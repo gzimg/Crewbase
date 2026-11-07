@@ -10,16 +10,14 @@ async function fetchPartners(): Promise<number[]> {
     return cachedPartners;
   }
 
-  try {
-    const res = await fetch("https://cdn.firefli.net/partners.json");
-    if (!res.ok) throw new Error(`Failed to fetch partners: ${res.status}`);
-    const data = await res.json();
-    cachedPartners = data.groupIds ?? [];
-    cacheTimestamp = now;
-    return cachedPartners!;
-  } catch {
-    return cachedPartners ?? [];
-  }
+  // Verified badges come from Crewbase's own list, not Firefli's partner list.
+  // Set PARTNER_GROUP_IDS to a comma-separated list of Roblox group IDs to show the badge.
+  cachedPartners = (process.env.PARTNER_GROUP_IDS || "")
+    .split(",")
+    .map((id) => Number(id.trim()))
+    .filter((id) => Number.isInteger(id) && id > 0);
+  cacheTimestamp = now;
+  return cachedPartners;
 }
 
 export default async function handler(

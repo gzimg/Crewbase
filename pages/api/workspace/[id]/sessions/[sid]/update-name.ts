@@ -31,9 +31,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
   }
 
   try {
+    // Only find sessions that belong to this workspace
     const session = await prisma.session.findFirst({
       where: {
         id: sessionId as string,
+        sessionType: { workspaceGroupId: BigInt(req.query.id as string) },
       },
     });
 

@@ -121,6 +121,14 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
       });
     }
 
+    if (req.body.acceptedTerms !== true) {
+      return res.status(400).json({
+        success: false,
+        error: "You need to be 13 or older and accept the Terms of Service and Privacy Policy",
+        code: 400,
+      });
+    }
+
     const password = req.body.password;
     if (!password) {
       return res

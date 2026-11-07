@@ -15,6 +15,7 @@ type FormData = {
 	username: string;
 	password: string;
 	verifypassword: string;
+	agree: boolean;
 };
 
 const Login: NextPage = () => {
@@ -249,6 +250,7 @@ const Login: NextPage = () => {
 						password: signupform.getValues("password"),
 						color: selectedColor,
 						robloxApiKey: trimmedApiKey,
+						acceptedTerms: signupform.getValues("agree") === true,
 					}),
 					new Promise((_, reject) => 
 						setTimeout(() => reject(new Error('Request timeout')), 30000)
@@ -548,6 +550,22 @@ const Login: NextPage = () => {
 								<p className="text-red-500 text-sm mt-1">
 									{signupform.formState.errors.verifypassword.message}
 								</p>
+							)}
+							<label className="mt-4 flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-300">
+								<input
+									type="checkbox"
+									className="mt-0.5 h-4 w-4 rounded"
+									{...signupform.register("agree", { required: "You need to be 13 or older and accept the terms to continue" })}
+								/>
+								<span>
+								I’m 13 or older, and I agree to the{" "}
+								<a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms of Service</a>{" "}
+								and{" "}
+								<a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy Policy</a>.
+								</span>
+							</label>
+							{signupform.formState.errors.agree && (
+								<p className="text-red-500 text-sm mt-1">{signupform.formState.errors.agree.message}</p>
 							)}
 						</form>
 					</FormProvider>

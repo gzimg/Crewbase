@@ -30,6 +30,10 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
       hostingRoles: true,
     },
   });
+  // Only allow deleting session types that belong to this workspace
+  if (!findSession || findSession.workspaceGroupId !== BigInt(req.query.id as string)) {
+    return res.status(404).json({ success: false, error: "Session type not found" });
+  }
   if (!findSession)
     return res.status(404).json({ success: false, error: "Session not found" });
 

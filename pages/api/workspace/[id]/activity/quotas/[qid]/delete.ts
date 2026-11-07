@@ -24,6 +24,10 @@ export async function handler(
 
 	try {
 		const quota = await prisma.quota.findUnique({ where: { id: req.query.qid as string }, include: { quotaRoles: { include: { role: true } } } });
+		// Only allow deleting quotas that belong to this workspace
+		if (!quota || quota.workspaceGroupId !== BigInt(req.query.id as string)) {
+			return res.status(404).json({ success: false, error: 'Quota not found' });
+		}
 		await prisma.quotaRole.deleteMany({
 			where: {
 				quotaId: req.query.qid

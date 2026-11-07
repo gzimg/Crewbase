@@ -20,6 +20,7 @@ type SignupForm = {
   username: string;
   password: string;
   verifypassword: string;
+  agree: boolean;
 };
 
 const Login: NextPage = () => {
@@ -441,6 +442,7 @@ const Login: NextPage = () => {
       const { data } = await axios.post("/api/auth/signup/finish", {
         password,
         code: verificationCode,
+        acceptedTerms: getSignupValues("agree") === true,
       });
       if (data.success) Router.push("/");
       else setVerificationError("Verification failed. Please try again.");
@@ -817,6 +819,26 @@ const Login: NextPage = () => {
                                 "Passwords must match",
                             })}
                           />
+                          <div>
+                            <label className="flex items-start gap-3 text-sm text-zinc-600 dark:text-zinc-300">
+                              <input
+                                type="checkbox"
+                                className="mt-0.5 h-4 w-4 rounded"
+                                {...regSignup("agree", {
+                                  required: "You need to be 13 or older and accept the terms to continue",
+                                })}
+                              />
+                              <span>
+                                I’m 13 or older, and I agree to the{" "}
+                                <Link href="/terms" target="_blank" className="underline">Terms of Service</Link>{" "}
+                                and{" "}
+                                <Link href="/privacy" target="_blank" className="underline">Privacy Policy</Link>.
+                              </span>
+                            </label>
+                            {signupMethods.formState.errors.agree && (
+                              <p className="mt-1 text-sm text-red-500">{signupMethods.formState.errors.agree.message}</p>
+                            )}
+                          </div>
                           <div className="flex justify-between gap-2">
                             <Button
                               type="button"
@@ -868,6 +890,11 @@ const Login: NextPage = () => {
                                   />
                                   Sign up with Roblox
                                 </button>
+                                <p className="mt-2 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                                  By signing up with Roblox, you confirm you’re 13 or older and agree to the{" "}
+                                  <Link href="/terms" target="_blank" className="underline">Terms</Link> and{" "}
+                                  <Link href="/privacy" target="_blank" className="underline">Privacy Policy</Link>.
+                                </p>
                               </div>
                             </>
                           )}

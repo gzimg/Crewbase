@@ -17,6 +17,8 @@ export type LoginState = {
 	canMakeWorkspace: boolean;
 	workspaces: workspaceinfo[];
 	isOwner: boolean;
+	/** Site-wide role for running the Crewbase instance: "admin", "staff" or none */
+	siteRole?: "admin" | "staff" | null;
 }
 
 const loginState = atom<LoginState>({

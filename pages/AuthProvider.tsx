@@ -38,7 +38,8 @@ export default function AuthProvider({
 			} catch (err: any) {
 				console.error('Login check error:', err.response?.data);
 				// The homepage (/) handles logged-out visitors and unfinished setup itself
-				const isHomePage = Router.pathname === '/';
+				// Pages anyone can view without logging in
+				const isHomePage = ['/', '/terms', '/privacy', '/forgot-password'].includes(Router.pathname);
 				if (err.response?.data.error === 'Workspace not setup') {
 					if (!isHomePage) Router.push('/welcome');
 					setLoading(false);

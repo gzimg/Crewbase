@@ -71,7 +71,8 @@ export async function handler(
       where: { id },
     });
 
-    if (!notice) {
+    // Only allow updating notices that belong to this workspace
+    if (!notice || notice.workspaceGroupId !== BigInt(req.query.id as string)) {
       return res.status(404).json({ success: false, error: 'Notice not found' });
     }
 

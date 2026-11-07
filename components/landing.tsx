@@ -340,6 +340,10 @@ export default function Landing({ setupNeeded = false }: LandingProps) {
             <span className="text-zinc-300">Crewbase</span>
             <span>© {new Date().getFullYear()}</span>
           </div>
+          <div className="flex gap-4">
+            <Link href="/terms" className="hover:text-zinc-300">Terms</Link>
+            <Link href="/privacy" className="hover:text-zinc-300">Privacy</Link>
+          </div>
           <p>
             Based on{" "}
             <a
@@ -352,6 +356,9 @@ export default function Landing({ setupNeeded = false }: LandingProps) {
             </a>{" "}
             by Cloudysatrn &amp; Max Croft · GPL-3.0
           </p>
+        </div>
+        <div className="mx-auto max-w-6xl px-6 pb-8 text-xs text-zinc-600">
+          Crewbase is an independent hobby project and isn’t affiliated with, endorsed by or sponsored by Roblox Corporation.
         </div>
       </footer>
     </div>

@@ -22,9 +22,12 @@ export async function handler(
 	if (!req.query.aid) return res.status(400).json({ success: false, error: 'Missing ally id' });
 	if (typeof req.query.aid !== 'string') return res.status(400).json({ success: false, error: 'Invalid ally id' })
 	const { reps } = req.body
+	if (!Array.isArray(reps)) return res.status(400).json({ success: false, error: 'Missing content' })
 	if (reps.length < 1) return res.status(400).json({ success: false, error: 'You need at least 1 rep' })
 	const aid = req.query.aid
-	if(!reps) return res.status(400).json({ success: false, error: 'Missing content' })
+	// Only allow changing alliances that belong to this workspace
+	const ally = await prisma.ally.findUnique({ where: { id: String(aid) }, select: { workspaceGroupId: true } })
+	if (!ally || ally.workspaceGroupId !== BigInt(req.query.id as string)) return res.status(404).json({ success: false, error: 'Alliance not found' })
 
 
 	try {

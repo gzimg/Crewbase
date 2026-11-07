@@ -63,15 +63,24 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
     if (!robloxApiKey) robloxApiKey = undefined;
   }
   if (!groupid || !username || !password || !color) {
+    // Never log the password itself
     console.error("Missing required fields:", {
-      groupid,
-      username,
-      password,
-      color,
+      groupid: !!groupid,
+      username: !!username,
+      password: !!password,
+      color: !!color,
     });
     return res.status(400).json({
       success: false,
       error: "Missing required fields",
+    });
+  }
+
+  // The owner must confirm they're 13+ and accept the Terms and Privacy Policy
+  if (req.body.acceptedTerms !== true) {
+    return res.status(400).json({
+      success: false,
+      error: "You need to be 13 or older and accept the Terms of Service and Privacy Policy",
     });
   }
 

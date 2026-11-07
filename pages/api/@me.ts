@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import prisma from '@/utils/database';
 import { withSessionRoute } from '@/lib/withSession'
 import { getUsername, getThumbnail, getDisplayName } from '@/utils/userinfoEngine'
+import { getSiteRoleLists } from '@/utils/siteRoles'
 
 type User = {
 	userId: number
@@ -14,6 +15,7 @@ type User = {
 	birthdayDay?: number | null
 	birthdayMonth?: number | null
 	isOwner: boolean
+	siteRole: 'admin' | 'staff' | null
 }
 
 type Data = {
@@ -83,6 +85,15 @@ export async function handler(
 		canMakeWorkspace = dbuser?.isOwner || false;
 	}
 
+	let siteRole: 'admin' | 'staff' | null = null;
+	if (dbuser?.isOwner) {
+		siteRole = 'admin';
+	} else {
+		const lists = await getSiteRoleLists();
+		const idStr = String(userId);
+		siteRole = lists.admins.includes(idStr) ? 'admin' : lists.staff.includes(idStr) ? 'staff' : null;
+	}
+
 	const user: User = {
 		userId: userId,
 		username,
@@ -93,6 +104,7 @@ export async function handler(
 		birthdayDay: dbuser?.birthdayDay ?? null,
 		birthdayMonth: dbuser?.birthdayMonth ?? null,
 		isOwner: dbuser?.isOwner || false,
+		siteRole,
 	}
 	
 	let roles: any[] = [];

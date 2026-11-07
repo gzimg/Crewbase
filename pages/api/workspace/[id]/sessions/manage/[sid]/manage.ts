@@ -76,7 +76,8 @@ export default withPermissionCheck(
           include: { sessionType: true },
         });
 
-        if (!currentSession) {
+        // Only allow editing sessions that belong to this workspace
+        if (!currentSession || currentSession.sessionType?.workspaceGroupId !== BigInt(id as string)) {
           return res.status(404).json({ error: "Session not found" });
         }
 

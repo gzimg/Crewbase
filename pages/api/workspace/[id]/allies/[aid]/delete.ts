@@ -24,6 +24,11 @@ export async function handler(
 
 
 	try {
+		// Only allow deleting alliances that belong to this workspace
+		const ally = await prisma.ally.findUnique({ where: { id: String(req.query.aid) }, select: { workspaceGroupId: true } });
+		if (!ally || ally.workspaceGroupId !== BigInt(req.query.id as string)) {
+			return res.status(404).json({ success: false, error: 'Alliance not found' });
+		}
 		await prisma.ally.delete({
 			where: {
 				id: String(req.query.aid)

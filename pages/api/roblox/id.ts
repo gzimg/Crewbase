@@ -6,7 +6,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method !== "POST")
-    return res.status(402).json({ error: true, message: "Method not allowed" });
+    return res.status(405).json({ error: true, message: "Method not allowed" });
 
   const body = req.body;
   if (!body.keyword) return res.status(400).json({ error: true, message: "Missing 'keyword'" });

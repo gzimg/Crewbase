@@ -3,7 +3,8 @@ import { loginState, workspacestate, createWorkspaceModalState } from "@/state";
 import { useRecoilState } from "recoil";
 import { Menu, Transition, Listbox } from "@headlessui/react";
 import { useRouter } from "next/router";
-import { IconLogout, IconChevronDown, IconPlus, IconCheck, IconHome } from "@tabler/icons-react";
+import { IconLogout, IconChevronDown, IconPlus, IconCheck, IconHome, IconHeadset, IconShieldLock } from "@tabler/icons-react";
+import Link from "next/link";
 import axios from "axios";
 import { Fragment } from "react";
 import ThemeToggle from "./ThemeToggle";
@@ -59,7 +60,8 @@ const Topbar: NextPage = () => {
 			canMakeWorkspace: false,
 			thumbnail: '',
 			workspaces: [],
-			isOwner: false
+			isOwner: false,
+			siteRole: null
 		});
 		router.push('/login');
 	}
@@ -188,6 +190,24 @@ const Topbar: NextPage = () => {
 						<div className="sm:hidden">
 							<ThemeToggle />
 						</div>
+					{(login?.siteRole === "staff" || login?.siteRole === "admin") && (
+						<Link
+							href="/site/staff"
+							className={`hidden sm:flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-sm font-medium transition-colors ${router.pathname === "/site/staff" ? "bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-white" : "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"}`}
+						>
+							<IconHeadset className="h-4 w-4" aria-hidden="true" />
+							Site staff
+						</Link>
+					)}
+					{login?.siteRole === "admin" && (
+						<Link
+							href="/site/admin"
+							className={`hidden sm:flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-sm font-medium transition-colors ${router.pathname === "/site/admin" ? "bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-white" : "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"}`}
+						>
+							<IconShieldLock className="h-4 w-4" aria-hidden="true" />
+							Site admin
+						</Link>
+					)}
 					{isInWorkspace && (
 						<div className="hidden sm:block">
 							<Notification variant="topbar" />
@@ -241,6 +261,33 @@ const Topbar: NextPage = () => {
 									<div className="sm:hidden">
 										<HelpWidget variant="topbar" />
 									</div>
+
+									{(login?.siteRole === "staff" || login?.siteRole === "admin") && (
+										<Menu.Item>
+											{({ active }) => (
+												<button
+													onClick={() => router.push("/site/staff")}
+													className={`${active ? 'bg-zinc-100 dark:bg-zinc-700' : ''} sm:hidden group flex w-full items-center rounded-md px-3 py-2 text-sm`}
+												>
+													<IconHeadset className="mr-2 h-5 w-5 text-zinc-500 dark:text-zinc-400" />
+													<span className="text-zinc-700 dark:text-zinc-200">Site staff</span>
+												</button>
+											)}
+										</Menu.Item>
+									)}
+									{login?.siteRole === "admin" && (
+										<Menu.Item>
+											{({ active }) => (
+												<button
+													onClick={() => router.push("/site/admin")}
+													className={`${active ? 'bg-zinc-100 dark:bg-zinc-700' : ''} sm:hidden group flex w-full items-center rounded-md px-3 py-2 text-sm`}
+												>
+													<IconShieldLock className="mr-2 h-5 w-5 text-zinc-500 dark:text-zinc-400" />
+													<span className="text-zinc-700 dark:text-zinc-200">Site admin</span>
+												</button>
+											)}
+										</Menu.Item>
+									)}
 
 									<Menu.Item>
 										{({ active }) => (
