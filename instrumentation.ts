@@ -4,8 +4,13 @@ export async function register() {
       return this.toString();
     };
 
-    const { closeActiveSessions } = await import('./utils/closesessions');
-    await closeActiveSessions();
+    // On Vercel, new server instances start constantly, so closing every open
+    // activity session on startup would cut off staff mid-session. There, the
+    // /api/cron/close-stale-sessions job handles leftover sessions instead.
+    if (!process.env.VERCEL) {
+      const { closeActiveSessions } = await import('./utils/closesessions');
+      await closeActiveSessions();
+    }
     
     if (process.env.NEXT_MULTI?.toLowerCase() === 'true') {
       const prisma = (await import('./utils/database')).default;

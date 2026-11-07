@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { withSessionRoute } from "@/lib/withSession";
 import prisma from "@/utils/database";
-import { getEvidenceFilePath } from "@/utils/evidenceManager";
+import { getEvidenceFilePath, getEvidenceSignedUrl, useBlobStorage } from "@/utils/evidenceManager";
 import fs from "fs";
 import { fileTypeFromBuffer } from "file-type";
 
@@ -69,6 +69,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     if (!isAdmin && !hasPermission) {
       return res.status(403).json({ error: "Insufficient permissions" });
+    }
+
+    if (useBlobStorage()) {
+      // Send the viewer to a short-lived private link instead of streaming the
+      // file through the function (Vercel caps function responses at 4.5 MB).
+      const signedUrl = await getEvidenceSignedUrl(caseId as string, fileName as string);
+      if (!signedUrl) {
+        return res.status(404).json({ error: "File not found in storage" });
+      }
+      res.setHeader("Cache-Control", "private, no-store");
+      return res.redirect(302, signedUrl);
     }
 
     const filePath = getEvidenceFilePath(caseId as string, fileName as string);

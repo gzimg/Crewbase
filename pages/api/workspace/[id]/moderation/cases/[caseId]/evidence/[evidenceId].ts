@@ -86,7 +86,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       });
 
       if (evidence.fileType !== "external_link") {
-        deleteEvidenceFile(evidence.fileUrl);
+        await deleteEvidenceFile(evidence.fileUrl);
       }
 
       await prisma.moderationLog.create({

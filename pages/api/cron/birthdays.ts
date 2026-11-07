@@ -3,25 +3,13 @@ import prisma from "@/utils/database";
 import { getConfig } from "@/utils/configEngine";
 import DiscordAPI, { decryptToken } from "@/utils/discord";
 import { getRobloxThumbnail } from "@/utils/roblox";
+import { checkCronRequest } from "@/utils/cronAuth";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  const cronSecret = req.headers["x-cron-secret"] || req.headers.authorization;
-  const expectedSecret = process.env.CRON_SECRET;
-
-  if (!expectedSecret) {
-    return res.status(500).json({ error: "CRON_SECRET not configured" });
-  }
-
-  if (!cronSecret || String(cronSecret) !== expectedSecret) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+  if (!checkCronRequest(req, res)) return;
 
   try {
     const workspaces = await prisma.workspace.findMany({

@@ -50,6 +50,7 @@
     "@types/uuid": "^9.0.7",
     "@types/zxcvbn": "^4.4.5",
     "@uiw/react-md-editor": "^4.1.0",
+    "@vercel/blob": "2.8.2",
     "axios": "^1.15.2",
     "bcryptjs": "^3.0.2",
     "chart.js": "^4.4.3",

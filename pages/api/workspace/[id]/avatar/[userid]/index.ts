@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 import axios from 'axios';
 import { getPlayerThumbnails } from '@/utils/roblox';
 import { createHash } from 'crypto';
@@ -29,7 +30,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const userIdNum = Number(userid);
   if (!Number.isInteger(userIdNum) || userIdNum <= 0) return res.status(400).end('Invalid userId');
   if (userIdNum > 100_000_000_000) return res.status(400).end('Invalid userId');
-  const avatarDir = path.join(process.cwd(), 'public', 'avatars');
+  // Vercel's app folder is read-only, so cache avatars in its temporary folder there
+  const avatarDir = process.env.VERCEL
+    ? path.join(os.tmpdir(), 'avatars')
+    : path.join(process.cwd(), 'public', 'avatars');
   const avatarPath = path.join(avatarDir, `${userIdNum}.png`);
   const resolved = path.resolve(avatarPath);
   if (!resolved.startsWith(path.resolve(avatarDir) + path.sep)) return res.status(400).end('Invalid userId');

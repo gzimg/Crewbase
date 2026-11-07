@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { fileTypeFromBuffer } from "file-type";
+import { put, del, list, issueSignedToken, presignUrl } from "@vercel/blob";
 
 const EVIDENCE_DIR = path.join(process.cwd(), "evidence");
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
@@ -11,6 +12,19 @@ const ALLOWED_MIME_TYPES = [
   "video/mp4",
   "video/webm",
 ];
+
+/**
+ * Evidence is stored in Vercel Blob (private) when BLOB_READ_WRITE_TOKEN is set,
+ * because Vercel's own disk is temporary. Without it, files go to the local
+ * `evidence/` folder as before (Docker, VPS or local development).
+ */
+export function useBlobStorage(): boolean {
+  return !!process.env.BLOB_READ_WRITE_TOKEN;
+}
+
+function blobPathname(caseId: string, fileName: string): string {
+  return `evidence/${caseId}/${fileName}`;
+}
 
 export interface EvidenceUploadResult {
   fileUrl: string;
@@ -62,13 +76,22 @@ export async function saveEvidenceFile(
     throw new Error(validation.error);
   }
 
-  ensureEvidenceDir();
-  const caseDir = ensureCaseDir(caseId);
   const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
   const timestamp = Date.now();
   const uniqueFileName = `${timestamp}-${sanitizedFileName}`;
-  const filePath = path.join(caseDir, uniqueFileName);
-  fs.writeFileSync(filePath, buffer);
+
+  if (useBlobStorage()) {
+    await put(blobPathname(caseId, uniqueFileName), buffer, {
+      access: "private",
+      contentType: validation.fileType,
+      addRandomSuffix: false,
+    });
+  } else {
+    ensureEvidenceDir();
+    const caseDir = ensureCaseDir(caseId);
+    const filePath = path.join(caseDir, uniqueFileName);
+    fs.writeFileSync(filePath, buffer);
+  }
 
   return {
     fileUrl: `/api/evidence/${caseId}/${uniqueFileName}`,
@@ -78,11 +101,15 @@ export async function saveEvidenceFile(
   };
 }
 
-export function deleteEvidenceFile(fileUrl: string): boolean {
+export async function deleteEvidenceFile(fileUrl: string): Promise<boolean> {
   try {
     const urlParts = fileUrl.split("/");
     const caseId = urlParts[urlParts.length - 2];
     const fileName = urlParts[urlParts.length - 1];
+    if (useBlobStorage()) {
+      await del(blobPathname(caseId, fileName));
+      return true;
+    }
     const filePath = path.join(EVIDENCE_DIR, caseId, fileName);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
@@ -95,8 +122,19 @@ export function deleteEvidenceFile(fileUrl: string): boolean {
   }
 }
 
-export function deleteCaseEvidence(caseId: string): boolean {
+export async function deleteCaseEvidence(caseId: string): Promise<boolean> {
   try {
+    if (useBlobStorage()) {
+      let cursor: string | undefined;
+      do {
+        const page = await list({ prefix: `evidence/${caseId}/`, cursor });
+        if (page.blobs.length > 0) {
+          await del(page.blobs.map((b) => b.url));
+        }
+        cursor = page.hasMore ? page.cursor : undefined;
+      } while (cursor);
+      return true;
+    }
     const caseDir = path.join(EVIDENCE_DIR, caseId);
     if (fs.existsSync(caseDir)) {
       fs.rmSync(caseDir, { recursive: true, force: true });
@@ -106,6 +144,32 @@ export function deleteCaseEvidence(caseId: string): boolean {
   } catch (error) {
     console.error("Error deleting case evidence:", error);
     return false;
+  }
+}
+
+/**
+ * Returns a short-lived signed link to a private evidence file in Vercel Blob.
+ * Only call this after checking the viewer's permissions.
+ */
+export async function getEvidenceSignedUrl(
+  caseId: string,
+  fileName: string,
+  validForMs = 5 * 60 * 1000
+): Promise<string | null> {
+  try {
+    const pathname = blobPathname(caseId, fileName);
+    const validUntil = Date.now() + validForMs;
+    const token = await issueSignedToken({ pathname, operations: ["get"], validUntil });
+    const { presignedUrl } = await presignUrl(token, {
+      operation: "get",
+      pathname,
+      validUntil,
+      access: "private",
+    });
+    return presignedUrl;
+  } catch (error) {
+    console.error("Error creating evidence link:", error);
+    return null;
   }
 }
 

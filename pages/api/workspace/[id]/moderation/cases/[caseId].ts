@@ -299,7 +299,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       });
 
       const { deleteCaseEvidence } = await import("@/utils/evidenceManager");
-      deleteCaseEvidence(caseId as string);
+      await deleteCaseEvidence(caseId as string);
       await prisma.moderationLog.create({
         data: {
           workspaceGroupId: groupId,
