@@ -16,7 +16,7 @@ export const ApiDocumentation = ({ triggerToast }: { triggerToast: any }) => {
         <div className="mb-6">
           <h3 className="text-lg font-medium text-zinc-900 dark:text-white">API Documentation</h3>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-            Learn how to use the Firefli public API to access your workspace data
+            Learn how to use the Crewbase public API to access your workspace data
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export const ApiDocumentation = ({ triggerToast }: { triggerToast: any }) => {
                   rel="noopener noreferrer"
                   className="text-primary underline hover:opacity-80"
                 >
-                  Firefli API Documentation
+                  Crewbase API Documentation
                 </a>.
               </div>
             </div>

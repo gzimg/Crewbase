@@ -34,8 +34,8 @@ function getRandomBg(username: string) {
 }
 
 const defaultAnnouncement: Announcement = {
-  title: "Firefli",
-  subtitle: "Aloha and welcome to your Firefli workspace!",
+  title: "Crewbase",
+  subtitle: "Welcome to your Crewbase workspace!",
   sections: [
     {
       title: "👋 Getting started",
@@ -192,7 +192,7 @@ const StickyWidget: React.FC = () => {
         {isCustom && announcement.editorPicture ? (
           <img src={announcement.editorPicture} alt={announcement.editorUsername || ""} className="w-full h-full object-cover" />
         ) : (
-          <img src="/stickylogo.png" alt="Firefli" className="w-full h-full object-cover" />
+          <img src="/stickylogo.png" alt="Crewbase" className="w-full h-full object-cover" />
         )}
       </div>
       <div className="flex-1 min-w-0">

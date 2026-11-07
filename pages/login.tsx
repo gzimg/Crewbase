@@ -496,7 +496,7 @@ const Login: NextPage = () => {
         <div className="pointer-events-none absolute left-10 top-8 hidden lg:block">
           <img
             src="/wlogo.svg"
-            alt="Firefli"
+            alt="Crewbase"
             className="h-12 w-auto drop-shadow-[0_8px_24px_rgba(15,23,42,0.18)]"
           />
         </div>
@@ -510,7 +510,7 @@ const Login: NextPage = () => {
               <div className="mb-3 sm:mb-4 flex justify-center">
                 <img
                   src="/logo.svg"
-                  alt="Firefli logo"
+                  alt="Crewbase logo"
                   className="h-7 w-auto sm:h-12"
                 />
               </div>
@@ -548,7 +548,7 @@ const Login: NextPage = () => {
               {mode === "login" && (
                 <>
                   <p className="mb-1 sm:mb-2 font-bold text-xl sm:text-3xl text-zinc-700 dark:text-white">
-                    👋 Welcome to Firefli
+                    👋 Welcome to Crewbase
                   </p>
                   <p className="mb-3 sm:mb-6 text-md text-zinc-600 dark:text-zinc-300">
                     Login to your account to continue
@@ -680,7 +680,7 @@ const Login: NextPage = () => {
                         🔨 Create an account
                       </p>
                       <p className="mb-6 text-md text-zinc-600 dark:text-zinc-300">
-                        Create a new account for Firefli
+                        Create a new account for Crewbase
                       </p>
 
                       {!oauthOnly && (

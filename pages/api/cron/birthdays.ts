@@ -116,7 +116,7 @@ export default async function handler(
                   ? parseInt(discordIntegration.birthdayEmbedColor.replace('#', ''), 16)
                   : defaultColor,
                 thumbnail: avatarUrl ? { url: avatarUrl } : undefined,
-                footer: { text: workspace.groupName ? `${workspace.groupName} • Firefli` : 'Firefli Birthdays' },
+                footer: { text: workspace.groupName ? `${workspace.groupName} • Crewbase` : 'Crewbase Birthdays' },
               };
 
               await discord.sendMessage(channelId, message);
@@ -155,13 +155,13 @@ export default async function handler(
 
             if (workspace.groupName) {
               embed.footer = {
-                text: `${workspace.groupName} | Firefli`,
+                text: `${workspace.groupName} | Crewbase`,
               };
             }
 
             const webhookBody: any = {
               embeds: [embed],
-              username: "Firefli Birthdays",
+              username: "Crewbase Birthdays",
               avatar_url: `http://cdn.planetaryapp.us/brand/planetary.png`,
             };
 

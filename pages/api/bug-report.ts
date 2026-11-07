@@ -90,7 +90,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
       ...(safePage ? [{ name: "Page", value: safePage, inline: false }] : []),
     ],
     timestamp: new Date().toISOString(),
-    footer: { text: "Firefli EZ Bugs" },
+    footer: { text: "Crewbase EZ Bugs" },
   };
 
   try {

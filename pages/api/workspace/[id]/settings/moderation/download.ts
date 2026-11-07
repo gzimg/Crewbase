@@ -32,7 +32,7 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
   let xml_string = fs.readFileSync(path.join("Firefli-moderation.rbxmx"), "utf8");
   res.setHeader(
     "Content-Disposition",
-    "attachment; filename=Firefli-moderation.rbxmx"
+    "attachment; filename=Crewbase-moderation.rbxmx"
   );
 
   let protocol =

@@ -187,7 +187,7 @@ export async function sendBloxlinkNotification(
       color: customColor[action] ? parseInt(customColor[action].replace('#', ''), 16) : defaultColor[action],
       timestamp: new Date().toISOString(),
       footer: {
-        text: customFooter[action] ? replaceVariables(customFooter[action]) : (workspace.groupName || 'Firefli')
+        text: customFooter[action] ? replaceVariables(customFooter[action]) : (workspace.groupName || 'Crewbase')
       },
       fields: [] as any[]
     };

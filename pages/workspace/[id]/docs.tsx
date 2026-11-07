@@ -873,7 +873,7 @@ const Home: pageWithLayout<pageProps> = ({
                     External Link Warning
                   </h2>
                   <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                    This is a link submitted by a member in this workspace. Links are not verified by Firefli so please proceed at your own risk.
+                    This is a link submitted by a member in this workspace. Links are not verified by Crewbase so please proceed at your own risk.
                   </p>
                 </div>
               </div>

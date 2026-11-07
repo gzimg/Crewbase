@@ -19,7 +19,7 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
   const filePath = path.join(process.cwd(), "Firefli-sessions.rbxm");
   const fileBuffer = fs.readFileSync(filePath);
 
-  res.setHeader("Content-Disposition", "attachment; filename=Firefli-sessions.rbxm");
+  res.setHeader("Content-Disposition", "attachment; filename=Crewbase-sessions.rbxm");
   res.setHeader("Content-Type", "application/octet-stream");
   res.status(200).send(fileBuffer as any);
 }

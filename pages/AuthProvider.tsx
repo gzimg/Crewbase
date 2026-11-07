@@ -37,8 +37,10 @@ export default function AuthProvider({
 				setLoading(false);
 			} catch (err: any) {
 				console.error('Login check error:', err.response?.data);
+				// The homepage (/) handles logged-out visitors and unfinished setup itself
+				const isHomePage = Router.pathname === '/';
 				if (err.response?.data.error === 'Workspace not setup') {
-					Router.push('/welcome');
+					if (!isHomePage) Router.push('/welcome');
 					setLoading(false);
 					return;
 				}
@@ -48,7 +50,7 @@ export default function AuthProvider({
 					return;
 				}
 				if (err.response?.data.error === 'Not logged in') {
-					Router.push('/login');
+					if (!isHomePage) Router.push('/login');
 					setLoading(false);
 					return;
 				}

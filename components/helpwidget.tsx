@@ -144,10 +144,9 @@ const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" 
                     <Dialog.Panel className="w-full max-w-sm transform overflow-hidden rounded-2xl bg-white dark:bg-zinc-800 text-left shadow-xl transition-all">
                       <div className="p-4">
                         <div className="flex items-center gap-3 mb-4 pb-3 border-b border-zinc-200 dark:border-zinc-700">
-                          <img src="/logo.png" alt="Firefli" className="h-8 w-auto dark:hidden" />
-                          <img src="/wlogo.png" alt="Firefli" className="h-8 w-auto hidden dark:block" />
+                          <img src="/crewbase.png" alt="Crewbase" className="h-8 w-8 rounded-lg" />
                           <div className="flex-1">
-                            <p className="text-sm font-semibold text-zinc-900 dark:text-white">Firefli</p>
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-white">Crewbase</p>
                             <div className="flex items-center gap-2">
                               <p className="text-xs text-zinc-500 dark:text-zinc-400">v{packageJson.version}</p>
                               <a
@@ -155,7 +154,7 @@ const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" 
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center justify-center w-5 h-5 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
-                                title="Buy us a coffee"
+                                title="Support the Firefli developers"
                               >
                                 <IconCoffee className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500" />
                               </a>
@@ -231,11 +230,10 @@ const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" 
           <Popover.Panel className="absolute bottom-14 md:bottom-16 right-0 w-64 origin-bottom-right rounded-xl bg-white dark:bg-zinc-800 shadow-xl ring-1 ring-black dark:ring-zinc-700 ring-opacity-5 focus:outline-none">
             <div className="p-4">
               <div className="flex items-center gap-3 mb-4 pb-3 border-b border-zinc-200 dark:border-zinc-700">
-                <img src="/logo.png" alt="Firefli" className="h-8 w-auto dark:hidden" />
-				<img src="/wlogo.png" alt="Firefli" className="h-8 w-auto hidden dark:block" />
+                <img src="/crewbase.png" alt="Crewbase" className="h-8 w-8 rounded-lg" />
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-zinc-900 dark:text-white">
-                    Firefli
+                    Crewbase
                   </p>
                   <div className="flex items-center gap-2">
                     <p className="text-xs text-zinc-500 dark:text-zinc-400">
@@ -246,7 +244,7 @@ const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" 
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center justify-center w-5 h-5 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
-                      title="Buy us a coffee"
+                      title="Support the Firefli developers"
                     >
                       <IconCoffee className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500" />
                     </a>
@@ -496,6 +494,15 @@ const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" 
                     Copyright Notices
                   </Dialog.Title>
                   <div className="mt-4 space-y-4">
+
+                    <div>
+                      <h3 className="text-sm font-medium text-zinc-900 dark:text-white mb-1">
+                        Crewbase features, enhancements, and modifications:
+                      </h3>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                        Copyright © 2026 Crewbase. Licensed under GPL-3.0.
+                      </p>
+                    </div>
 
                     <div>
                       <h3 className="text-sm font-medium text-zinc-900 dark:text-white mb-1">

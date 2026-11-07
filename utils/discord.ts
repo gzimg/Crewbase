@@ -130,7 +130,7 @@ export class DiscordAPI {
       description: (message.description || '').substring(0, 4096) || undefined,
       color: message.color || 0x5865F2,
       timestamp: message.timestamp || new Date().toISOString(),
-      footer: message.footer || { text: 'Firefli Workspace' },
+      footer: message.footer || { text: 'Crewbase Workspace' },
     };
     if (fields.length > 0) embed.fields = fields;
     if (message.thumbnail?.url && message.thumbnail.url.startsWith('http')) embed.thumbnail = message.thumbnail;
@@ -156,7 +156,7 @@ export class DiscordAPI {
     try {
       await this.sendMessage(channelId, {
         title: 'Discord Integration Connected!',
-        description: 'Your Firefli workspace is now connected to Discord. You will receive notifications for workspace events here.',
+        description: 'Your Crewbase workspace is now connected to Discord. You will receive notifications for workspace events here.',
         color: 0x00ff00,
       });
       return true;
@@ -332,7 +332,7 @@ export function formatAuditEvent(
     }
   }
 
-  let footerText = embedConfig?.footer || 'Firefli Workspace Logs';
+  let footerText = embedConfig?.footer || 'Crewbase Workspace Logs';
   if (embedConfig?.footer) {
     footerText = footerText
       .replace('{user}', userName)

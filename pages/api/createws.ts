@@ -301,7 +301,7 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
 
       await sendWebhookEmbed(process.env.DISCORD_WELCOME, {
         title: "🎉 New Workspace Created",
-        description: `A new workspace has been created on Firefli!`,
+        description: `A new workspace has been created on Crewbase!`,
         color: 0x00ff88,
         fields: [
           { name: "Owner", value: ownerUsername, inline: true },
@@ -309,7 +309,7 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
           { name: "Group ID", value: String(groupId), inline: true },
         ],
         thumbnail: groupLogo ? { url: groupLogo } : undefined,
-        footer: { text: "Firefli Workspace" },
+        footer: { text: "Crewbase Workspace" },
       });
     } catch (err) {
       console.error(

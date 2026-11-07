@@ -58,8 +58,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
     });
 
     const defaultAnnouncement = {
-      title: "Firefli",
-      subtitle: "Aloha and welcome to your Firefli workspace!",
+      title: "Crewbase",
+      subtitle: "Welcome to your Crewbase workspace!",
       sections: [
         {
           title: "👋 Getting started",
@@ -69,7 +69,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
         {
           title: "❓ Need help?",
           content:
-            "Click the Help icon in your sidebar for documentation, helpful links, guides, and more resources to get the most out of Firefli.",
+            "Click the Help icon in your sidebar for documentation, helpful links, guides, and more resources to get the most out of Crewbase.",
         },
         {
           title: "✏️ Customise this message",

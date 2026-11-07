@@ -356,13 +356,13 @@ const Login: NextPage = () => {
 			/>
 			<div className="relative z-10 flex w-full h-full">
 				<p className="text-md -mt-1 text-white absolute top-4 left-4 xs:hidden md:text-6xl font-extrabold">
-					👋 Welcome <br /> to <span className="text-pink-100 "> Firefli </span>
+					👋 Welcome <br /> to <span className="text-pink-100 "> Crewbase </span>
 				</p>
 				<Slider activeSlide={selectedSlide}>
 				<div>
 					<p className="font-bold text-2xl dark:text-white">Let's get started</p>
 					<p className="text-md -mt-1 text-zinc-500 dark:text-zinc-200">
-						To setup your Firefli workspace, we'll need some information.
+						To set up your Crewbase workspace, we'll need some information.
 					</p>
 					<FormProvider {...methods}>
 						<form className="mt-2" onSubmit={handleSubmit(nextSlide)}>
@@ -498,10 +498,10 @@ const Login: NextPage = () => {
 				</div>
 				<div>
 					<p className="font-bold text-2xl dark:text-white" id="2">
-						Make your Firefli account
+						Make your Crewbase account
 					</p>
 					<p className="text-md -mt-1 text-zinc-500 dark:text-zinc-200">
-						You need to create a Firefli account to continue
+						You need to create a Crewbase account to continue
 					</p>
 					<FormProvider {...signupform}>
 						<form onSubmit={signupform.handleSubmit(createAccount)}>

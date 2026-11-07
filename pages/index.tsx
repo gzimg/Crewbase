@@ -22,6 +22,7 @@ import {
 import { createWorkspaceModalState } from "@/state";
 import VerifiedBadge from "@/components/partners";
 import { usePartners } from "@/hooks/usePartners";
+import Landing from "@/components/landing";
 
 const Home: NextPage = () => {
   const [login, setLogin] = useRecoilState(loginState);
@@ -31,6 +32,9 @@ const Home: NextPage = () => {
   const [isOpen, setIsOpen] = useRecoilState(createWorkspaceModalState);
   const canCreateWorkspace = login.canMakeWorkspace;
   const { partnerIds } = usePartners();
+  // Logged-out visitors see the public homepage instead of being sent to /login
+  const [publicView, setPublicView] = useState<null | "login" | "setup">(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const gotoWorkspace = (id: number) => {
     localStorage.setItem("lastWorkspace", id.toString());
@@ -76,21 +80,18 @@ const Home: NextPage = () => {
         req = await axios.get("/api/@me");
       } catch (err: any) {
         if (err.response?.data.error === "Workspace not setup") {
-          const currentPath = router.pathname;
-          // Only redirect if we are not already on the /welcome page
-          if (currentPath !== "/welcome") {
-            router.push("/welcome");
-          }
-
+          // Instance not set up yet: show the homepage with a "Set up Crewbase" button
+          setPublicView("setup");
           setLoading(false);
           return;
         }
         if (err.response?.data.error === "Not logged in") {
-          router.push("/login");
+          setPublicView("login");
           setLoading(false);
           return;
         }
       } finally {
+        setAuthChecked(true);
         if (req?.data) {
           setLogin({
             ...req.data.user,
@@ -138,13 +139,22 @@ const Home: NextPage = () => {
     });
   };
 
+  // Avoid flashing the workspace list before we know whether the visitor is logged in
+  if (!authChecked) {
+    return <div className="min-h-screen bg-white dark:bg-[#0c1324]" />;
+  }
+
+  if (publicView) {
+    return <Landing setupNeeded={publicView === "setup"} />;
+  }
+
   return (
     <div>
       <Head>
-        <title>Firefli - Workspaces</title>
+        <title>Crewbase - Workspaces</title>
         <meta
           name="description"
-          content="Manage your Roblox workspaces with Firefli"
+          content="Manage your Roblox workspaces with Crewbase"
         />
       </Head>
 

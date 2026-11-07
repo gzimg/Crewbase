@@ -1,11 +1,11 @@
 {
-  "name": "Firefli",
-  "short_name": "Firefli",
-  "description": "Group Workspace Management",
+  "name": "Crewbase",
+  "short_name": "Crewbase",
+  "description": "Home base for your Roblox staff team",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#14213D",
+  "theme_color": "#14213D",
   "orientation": "portrait-primary",
   "icons": [
     {
@@ -19,7 +19,7 @@
       "type": "image/png"
     },
     {
-      "src": "/firefli.png",
+      "src": "/crewbase.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

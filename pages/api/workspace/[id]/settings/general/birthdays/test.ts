@@ -78,15 +78,15 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         },
       ],
       footer: {
-        text: "Firefli Birthday Notifications",
+        text: "Crewbase Birthday Notifications",
       },
       timestamp: new Date().toISOString(),
     };
 
     const webhookBody = {
       embeds: [embed],
-      username: "Firefli Birthdays",
-      avatar_url: `http://app.firefli.net/firefli.png`,
+      username: "Crewbase Birthdays",
+      avatar_url: `${process.env.NEXTAUTH_URL || ""}/crewbase.png`,
     };
 
     const response = await fetch(url, {

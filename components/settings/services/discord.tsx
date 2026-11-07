@@ -842,7 +842,7 @@ const DiscordIntegration: FC<{ triggerToast?: any }> = ({ triggerToast }) => {
               <IconBrandDiscord className="w-6 h-6 text-white" />
             </div>
             <div>
-              <span className="text-white font-medium text-sm">Firefli</span>
+              <span className="text-white font-medium text-sm">Crewbase</span>
               <span className="ml-1.5 px-1 py-0.5 bg-[#5865F2] rounded text-[10px] text-white font-medium">BOT</span>
               <p className="text-[#949ba4] text-xs">Today at {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
             </div>

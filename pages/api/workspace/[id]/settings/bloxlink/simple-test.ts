@@ -79,7 +79,7 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
       fields: [
         {
           name: '📝 Reason',
-          value: 'This is a test notification from Firefli',
+          value: 'This is a test notification from Crewbase',
           inline: false
         },
         {
@@ -95,7 +95,7 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
       ],
       timestamp: new Date().toISOString(),
       footer: {
-        text: workspaceInfo.groupName || 'Firefli'
+        text: workspaceInfo.groupName || 'Crewbase'
       }
     };
 

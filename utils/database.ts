@@ -8,7 +8,7 @@ declare global {
 }
 
 const pool = globalThis.pgPool || new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
     // Serverless instances each open their own pool, so keep it small on Vercel
     max: parseInt(process.env.DB_POOL_MAX ?? (process.env.VERCEL ? '5' : '20')),
     idleTimeoutMillis: 30000,
