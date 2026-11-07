@@ -176,7 +176,7 @@ export async function handler(req: NextApiRequest, res: NextApiResponse) {
 		delete req.session.oauthState;
 		await req.session.save();
 
-		res.redirect('/');
+		res.redirect('/workspaces');
 		} catch (prismaError) {
 		console.error('Database error during OAuth login:', prismaError);
 		return res.redirect('/login?error=database_error');

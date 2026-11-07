@@ -230,14 +230,14 @@ export function withPermissionCheckSsr(
     if (!uid)
       return {
         redirect: {
-          destination: "/",
+          destination: "/workspaces",
           permanent: false,
         },
       };
     if (!query.id)
       return {
         redirect: {
-          destination: "/",
+          destination: "/workspaces",
           permanent: false,
         },
       };
@@ -256,7 +256,7 @@ export function withPermissionCheckSsr(
       if (hasPermission) return handler(context);
       return {
         redirect: {
-          destination: "/",
+          destination: "/workspaces",
           permanent: false,
         },
       };
@@ -283,7 +283,7 @@ export function withPermissionCheckSsr(
     if (!user) {
       return {
         redirect: {
-          destination: "/",
+          destination: "/workspaces",
           permanent: false,
         },
       };
@@ -316,7 +316,7 @@ export function withPermissionCheckSsr(
     if (!membership) {
       return {
         redirect: {
-          destination: "/",
+          destination: "/workspaces",
           permanent: false,
         },
       };
@@ -335,7 +335,7 @@ export function withPermissionCheckSsr(
     if (!userrole) {
       return {
         redirect: {
-          destination: "/",
+          destination: "/workspaces",
           permanent: false,
         },
       };
@@ -349,7 +349,7 @@ export function withPermissionCheckSsr(
     if (!hasPermission) {
       return {
         redirect: {
-          destination: "/",
+          destination: "/workspaces",
           permanent: false,
         },
       };

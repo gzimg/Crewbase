@@ -63,7 +63,7 @@ const Topbar: NextPage = () => {
 			isOwner: false,
 			siteRole: null
 		});
-		router.push('/login');
+		router.push('/');
 	}
 
 	return (
@@ -148,7 +148,7 @@ const Topbar: NextPage = () => {
 													onClick={(e) => {
 														e.preventDefault();
 														e.stopPropagation();
-														router.push('/?home=true');
+														router.push('/workspaces?home=true');
 													}}
 												>
 													<div className="w-6 h-6 rounded bg-zinc-100 dark:bg-zinc-600 flex items-center justify-center">

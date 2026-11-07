@@ -296,7 +296,7 @@ const workspace: LayoutProps = ({ children }) => {
 				const res = await axios.get("/api/workspace/" + router.query.id);
 				setWorkspace(res.data.workspace);
 			} catch (e: any) {
-				router.push("/");
+				router.push("/workspaces");
 			}
 		}
 		if (router.query.id) getworkspace();

@@ -43,7 +43,7 @@ const Login: NextPage = () => {
 				setLogin({ ...userData.user, workspaces: userData.workspaces || [] });
 				setUseCreateWs(true);
 				if (!userData.user.canMakeWorkspace) {
-					Router.push('/');
+					Router.push('/workspaces');
 					return;
 				}
 				setReady(true);
@@ -264,7 +264,7 @@ const Login: NextPage = () => {
 						...request?.data.user,
 						isOwner: true
 					}));
-					Router.push("/");
+					Router.push("/workspaces");
 					return;
 				}
 			}

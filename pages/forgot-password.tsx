@@ -156,7 +156,7 @@ const ForgotPassword: NextPage = () => {
 			await axios.post("/api/auth/reset/finish", {
 				password: passwordForm.getValues("password"),
 			});
-			Router.push("/");
+			Router.push("/workspaces");
 		} catch (e: any) {
 			const msg = e?.response?.data?.error ?? "Verification failed";
 			setError(msg);

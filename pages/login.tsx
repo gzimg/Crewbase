@@ -385,7 +385,7 @@ const Login: NextPage = () => {
       }
       const { data: res } = req;
       setLogin({ ...res.user, workspaces: res.workspaces });
-      Router.push("/");
+      Router.push("/workspaces");
     } catch (e: any) {
       const msg = e.response?.data?.error || "Something went wrong";
       const status = e.response?.status;
@@ -444,7 +444,7 @@ const Login: NextPage = () => {
         code: verificationCode,
         acceptedTerms: getSignupValues("agree") === true,
       });
-      if (data.success) Router.push("/");
+      if (data.success) Router.push("/workspaces");
       else setVerificationError("Verification failed. Please try again.");
     } catch (e: any) {
       const errorMessage =

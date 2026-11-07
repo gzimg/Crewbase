@@ -37,7 +37,7 @@ export default function SiteShell({ title, description, minRole, children }: Pro
             <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
               This area is for Crewbase {minRole === "admin" ? "site admins" : "site staff"} only.
             </p>
-            <Link href="/?home=true" className="mt-5 inline-block text-sm font-medium text-zinc-900 underline dark:text-white">
+            <Link href="/workspaces?home=true" className="mt-5 inline-block text-sm font-medium text-zinc-900 underline dark:text-white">
               Back to your workspaces
             </Link>
           </div>

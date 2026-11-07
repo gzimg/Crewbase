@@ -64,7 +64,7 @@ const Admin: FC<props> = ({ triggerToast, isAdmin }) => {
         onClose={() => setShowDeleteModal(false)}
         workspaceId={workspace.groupId}
         workspaceName={workspace.groupName || ""}
-        onSuccess={() => router.push("/")}
+        onSuccess={() => router.push("/workspaces")}
       />
       <TransferOwnership
         isOpen={showTransferModal}
@@ -74,7 +74,7 @@ const Admin: FC<props> = ({ triggerToast, isAdmin }) => {
         onSuccess={() => {
           setShowTransferModal(false);
           triggerToast.success("You are no longer the workspace owner");
-          setTimeout(() => router.push("/"), 2000);
+          setTimeout(() => router.push("/workspaces"), 2000);
         }}
       />
     </div>
