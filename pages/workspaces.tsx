@@ -71,6 +71,12 @@ const Home: NextPage = () => {
     }
   };
   useEffect(() => {
+    if (router.query.locked === "1") {
+      toast.error("That workspace has been locked by Crewbase staff. Contact them if you think this is a mistake.", { id: "ws-locked", duration: 8000 });
+    }
+  }, [router.query.locked]);
+
+  useEffect(() => {
     const checkLogin = async () => {
       let req;
       try {
@@ -93,7 +99,9 @@ const Home: NextPage = () => {
             ...req.data.user,
             workspaces: req.data.workspaces,
           });
-          const manualNav = router.query.home === "true";
+          // Read the URL directly: router.query can still be empty on the first render
+          const params = new URLSearchParams(window.location.search);
+          const manualNav = params.get("home") === "true" || params.get("locked") === "1";
 
           if (!manualNav) {
             if (req.data.workspaces?.length === 1) {

@@ -143,6 +143,16 @@ export async function handler(req: NextApiRequest, res: NextApiResponse) {
 		return res.redirect('/login?error=access_denied');
 		}
 
+		// Respect the site admin's "new sign-ups" setting for brand-new accounts
+		{
+			const { getSiteSettings } = await import('@/utils/siteSettings');
+			const site = await getSiteSettings();
+			if (!site.registrations.open) {
+				const existing = await prisma.user.findUnique({ where: { userid: BigInt(userId) }, select: { registered: true } });
+				if (!existing?.registered) return res.redirect('/login?error=registrations_closed');
+			}
+		}
+
 		let thumbnail: string | undefined = await getRobloxThumbnail(userId) || undefined;
 
 		const username = userInfo.preferred_username || userInfo.name;
@@ -176,6 +186,15 @@ export async function handler(req: NextApiRequest, res: NextApiResponse) {
 		delete req.session.oauthState;
 		await req.session.save();
 
+		{
+			const { getSiteSettings } = await import('@/utils/siteSettings');
+			const { getSiteRole } = await import('@/utils/siteRoles');
+			const site = await getSiteSettings();
+			if (site.maintenance.enabled && !(await getSiteRole(userId))) {
+				req.session.destroy();
+				return res.redirect('/maintenance');
+			}
+		}
 		res.redirect('/workspaces');
 		} catch (prismaError) {
 		console.error('Database error during OAuth login:', prismaError);

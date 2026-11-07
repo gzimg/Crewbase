@@ -21,6 +21,17 @@ export default function PrivacyPage() {
         <li>Your Roblox user ID, username, display name and avatar image, which are public on Roblox.</li>
         <li>Your Crewbase password, stored only as a secure one-way hash. We can’t see your actual password.</li>
         <li>If you choose to add it, your birthday as a day and month only (never the year).</li>
+        <li>
+          Optional workspace profile details you choose to add, such as your timezone, Discord ID, an email address, an intro
+          message and a favourite song.
+        </li>
+      </ul>
+
+      <h3>Reports and support</h3>
+      <ul>
+        <li>Reports you send to Crewbase site staff, and requests like account deletion.</li>
+        <li>Private notes site staff keep about accounts when handling reports or rule-breaking.</li>
+        <li>A log of actions site staff and admins take, such as suspensions.</li>
       </ul>
 
       <h3>Information inside workspaces</h3>
@@ -90,8 +101,9 @@ export default function PrivacyPage() {
 
       <h2>6. Your choices and rights</h2>
       <p>
-        You can ask to see, correct, export or delete your personal information by emailing <ContactEmail />. We’ll respond
-        within 30 days. Some information belongs to a workspace’s records, like warnings or moderation cases. For those, we may
+        You can download a copy of your data at any time from <Link href="/account">your account page</Link>, and request account
+        deletion there too. You can also ask to see, correct, export or delete your personal information by emailing{" "}
+        <ContactEmail />. We’ll respond within 30 days. Some information belongs to a workspace’s records, like warnings or moderation cases. For those, we may
         need to work with the workspace’s owner, and we may keep information when we need it to keep Crewbase safe or to meet a
         legal obligation.
       </p>

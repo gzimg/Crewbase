@@ -121,6 +121,11 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
       });
     }
 
+    const { getSiteSettings } = await import("@/utils/siteSettings");
+    if (!(await getSiteSettings()).registrations.open) {
+      return res.status(403).json({ success: false, error: "New sign-ups are closed right now.", code: 403 });
+    }
+
     if (req.body.acceptedTerms !== true) {
       return res.status(400).json({
         success: false,

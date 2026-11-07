@@ -107,6 +107,9 @@ const Login: NextPage = () => {
         case 'oauth_failed':
           message = 'OAuth authentication failed. Please check your credentials and try again.';
           break;
+        case 'registrations_closed':
+          message = 'New sign-ups are closed right now. Please try again later.';
+          break;
         case 'account_suspended':
           message = 'Your account has been suspended. Please contact support for an appeal.';
           isSuspended = true;

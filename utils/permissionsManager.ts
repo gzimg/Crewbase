@@ -1,3 +1,5 @@
+import { getWorkspaceLock, isUserSuspended } from "@/utils/siteSettings";
+import { getSiteRole } from "@/utils/siteRoles";
 import prisma from "./database";
 import type {
   NextApiRequest,
@@ -122,6 +124,14 @@ export function withPermissionCheck(
         .status(400)
         .json({ success: false, error: "Missing required fields" });
     const workspaceId = parseInt(req.query.id as string);
+    // Site-wide checks: suspended accounts and workspaces locked by Crewbase staff
+    if (await isUserSuspended(uid))
+      return res.status(403).json({ success: false, error: "account_suspended" });
+    if (await getWorkspaceLock(workspaceId)) {
+      const siteRole = await getSiteRole(uid);
+      if (!siteRole)
+        return res.status(423).json({ success: false, error: "workspace_locked" });
+    }
     const cacheKey = `permissions_${uid}_${workspaceId}`;
     const now = Date.now();
     const cached = permissionsCache.get(cacheKey);
@@ -242,6 +252,13 @@ export function withPermissionCheckSsr(
         },
       };
     const workspaceId = parseInt(query.id as string);
+    if (await isUserSuspended(uid))
+      return { redirect: { destination: "/login?error=account_suspended", permanent: false } };
+    if (await getWorkspaceLock(workspaceId)) {
+      const siteRole = await getSiteRole(uid);
+      if (!siteRole)
+        return { redirect: { destination: "/workspaces?locked=1", permanent: false } };
+    }
     const cacheKey = `permissions_${uid}_${workspaceId}`;
     const now = Date.now();
     const cached = permissionsCache.get(cacheKey);

@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { withSessionRoute } from "@/lib/withSession";
 import prisma from "@/utils/database";
 import { requireSiteRole, getSiteRole, logSiteAction } from "@/utils/siteRoles";
+import { forgetSuspension } from "@/utils/siteSettings";
 
 /**
  * POST   { reason } suspends a user from the whole site.
@@ -38,6 +39,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       where: { userid: BigInt(targetId) },
       data: { banned: true, bannedAt: new Date(), bannedBy: caller.userId, banReason: reason },
     });
+    forgetSuspension(targetId);
     await logSiteAction({ actorId: caller.userId, action: "suspend_user", targetId, detail: reason });
     return res.status(200).json({ success: true });
   }
@@ -46,6 +48,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     where: { userid: BigInt(targetId) },
     data: { banned: false, bannedAt: null, bannedBy: null, banReason: null },
   });
+  forgetSuspension(targetId);
   await logSiteAction({ actorId: caller.userId, action: "unsuspend_user", targetId });
   return res.status(200).json({ success: true });
 }

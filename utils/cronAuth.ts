@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { timingSafeEqual } from "crypto";
+import { recordCronRun } from "@/utils/siteSettings";
 
 /**
  * Shared auth check for /api/cron/* routes.
@@ -35,5 +36,8 @@ export function checkCronRequest(req: NextApiRequest, res: NextApiResponse): boo
     return false;
   }
 
+  // Remember when each job last ran, for the site admin health page
+  const name = (req.url || "").split("?")[0].split("/").pop() || "unknown";
+  void recordCronRun(name);
   return true;
 }

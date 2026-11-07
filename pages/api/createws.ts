@@ -1,4 +1,5 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
+import { encryptSecret } from "@/utils/secrets";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { fetchworkspace, getConfig, setConfig } from "@/utils/configEngine";
 import prisma from "@/utils/database";
@@ -249,7 +250,7 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
 
       if (robloxApiKey && typeof robloxApiKey === "string") {
         await tx.workspaceExternalServices.create({
-          data: { workspaceGroupId: groupId, robloxApiKey },
+          data: { workspaceGroupId: groupId, robloxApiKey: encryptSecret(robloxApiKey) },
         });
       }
 

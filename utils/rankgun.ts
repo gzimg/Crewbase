@@ -122,12 +122,14 @@ export async function getRankGun(
       },
     });
 
-    if (!settings?.rankingToken || !settings?.rankingWorkspaceId) {
+    const { decryptSecret } = await import("@/utils/secrets");
+    const token = decryptSecret(settings?.rankingToken);
+    if (!token || !settings?.rankingWorkspaceId) {
       return null;
     }
 
     return {
-      apiKey: settings.rankingToken,
+      apiKey: token,
       workspaceId: String(settings.rankingWorkspaceId),
     };
   } catch (error) {
@@ -212,18 +214,22 @@ export async function getRankingProvider(
 
     if (!settings?.rankingProvider) return null;
 
+    const { decryptSecret } = await import("@/utils/secrets");
+
     if (settings.rankingProvider === "rankgun") {
-      if (!settings.rankingToken || !settings.rankingWorkspaceId) return null;
+      const token = decryptSecret(settings.rankingToken);
+      if (!token || !settings.rankingWorkspaceId) return null;
       return new RankGunProvider({
-        apiKey: settings.rankingToken,
+        apiKey: token,
         workspaceId: String(settings.rankingWorkspaceId),
       }, Number(workspaceGroupId));
     }
 
     if (settings.rankingProvider === "roblox_cloud") {
-      if (!settings.robloxApiKey) return null;
+      const robloxKey = decryptSecret(settings.robloxApiKey);
+      if (!robloxKey) return null;
       const { RobloxCloudRankingAPI } = await import("@/utils/openCloud");
-      const api = new RobloxCloudRankingAPI(settings.robloxApiKey, Number(workspaceGroupId));
+      const api = new RobloxCloudRankingAPI(robloxKey, Number(workspaceGroupId));
       return new RobloxCloudProvider(api);
     }
 

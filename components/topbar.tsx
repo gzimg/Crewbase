@@ -3,7 +3,8 @@ import { loginState, workspacestate, createWorkspaceModalState } from "@/state";
 import { useRecoilState } from "recoil";
 import { Menu, Transition, Listbox } from "@headlessui/react";
 import { useRouter } from "next/router";
-import { IconLogout, IconChevronDown, IconPlus, IconCheck, IconHome, IconHeadset, IconShieldLock } from "@tabler/icons-react";
+import { IconLogout, IconChevronDown, IconPlus, IconCheck, IconHome, IconHeadset, IconShieldLock, IconUserCircle, IconFlag } from "@tabler/icons-react";
+import AnnouncementBanner from "@/components/announcementbanner";
 import Link from "next/link";
 import axios from "axios";
 import { Fragment } from "react";
@@ -292,6 +293,29 @@ const Topbar: NextPage = () => {
 									<Menu.Item>
 										{({ active }) => (
 											<button
+												onClick={() => router.push("/account")}
+												className={`${active ? 'bg-zinc-100 dark:bg-zinc-700' : ''} group flex w-full items-center rounded-md px-3 py-2 text-sm`}
+											>
+												<IconUserCircle className="mr-2 h-5 w-5 text-zinc-500 dark:text-zinc-400" />
+												<span className="text-zinc-700 dark:text-zinc-200">Your account</span>
+											</button>
+										)}
+									</Menu.Item>
+									<Menu.Item>
+										{({ active }) => (
+											<button
+												onClick={() => router.push(isInWorkspace && router.query.id ? `/report?workspace=${router.query.id}` : "/report")}
+												className={`${active ? 'bg-zinc-100 dark:bg-zinc-700' : ''} group flex w-full items-center rounded-md px-3 py-2 text-sm`}
+											>
+												<IconFlag className="mr-2 h-5 w-5 text-zinc-500 dark:text-zinc-400" />
+												<span className="text-zinc-700 dark:text-zinc-200">Report a problem</span>
+											</button>
+										)}
+									</Menu.Item>
+
+									<Menu.Item>
+										{({ active }) => (
+											<button
 												onClick={logout}
 												className={`${
 													active ? 'bg-zinc-100 dark:bg-zinc-700' : ''
@@ -309,6 +333,7 @@ const Topbar: NextPage = () => {
 					</div>
 				</div>
 			</div>
+			<AnnouncementBanner />
 		</header>
 	);
 };

@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { encryptOrNull, decryptSecret, maskSecret } from "@/utils/secrets";
 import prisma from "@/utils/database";
 import { withPermissionCheck } from "@/utils/permissionsManager";
 import { fetchOpenCloudGroupMembers } from "@/utils/openCloud";
@@ -20,13 +21,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         },
       });
 
-      const hasKey = !!settings?.robloxApiKey;
+      // Secrets are stored encrypted; decrypt them only to test or mask them
+      const robloxKey = decryptSecret(settings?.robloxApiKey);
+      const rankingTokenPlain = decryptSecret(settings?.rankingToken);
+      const hasKey = !!robloxKey;
       let robloxApiKeyValid: boolean | null = null;
 
       // If ?validate=true, actually test the stored key
-      if (req.query.validate === "true" && hasKey && settings?.robloxApiKey) {
+      if (req.query.validate === "true" && robloxKey) {
         try {
-          await fetchOpenCloudGroupMembers(parseInt(workspaceId), settings.robloxApiKey, 1);
+          await fetchOpenCloudGroupMembers(parseInt(workspaceId), robloxKey, 1);
           robloxApiKeyValid = true;
         } catch {
           robloxApiKeyValid = false;
@@ -35,9 +39,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
       return res.status(200).json({
         rankingProvider: settings?.rankingProvider || "",
-        rankingToken: settings?.rankingToken || "",
+        // Never send stored secrets back to the browser in full
+        rankingToken: maskSecret(rankingTokenPlain),
         rankingWorkspaceId: settings?.rankingWorkspaceId || "",
-        robloxApiKey: settings?.robloxApiKey ? "••••••••" + settings.robloxApiKey.slice(-8) : "",
+        robloxApiKey: maskSecret(robloxKey, 8),
         ...(robloxApiKeyValid !== null && { robloxApiKeyValid }),
       });
     } catch (error) {
@@ -74,25 +79,30 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
     }
 
-    const shouldUpdateRobloxKey = robloxApiKey !== undefined && robloxApiKey !== null && !robloxApiKey.startsWith("••••");
+    const shouldUpdateRobloxKey = robloxApiKey !== undefined && robloxApiKey !== null && !String(robloxApiKey).startsWith("••••");
+    // A masked token means "keep the one that's already saved"
+    const keepRankingToken = typeof rankingToken === "string" && rankingToken.startsWith("••••");
 
     try {
       const updateData: any = {
         rankingProvider: rankingProvider || null,
-        rankingToken: rankingToken || null,
         rankingWorkspaceId: rankingWorkspaceId || null,
         updatedAt: new Date(),
       };
       const createData: any = {
         workspaceGroupId: parseInt(workspaceId),
         rankingProvider: rankingProvider || null,
-        rankingToken: rankingToken || null,
         rankingWorkspaceId: rankingWorkspaceId || null,
       };
 
+      if (!keepRankingToken) {
+        updateData.rankingToken = encryptOrNull(rankingToken);
+        createData.rankingToken = encryptOrNull(rankingToken);
+      }
+
       if (shouldUpdateRobloxKey) {
-        updateData.robloxApiKey = robloxApiKey || null;
-        createData.robloxApiKey = robloxApiKey || null;
+        updateData.robloxApiKey = encryptOrNull(robloxApiKey);
+        createData.robloxApiKey = encryptOrNull(robloxApiKey);
       }
 
       await prisma.workspaceExternalServices.upsert({

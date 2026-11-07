@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { withSessionRoute } from "@/lib/withSession";
 import prisma from "@/utils/database";
 import { requireSiteRole } from "@/utils/siteRoles";
+import { getWorkspaceLocks } from "@/utils/siteSettings";
 
 /** Lists every workspace on this instance with its owner and member count. */
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -27,9 +28,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     : [];
   const ownerNames = new Map(owners.map((o) => [o.userid.toString(), o.username]));
 
+  const locks = await getWorkspaceLocks(true);
+
   return res.status(200).json({
     success: true,
     workspaces: workspaces.map((w) => ({
+      lock: locks[w.groupId.toString()] ?? null,
       groupId: w.groupId.toString(),
       groupName: w.groupName,
       groupLogo: w.groupLogo,

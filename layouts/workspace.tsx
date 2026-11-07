@@ -296,7 +296,8 @@ const workspace: LayoutProps = ({ children }) => {
 				const res = await axios.get("/api/workspace/" + router.query.id);
 				setWorkspace(res.data.workspace);
 			} catch (e: any) {
-				router.push("/workspaces");
+				// Locked by Crewbase staff: tell the user why they were sent back
+				router.push(e?.response?.status === 423 ? "/workspaces?locked=1" : "/workspaces");
 			}
 		}
 		if (router.query.id) getworkspace();

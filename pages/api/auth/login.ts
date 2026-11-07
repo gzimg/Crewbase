@@ -279,6 +279,16 @@ export async function handler(
     console.log("Password verified, setting up session...");
     clearLoginAttempts(id);
 
+    // During maintenance, only site staff and admins can log in
+    {
+      const { getSiteSettings } = await import("@/utils/siteSettings");
+      const { getSiteRole } = await import("@/utils/siteRoles");
+      const site = await getSiteSettings();
+      if (site.maintenance.enabled && !(await getSiteRole(id))) {
+        return res.status(503).json({ success: false, error: site.maintenance.message || "Crewbase is down for maintenance." });
+      }
+    }
+
     req.session.userid = id;
     await req.session?.save();
 

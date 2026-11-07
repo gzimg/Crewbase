@@ -19,6 +19,10 @@ export async function handler(
 ) {
 	if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' })
 	if (req.session.userid) return res.status(400).json({ success: false, error: 'Already logged in' })
+	const { getSiteSettings } = await import('@/utils/siteSettings');
+	if (!(await getSiteSettings()).registrations.open) {
+		return res.status(403).json({ success: false, error: 'New sign-ups are closed right now.' })
+	}
 	const { username } = req.body;
 	if (!username) return res.status(400).json({ success: false, error: 'Missing username' })
 	const userid = await getRobloxUserId(username).catch(() => null) as number | undefined;

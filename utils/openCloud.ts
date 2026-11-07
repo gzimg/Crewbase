@@ -186,7 +186,8 @@ export async function getWorkspaceRobloxApiKey(
     select: { robloxApiKey: true },
   });
 
-  return services?.robloxApiKey || null;
+  const { decryptSecret } = await import("./secrets");
+  return decryptSecret(services?.robloxApiKey);
 }
 
 export interface RankingResponse {

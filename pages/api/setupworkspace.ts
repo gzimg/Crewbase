@@ -1,4 +1,5 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
+import { encryptSecret } from "@/utils/secrets";
 import type { NextApiRequest, NextApiResponse } from "next";
 import {
   getUsername,
@@ -306,8 +307,8 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
       try {
         await prisma.workspaceExternalServices.upsert({
           where: { workspaceGroupId: groupIdNumber },
-          update: { robloxApiKey },
-          create: { workspaceGroupId: groupIdNumber, robloxApiKey },
+          update: { robloxApiKey: encryptSecret(robloxApiKey) },
+          create: { workspaceGroupId: groupIdNumber, robloxApiKey: encryptSecret(robloxApiKey) },
         });
       } catch (err) {
         console.error("[setupworkspace] Failed to save Roblox API key:", err);

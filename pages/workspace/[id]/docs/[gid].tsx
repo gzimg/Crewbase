@@ -53,7 +53,8 @@ function marksToHtml(text: string, marks: any[] = []): string {
       case "strike": return `<s>${acc}</s>`;
       case "link": {
         const href = safeHref(mark.attrs?.href || "");
-        return `<a href="${href}" rel="noopener noreferrer">${acc}</a>`;
+        // Escape the link so quotes in it can't break out of the attribute
+        return `<a href="${escapeHtml(href)}" rel="noopener noreferrer">${acc}</a>`;
       }
       default: return acc;
     }
@@ -68,9 +69,13 @@ function nodeToHtml(node: any): string {
   switch (node.type) {
     case "doc": return children;
     case "paragraph": return `<p${style}>${children || "<br>"}</p>`;
-    case "heading": { const l = node.attrs?.level ?? 1; return `<h${l}${style}>${children}</h${l}>`; }
+    case "heading": {
+      // Only allow real heading levels, so the level can't be used to inject HTML
+      const l = Math.min(6, Math.max(1, parseInt(String(node.attrs?.level ?? 1), 10) || 1));
+      return `<h${l}${style}>${children}</h${l}>`;
+    }
     case "bulletList": return `<ul>${children}</ul>`;
-    case "orderedList": return `<ol start="${node.attrs?.start ?? 1}">${children}</ol>`;
+    case "orderedList": return `<ol start="${parseInt(String(node.attrs?.start ?? 1), 10) || 1}">${children}</ol>`;
     case "listItem": return `<li>${children}</li>`;
     case "blockquote": return `<blockquote>${children}</blockquote>`;
     case "codeBlock": return `<pre><code>${children}</code></pre>`;

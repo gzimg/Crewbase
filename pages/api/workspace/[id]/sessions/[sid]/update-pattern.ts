@@ -43,7 +43,8 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
       },
     });
 
-    if (!originalSession) {
+    // Only allow changing sessions that belong to this workspace
+    if (!originalSession || originalSession.sessionType?.workspaceGroupId !== BigInt(req.query.id as string)) {
       return res.status(404).json({ success: false, error: "Session not found" });
     }
 

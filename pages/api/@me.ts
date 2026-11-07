@@ -94,6 +94,15 @@ export async function handler(
 		siteRole = lists.admins.includes(idStr) ? 'admin' : lists.staff.includes(idStr) ? 'staff' : null;
 	}
 
+	// During maintenance, only site staff and admins can use the app
+	{
+		const { getSiteSettings } = await import('@/utils/siteSettings');
+		const site = await getSiteSettings();
+		if (site.maintenance.enabled && !siteRole) {
+			return res.status(503).json({ success: false, error: 'maintenance' } as any);
+		}
+	}
+
 	const user: User = {
 		userId: userId,
 		username,

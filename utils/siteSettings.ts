@@ -1,0 +1,164 @@
+import prisma from "@/utils/database";
+
+/**
+ * Site-wide settings and records for running a Crewbase instance, stored in
+ * the instanceConfig table as JSON (no database migration needed).
+ */
+
+export type SiteSettings = {
+  maintenance: { enabled: boolean; message: string };
+  registrations: { open: boolean };
+  announcement: { enabled: boolean; text: string; tone: "info" | "warning" | "success"; updatedAt: string | null };
+};
+
+export type WorkspaceLock = { by: string; at: string; reason: string };
+
+export type SiteReport = {
+  id: string;
+  category: "user" | "workspace" | "bug" | "content" | "deletion" | "other";
+  status: "open" | "resolved" | "dismissed";
+  reporterId: string;
+  targetUsername?: string;
+  workspaceId?: string;
+  details: string;
+  createdAt: string;
+  handledBy?: string;
+  handledAt?: string;
+  resolution?: string;
+};
+
+export type StaffNote = { id: string; by: string; at: string; text: string };
+
+const DEFAULT_SETTINGS: SiteSettings = {
+  maintenance: { enabled: false, message: "Crewbase is down for maintenance. We’ll be back soon." },
+  registrations: { open: true },
+  announcement: { enabled: false, text: "", tone: "info", updatedAt: null },
+};
+
+async function readJson<T>(key: string, fallback: T): Promise<T> {
+  const row = await prisma.instanceConfig.findUnique({ where: { key } });
+  return (row?.value as unknown as T) ?? fallback;
+}
+
+async function writeJson(key: string, value: unknown): Promise<void> {
+  await prisma.instanceConfig.upsert({
+    where: { key },
+    update: { value: value as any },
+    create: { key, value: value as any },
+  });
+}
+
+/* ---------- Settings (cached briefly, since some are checked on every request) ---------- */
+
+let settingsCache: { value: SiteSettings; at: number } | null = null;
+const SETTINGS_TTL = 15_000;
+
+export async function getSiteSettings(fresh = false): Promise<SiteSettings> {
+  if (!fresh && settingsCache && Date.now() - settingsCache.at < SETTINGS_TTL) return settingsCache.value;
+  const stored = await readJson<Partial<SiteSettings>>("site_settings", {});
+  const value: SiteSettings = {
+    maintenance: { ...DEFAULT_SETTINGS.maintenance, ...(stored.maintenance || {}) },
+    registrations: { ...DEFAULT_SETTINGS.registrations, ...(stored.registrations || {}) },
+    announcement: { ...DEFAULT_SETTINGS.announcement, ...(stored.announcement || {}) },
+  };
+  settingsCache = { value, at: Date.now() };
+  return value;
+}
+
+export async function saveSiteSettings(next: SiteSettings): Promise<void> {
+  await writeJson("site_settings", next);
+  settingsCache = { value: next, at: Date.now() };
+}
+
+/* ---------- Workspace locks ---------- */
+
+let locksCache: { value: Record<string, WorkspaceLock>; at: number } | null = null;
+
+export async function getWorkspaceLocks(fresh = false): Promise<Record<string, WorkspaceLock>> {
+  if (!fresh && locksCache && Date.now() - locksCache.at < SETTINGS_TTL) return locksCache.value;
+  const value = await readJson<Record<string, WorkspaceLock>>("site_workspace_locks", {});
+  locksCache = { value, at: Date.now() };
+  return value;
+}
+
+export async function setWorkspaceLock(groupId: string, lock: WorkspaceLock | null): Promise<void> {
+  const locks = { ...(await getWorkspaceLocks(true)) };
+  if (lock) locks[groupId] = lock;
+  else delete locks[groupId];
+  await writeJson("site_workspace_locks", locks);
+  locksCache = { value: locks, at: Date.now() };
+}
+
+export async function getWorkspaceLock(groupId: number | bigint | string): Promise<WorkspaceLock | null> {
+  const locks = await getWorkspaceLocks();
+  return locks[String(groupId)] ?? null;
+}
+
+/* ---------- Suspension check (cached briefly) ---------- */
+
+const bannedCache = new Map<string, { banned: boolean; at: number }>();
+
+export async function isUserSuspended(userId: number | bigint | string): Promise<boolean> {
+  const id = String(userId);
+  const hit = bannedCache.get(id);
+  if (hit && Date.now() - hit.at < SETTINGS_TTL) return hit.banned;
+  const user = await prisma.user.findUnique({ where: { userid: BigInt(id) }, select: { banned: true } });
+  const banned = !!user?.banned;
+  bannedCache.set(id, { banned, at: Date.now() });
+  if (bannedCache.size > 5000) bannedCache.clear();
+  return banned;
+}
+
+export function forgetSuspension(userId: string): void {
+  bannedCache.delete(userId);
+}
+
+/* ---------- Reports ---------- */
+
+const REPORTS_LIMIT = 1000;
+
+export async function getReports(): Promise<SiteReport[]> {
+  const list = await readJson<SiteReport[]>("site_reports", []);
+  return Array.isArray(list) ? list : [];
+}
+
+export async function saveReports(list: SiteReport[]): Promise<void> {
+  // Keep every open report, then the most recent closed ones up to the limit
+  const open = list.filter((r) => r.status === "open");
+  const closed = list.filter((r) => r.status !== "open");
+  await writeJson("site_reports", [...open, ...closed].slice(0, Math.max(REPORTS_LIMIT, open.length)));
+}
+
+/* ---------- Staff notes on users ---------- */
+
+export async function getStaffNotes(userId: string): Promise<StaffNote[]> {
+  const all = await readJson<Record<string, StaffNote[]>>("site_user_notes", {});
+  return all[userId] ?? [];
+}
+
+export async function saveStaffNotes(userId: string, notes: StaffNote[]): Promise<void> {
+  const all = await readJson<Record<string, StaffNote[]>>("site_user_notes", {});
+  if (notes.length) all[userId] = notes;
+  else delete all[userId];
+  await writeJson("site_user_notes", all);
+}
+
+/* ---------- Scheduled job tracking ---------- */
+
+export async function recordCronRun(name: string): Promise<void> {
+  try {
+    const runs = await readJson<Record<string, string>>("site_cron_runs", {});
+    runs[name] = new Date().toISOString();
+    await writeJson("site_cron_runs", runs);
+  } catch {
+    // Tracking is best-effort and must never break a scheduled job
+  }
+}
+
+export async function getCronRuns(): Promise<Record<string, string>> {
+  return readJson<Record<string, string>>("site_cron_runs", {});
+}
+
+export function newId(): string {
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+}
