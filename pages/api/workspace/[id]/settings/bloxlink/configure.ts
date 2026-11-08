@@ -17,6 +17,14 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
     return res.status(400).json({ success: false, error: 'Missing workspace id' });
   }
 
+  // Bloxlink integration depends on the workspace's Crewbase plan
+  if (req.method === 'POST' || req.method === 'PATCH') {
+    const { workspaceHasFeature, planUpgradeError } = await import('@/utils/plans');
+    if (!(await workspaceHasFeature(String(req.query.id), 'bloxlink'))) {
+      return res.status(403).json(planUpgradeError('Bloxlink integration') as any);
+    }
+  }
+
   if (req.method === 'POST') {
     // Configure new integration
     const { apiKey, discordServerId, notifyPromotion, notifyDemotion, notifyWarning, notifyActivityReview } = req.body;

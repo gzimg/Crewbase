@@ -10,7 +10,8 @@ const faqs: { section: string; items: Faq[] }[] = [
     section: "Getting started",
     items: [
       { q: "What is Crewbase?", tags: "about", a: <>Crewbase is a free home base for Roblox group staff teams. It brings activity tracking, sessions, moderation, promotions, docs and more into one shared workspace.</> },
-      { q: "Is Crewbase free?", tags: "price cost money", a: <>Yes. Crewbase is a free, open-source hobby project. There are no paid plans.</> },
+      { q: "Is Crewbase free?", tags: "price cost money", a: <>Yes. Crewbase is a free, open-source hobby project, and every plan is free.</> },
+      { q: "How do plans work?", tags: "plan upgrade plus pro limits badge", a: <>Every workspace starts on the default plan. Higher plans raise limits and unlock extras like Discord and the API. A workspace admin can request one from the Plan page in their workspace, Crewbase staff can give one, and workspaces can unlock one automatically as they grow. <Link href="/plans">Compare plans</Link>.</> },
       { q: "How do I join my group’s workspace?", tags: "join member invite", a: <>Create a Crewbase account linked to your Roblox username. If your group’s workspace syncs roles from Roblox ranks, it shows up on your <Link href="/workspaces">workspaces page</Link> once your rank has a role. Otherwise, ask your workspace’s admins to add you.</> },
       { q: "How do I set up a workspace for my group?", tags: "create new group", a: <>On your <Link href="/workspaces">workspaces page</Link>, choose to create a workspace and enter your Roblox group ID. If you don’t see that option, <Link href="/report">contact Crewbase staff</Link>.</> },
       { q: "How old do I need to be?", tags: "age 13 kids", a: <>You must be at least 13. If you’re under 18, a parent or guardian should be okay with you using Crewbase. See our <Link href="/terms">Terms of Service</Link>.</> },

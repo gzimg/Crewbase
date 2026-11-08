@@ -23,6 +23,7 @@ const WORKSPACE_PAGES: [string, string, string?][] = [
   ["/moderation", "Moderation", "cases bans evidence"],
   ["/alliances", "Alliances", "allies groups"],
   ["/settings", "Workspace settings", "config roles permissions"],
+  ["/plan", "Plan & usage", "upgrade limits badge request"],
 ];
 
 /**
@@ -80,6 +81,7 @@ export default function CommandPalette() {
       { id: "account", label: "Your account", group: "Go to", href: "/account", keywords: "profile data delete export" },
       { id: "report", label: "Report a problem", group: "Go to", href: "/report", keywords: "bug abuse help" },
       { id: "changelog", label: "What’s new", group: "Go to", href: "/changelog", keywords: "updates changelog" },
+      { id: "plans", label: "Compare plans", group: "Go to", href: "/plans", keywords: "upgrade free" },
       { id: "help", label: "Help center", group: "Go to", href: "/help", keywords: "faq support questions" },
       { id: "status", label: "Site status", group: "Go to", href: "/status", keywords: "down outage" },
       { id: "home", label: "Crewbase homepage", group: "Go to", href: "/" }

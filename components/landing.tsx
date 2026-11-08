@@ -99,6 +99,9 @@ export default function Landing({ mode, displayName, avatar }: LandingProps) {
             <a href="#how" className="hidden h-9 items-center rounded-lg px-3 text-sm text-zinc-300 hover:bg-zinc-700 sm:flex">
               How it works
             </a>
+            <Link href="/plans" className="hidden h-9 items-center rounded-lg px-3 text-sm text-zinc-300 hover:bg-zinc-700 sm:flex">
+              Plans
+            </Link>
             {mode === "loggedIn" ? (
               <Link href="/workspaces" className="flex h-9 items-center gap-2 rounded-lg px-2 text-sm font-medium text-zinc-100 hover:bg-zinc-700">
                 {avatar && <img src={avatar} alt="" aria-hidden="true" className="h-7 w-7 rounded-full bg-zinc-600 object-cover" />}
@@ -263,7 +266,7 @@ export default function Landing({ mode, displayName, avatar }: LandingProps) {
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Good to know.</h2>
           <div className="mt-10 grid gap-4 md:grid-cols-2">
             {[
-              ["Is Crewbase free?", "Yes. It’s a free, open-source hobby project with no paid plans."],
+              ["Is Crewbase free?", "Yes. Every plan is free. Bigger groups can request a higher plan or unlock one as they grow."],
               ["Do my staff need to install anything?", "No. Staff use Crewbase in their browser. Only the game owner adds the activity script to the group’s game."],
               ["Who can see our records?", "Your workspace members, based on the roles you set, plus a small Crewbase staff team for support and safety."],
               ["Is it affiliated with Roblox?", "No. Crewbase is an independent project that works with Roblox groups and games."],
@@ -305,6 +308,7 @@ export default function Landing({ mode, displayName, avatar }: LandingProps) {
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <span className="text-zinc-300">© {new Date().getFullYear()} Crewbase</span>
+            <Link href="/plans" className="hover:text-zinc-300">Plans</Link>
             <Link href="/help" className="hover:text-zinc-300">Help</Link>
             <Link href="/changelog" className="hover:text-zinc-300">What’s new</Link>
             <Link href="/status" className="hover:text-zinc-300">Status</Link>

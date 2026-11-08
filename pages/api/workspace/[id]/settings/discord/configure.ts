@@ -17,6 +17,14 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
+  // Discord integration depends on the workspace's Crewbase plan
+  {
+    const { workspaceHasFeature, planUpgradeError } = await import('@/utils/plans');
+    if (!(await workspaceHasFeature(String(req.query.id), 'discord'))) {
+      return res.status(403).json(planUpgradeError('Discord integration') as any);
+    }
+  }
+
   const workspaceId = parseInt(req.query.id as string);
   if (!workspaceId) {
     return res.status(400).json({ success: false, error: 'Missing workspace id' });

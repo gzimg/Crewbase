@@ -9,11 +9,33 @@
     }
   },
   "crons": [
-    { "path": "/api/cron/update-sessions", "schedule": "*/5 * * * *" },
-    { "path": "/api/cron/close-stale-sessions", "schedule": "*/30 * * * *" },
-    { "path": "/api/cron/reset-activity", "schedule": "5 * * * *" },
-    { "path": "/api/cron/update-roles", "schedule": "20 * * * *" },
-    { "path": "/api/cron/update-users", "schedule": "0 4 * * *" },
-    { "path": "/api/cron/birthdays", "schedule": "0 12 * * *" }
+    {
+      "path": "/api/cron/update-sessions",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/close-stale-sessions",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/reset-activity",
+      "schedule": "5 * * * *"
+    },
+    {
+      "path": "/api/cron/update-roles",
+      "schedule": "20 * * * *"
+    },
+    {
+      "path": "/api/cron/update-users",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/birthdays",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/plans",
+      "schedule": "30 3 * * *"
+    }
   ]
 }

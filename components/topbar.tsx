@@ -5,9 +5,10 @@ import { Menu, Transition, Listbox } from "@headlessui/react";
 import { useRouter } from "next/router";
 import { IconLogout, IconChevronDown, IconPlus, IconCheck, IconHome, IconHeadset, IconShieldLock, IconUserCircle, IconFlag } from "@tabler/icons-react";
 import AnnouncementBanner from "@/components/announcementbanner";
+import { PlanBadge } from "@/components/planbadge";
 import Link from "next/link";
 import axios from "axios";
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
 import ThemeToggle from "./ThemeToggle";
 import VerifiedBadge from "./partners";
 import { usePartners } from "@/hooks/usePartners";
@@ -50,6 +51,18 @@ const Topbar: NextPage = () => {
 	const [, setCreateWorkspaceModal] = useRecoilState(createWorkspaceModalState);
 	const router = useRouter();
 	const isInWorkspace = router.pathname.startsWith('/workspace/');
+	const [workspacePlan, setWorkspacePlan] = useState<{ name: string; color: string } | null>(null);
+	useEffect(() => {
+		const id = router.query.id;
+		if (!isInWorkspace || !id) {
+			setWorkspacePlan(null);
+			return;
+		}
+		axios
+			.get(`/api/workspace/${id}/plan`, { params: { lite: 1 } })
+			.then((r) => setWorkspacePlan({ name: r.data.plan.name, color: r.data.plan.color }))
+			.catch(() => setWorkspacePlan(null));
+	}, [isInWorkspace, router.query.id]);
 	const { partnerIds } = usePartners();
 
 	async function logout() {
@@ -184,6 +197,11 @@ const Topbar: NextPage = () => {
 									</Transition>
 								</div>
 							</Listbox>
+						)}
+						{isInWorkspace && workspacePlan && (
+							<Link href={`/workspace/${router.query.id}/plan`} className="hidden sm:inline-flex" aria-label={`${workspacePlan.name} plan, view details`}>
+								<PlanBadge name={workspacePlan.name} color={workspacePlan.color} />
+							</Link>
 						)}
 					</div>
 

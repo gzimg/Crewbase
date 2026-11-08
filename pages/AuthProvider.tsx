@@ -39,7 +39,7 @@ export default function AuthProvider({
 				console.error('Login check error:', err.response?.data);
 				// The homepage (/) handles logged-out visitors and unfinished setup itself
 				// Pages anyone can view without logging in
-				const isHomePage = ['/', '/terms', '/privacy', '/forgot-password', '/maintenance', '/help', '/status', '/changelog'].includes(Router.pathname);
+				const isHomePage = ['/', '/terms', '/privacy', '/forgot-password', '/maintenance', '/help', '/status', '/changelog', '/plans'].includes(Router.pathname);
 				if (err.response?.data.error === 'maintenance') {
 					if (Router.pathname !== '/maintenance' && Router.pathname !== '/login') Router.push('/maintenance');
 					setLoading(false);

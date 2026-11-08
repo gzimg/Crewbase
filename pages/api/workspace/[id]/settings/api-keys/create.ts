@@ -30,8 +30,15 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
 		const apiKeyCount = await prisma.apiKey.count({
 			where: { workspaceGroupId: workspaceId },
 		})
-		if (apiKeyCount >= 10) {
-			return res.status(400).json({ success: false, error: "Maximum of 10 API keys reached" })
+		// API keys depend on the workspace's Crewbase plan
+		const { getPlanDefinition, planUpgradeError } = await import("@/utils/plans")
+		const { def } = await getPlanDefinition(workspaceId)
+		if (!def.features.includes("api")) {
+			return res.status(403).json(planUpgradeError("The public API") as any)
+		}
+		const keyLimit = Math.min(def.limits.apiKeys, 50)
+		if (apiKeyCount >= keyLimit) {
+			return res.status(400).json({ success: false, error: `This workspace’s ${def.name} plan allows up to ${keyLimit} API key${keyLimit === 1 ? "" : "s"}` })
 		}
 
 		// Generate a secure API key

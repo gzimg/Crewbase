@@ -57,6 +57,26 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         };
       } else {
         const fileBuffer = parseBase64File(fileData);
+
+        // Evidence storage limits depend on the workspace's Crewbase plan
+        {
+          const { getPlanDefinition, getWorkspaceUsage } = await import("@/utils/plans");
+          const { def } = await getPlanDefinition(String(req.query.id));
+          if (fileBuffer.length > def.limits.evidenceFileMb * 1024 * 1024) {
+            return res.status(400).json({
+              success: false,
+              error: `Files can be up to ${def.limits.evidenceFileMb} MB on the ${def.name} plan.`,
+            } as any);
+          }
+          const usage = await getWorkspaceUsage(String(req.query.id));
+          if (usage.evidenceFiles >= def.limits.evidenceFiles) {
+            return res.status(400).json({
+              success: false,
+              error: `This workspace has reached its ${def.name} plan limit of ${def.limits.evidenceFiles} evidence files. Delete old evidence or request a higher plan.`,
+            } as any);
+          }
+        }
+
         const { fileUrl: savedFileUrl, fileName: sanitizedFileName, fileType, fileSize } =
           await saveEvidenceFile(caseId as string, fileName, fileBuffer);
 

@@ -15,6 +15,7 @@ export default function PublicLayout({ title, intro, children }: { title: string
             <span className="text-[15px] font-medium text-zinc-100">Crewbase</span>
           </Link>
           <div className="flex items-center gap-1 text-sm">
+            <Link href="/plans" className="rounded-lg px-3 py-2 text-zinc-300 hover:bg-zinc-700">Plans</Link>
             <Link href="/help" className="rounded-lg px-3 py-2 text-zinc-300 hover:bg-zinc-700">Help</Link>
             <Link href="/changelog" className="hidden rounded-lg px-3 py-2 text-zinc-300 hover:bg-zinc-700 sm:block">What’s new</Link>
             <Link href="/status" className="hidden rounded-lg px-3 py-2 text-zinc-300 hover:bg-zinc-700 sm:block">Status</Link>

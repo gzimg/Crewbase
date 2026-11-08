@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import { useRecoilState } from "recoil";
 import { loginState } from "@/state";
 import SiteShell, { Panel, StatGrid } from "@/components/siteshell";
+import { PlanBadge, CustomBadge } from "@/components/planbadge";
 import {
   Badge, Tabs, inputClass, buttonClass, primaryButtonClass, dangerButtonClass, reportCategoryLabels, timeAgo,
 } from "@/components/sitebits";
@@ -29,7 +30,7 @@ type UserDetail = {
   canExport: boolean;
 };
 
-type Tab = "overview" | "reports" | "users" | "workspaces";
+type Tab = "overview" | "reports" | "plans" | "users" | "workspaces";
 const errorText = (e: any) => e?.response?.data?.error || "Something went wrong";
 
 export default function SiteStaffPage() {
@@ -39,10 +40,12 @@ export default function SiteStaffPage() {
   const [stats, setStats] = useState<{ users: number; workspaces: number; suspended: number; activeSessions: number } | null>(null);
   const [reportCounts, setReportCounts] = useState({ open: 0, resolved: 0, dismissed: 0 });
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [pendingPlans, setPendingPlans] = useState(0);
 
   const loadStats = useCallback(() => {
     axios.get("/api/site/overview").then((r) => setStats(r.data.stats)).catch(() => {});
     axios.get("/api/site/reports", { params: { status: "open" } }).then((r) => setReportCounts(r.data.counts)).catch(() => {});
+    axios.get("/api/site/plans").then((r) => setPendingPlans(r.data.requests.filter((x: any) => x.status === "pending").length)).catch(() => {});
   }, []);
   useEffect(loadStats, [loadStats]);
 
@@ -54,6 +57,7 @@ export default function SiteStaffPage() {
         tabs={[
           { id: "overview", label: "Overview" },
           { id: "reports", label: "Reports", count: reportCounts.open },
+          { id: "plans", label: "Plans & badges", count: pendingPlans },
           { id: "users", label: "Users" },
           { id: "workspaces", label: "Workspaces" },
         ]}
@@ -89,6 +93,7 @@ export default function SiteStaffPage() {
       )}
 
       {tab === "reports" && <ReportsTab onChanged={loadStats} onOpenUser={setSelectedUser} />}
+      {tab === "plans" && <PlansTab onChanged={loadStats} />}
       {tab === "users" && <UsersTab onOpenUser={setSelectedUser} onChanged={loadStats} />}
       {tab === "workspaces" && <WorkspacesTab isAdmin={isAdmin} />}
 
@@ -592,5 +597,226 @@ function WorkspacesTab({ isAdmin }: { isAdmin: boolean }) {
         ))}
       </div>
     </Panel>
+  );
+}
+
+/* ---------------- Plans & badges ---------------- */
+
+type PlanOption = { id: string; name: string; color: string };
+type PlanWorkspace = {
+  groupId: string; groupName: string | null; groupLogo: string | null; members: number;
+  plan: string; source: string; expiresAt: string | null;
+  badges: { id: string; label: string; color: string; description?: string }[];
+};
+type PlanRequestRow = {
+  id: string; groupId: string; groupName: string | null; plan: string; status: string; reason: string;
+  memberCount: number; createdAt: string; requestedByName: string | null; response?: string;
+};
+
+function PlansTab({ onChanged }: { onChanged: () => void }) {
+  const [plans, setPlans] = useState<PlanOption[]>([]);
+  const [workspaces, setWorkspaces] = useState<PlanWorkspace[]>([]);
+  const [requests, setRequests] = useState<PlanRequestRow[]>([]);
+  const [responses, setResponses] = useState<Record<string, string>>({});
+  const [endDates, setEndDates] = useState<Record<string, string>>({});
+  const [query, setQuery] = useState("");
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draft, setDraft] = useState({ plan: "", expiresAt: "", note: "" });
+  const [badge, setBadge] = useState({ label: "", color: "#F28C28", description: "" });
+
+  const load = useCallback(() => {
+    axios
+      .get("/api/site/plans")
+      .then((r) => {
+        setPlans(r.data.plans);
+        setWorkspaces(r.data.workspaces);
+        setRequests(r.data.requests);
+      })
+      .catch((e) => toast.error(errorText(e)));
+  }, []);
+  useEffect(load, [load]);
+
+  const planInfo = (id: string) => plans.find((p) => p.id === id) || { id, name: id, color: "#71717A" };
+
+  const decide = async (id: string, decision: "approve" | "decline") => {
+    try {
+      await axios.post("/api/site/plans/requests", { id, decision, response: responses[id] || "", expiresAt: endDates[id] || undefined });
+      toast.success(decision === "approve" ? "Approved" : "Declined");
+      load();
+      onChanged();
+    } catch (e) {
+      toast.error(errorText(e));
+    }
+  };
+
+  const assign = async (groupId: string) => {
+    try {
+      await axios.post("/api/site/plans", { groupId, plan: draft.plan, expiresAt: draft.expiresAt || undefined, note: draft.note });
+      toast.success("Plan updated");
+      setEditing(null);
+      load();
+    } catch (e) {
+      toast.error(errorText(e));
+    }
+  };
+
+  const addBadge = async (groupId: string) => {
+    try {
+      await axios.post("/api/site/plans/badges", { groupId, ...badge });
+      toast.success("Badge added");
+      setBadge({ label: "", color: "#F28C28", description: "" });
+      load();
+    } catch (e) {
+      toast.error(errorText(e));
+    }
+  };
+  const removeBadge = async (groupId: string, badgeId: string) => {
+    try {
+      await axios.delete("/api/site/plans/badges", { params: { groupId, badgeId } });
+      load();
+    } catch (e) {
+      toast.error(errorText(e));
+    }
+  };
+
+  const pending = requests.filter((r) => r.status === "pending");
+  const q = query.trim().toLowerCase();
+  const shown = workspaces.filter((w) => !q || (w.groupName || "").toLowerCase().includes(q) || w.groupId.includes(q));
+  const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+
+  return (
+    <div className="space-y-6">
+      <Panel title={`Plan requests (${pending.length} waiting)`}>
+        {pending.length === 0 && <p className="text-sm text-zinc-500">No requests waiting.</p>}
+        <div className="space-y-3">
+          {pending.map((r) => (
+            <div key={r.id} className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="font-medium text-zinc-900 dark:text-white">{r.groupName || r.groupId}</span>
+                <span className="text-zinc-500">wants</span>
+                <PlanBadge name={planInfo(r.plan).name} color={planInfo(r.plan).color} />
+                <span className="text-zinc-500">· {r.memberCount} members · by {r.requestedByName || "unknown"} · {timeAgo(r.createdAt)}</span>
+              </div>
+              <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-800 dark:text-zinc-200">{r.reason}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <label htmlFor={`pr-${r.id}`} className="sr-only">Response</label>
+                <input
+                  id={`pr-${r.id}`}
+                  value={responses[r.id] || ""}
+                  onChange={(e) => setResponses({ ...responses, [r.id]: e.target.value })}
+                  placeholder="Message to the workspace (required to decline)"
+                  className={`${inputClass} min-w-[220px] flex-1`}
+                />
+                <label htmlFor={`pe-${r.id}`} className="sr-only">Optional end date</label>
+                <input
+                  id={`pe-${r.id}`}
+                  type="date"
+                  min={tomorrow}
+                  value={endDates[r.id] || ""}
+                  onChange={(e) => setEndDates({ ...endDates, [r.id]: e.target.value })}
+                  title="Optional end date"
+                  className="rounded-lg border border-zinc-300 bg-white px-2 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-white"
+                />
+                <button onClick={() => decide(r.id, "approve")} className={primaryButtonClass}>Approve</button>
+                <button onClick={() => decide(r.id, "decline")} className={buttonClass}>Decline</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      <Panel title="Workspace plans and badges">
+        <label htmlFor="plan-ws-search" className="sr-only">Search workspaces</label>
+        <input id="plan-ws-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search workspaces" className={inputClass} />
+        <div className="mt-4 divide-y divide-zinc-200 dark:divide-zinc-700">
+          {shown.map((w) => {
+            const info = planInfo(w.plan);
+            const isOpen = editing === w.groupId;
+            return (
+              <div key={w.groupId} className="py-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <img src={w.groupLogo || "/default-group-logo.svg"} alt="" className="h-9 w-9 rounded-lg object-cover" />
+                  <div className="min-w-0 flex-1">
+                    <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-zinc-900 dark:text-white">
+                      {w.groupName || w.groupId}
+                      <PlanBadge name={info.name} color={info.color} />
+                      {w.badges.map((b) => <CustomBadge key={b.id} {...b} />)}
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      {w.members} members · {w.source === "default" ? "default plan" : `via ${w.source}`}
+                      {w.expiresAt && ` · ends ${new Date(w.expiresAt).toLocaleDateString()}`}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setEditing(isOpen ? null : w.groupId);
+                      setDraft({ plan: w.plan, expiresAt: "", note: "" });
+                      setBadge({ label: "", color: "#F28C28", description: "" });
+                    }}
+                    className={buttonClass}
+                  >
+                    {isOpen ? "Close" : "Manage"}
+                  </button>
+                </div>
+                {isOpen && (
+                  <div className="mt-3 space-y-4 rounded-lg bg-zinc-50 p-4 dark:bg-zinc-900/60 sm:ml-12">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Plan</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <label htmlFor={`pl-${w.groupId}`} className="sr-only">Plan</label>
+                        <select id={`pl-${w.groupId}`} value={draft.plan} onChange={(e) => setDraft({ ...draft, plan: e.target.value })} className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-white">
+                          {plans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </select>
+                        <label htmlFor={`pd-${w.groupId}`} className="sr-only">Optional end date</label>
+                        <input id={`pd-${w.groupId}`} type="date" min={tomorrow} value={draft.expiresAt} onChange={(e) => setDraft({ ...draft, expiresAt: e.target.value })} title="Optional end date" className="rounded-lg border border-zinc-300 bg-white px-2 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-white" />
+                        <label htmlFor={`pn-${w.groupId}`} className="sr-only">Note</label>
+                        <input id={`pn-${w.groupId}`} value={draft.note} onChange={(e) => setDraft({ ...draft, note: e.target.value })} maxLength={300} placeholder="Internal note (optional)" className={`${inputClass} min-w-[180px] flex-1`} />
+                        <button onClick={() => assign(w.groupId)} className={primaryButtonClass}>Save plan</button>
+                      </div>
+                      <p className="mt-1 text-xs text-zinc-500">Leave the date empty for no end date. When it ends, the workspace goes back to the default plan.</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Custom badges</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {w.badges.length === 0 && <span className="text-sm text-zinc-500">None yet.</span>}
+                        {w.badges.map((b) => (
+                          <span key={b.id} className="inline-flex items-center gap-1">
+                            <CustomBadge {...b} />
+                            <button onClick={() => removeBadge(w.groupId, b.id)} className="text-xs text-zinc-500 underline" aria-label={`Remove ${b.label} badge`}>remove</button>
+                          </span>
+                        ))}
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <label htmlFor={`bl-${w.groupId}`} className="sr-only">Badge name</label>
+                        <input id={`bl-${w.groupId}`} value={badge.label} onChange={(e) => setBadge({ ...badge, label: e.target.value })} maxLength={24} placeholder="e.g. Verified, Partner" className={`${inputClass} w-44`} />
+                        <label htmlFor={`bc-${w.groupId}`} className="sr-only">Badge colour</label>
+                        <input id={`bc-${w.groupId}`} type="color" value={badge.color} onChange={(e) => setBadge({ ...badge, color: e.target.value })} className="h-9 w-12 cursor-pointer rounded border border-zinc-300 dark:border-zinc-600" />
+                        <label htmlFor={`bd-${w.groupId}`} className="sr-only">Badge description</label>
+                        <input id={`bd-${w.groupId}`} value={badge.description} onChange={(e) => setBadge({ ...badge, description: e.target.value })} maxLength={140} placeholder="Tooltip (optional)" className={`${inputClass} min-w-[160px] flex-1`} />
+                        <button disabled={!badge.label.trim()} onClick={() => addBadge(w.groupId)} className={primaryButtonClass}>Add badge</button>
+                        {badge.label && <CustomBadge label={badge.label} color={badge.color} />}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Panel>
+
+      {requests.some((r) => r.status !== "pending") && (
+        <Panel title="Recent decisions">
+          <ul className="divide-y divide-zinc-200 dark:divide-zinc-700">
+            {requests.filter((r) => r.status !== "pending").slice(0, 20).map((r) => (
+              <li key={r.id} className="py-2 text-sm text-zinc-700 dark:text-zinc-300">
+                <strong>{r.groupName || r.groupId}</strong> → {planInfo(r.plan).name} · <span className="capitalize">{r.status}</span>
+                {r.response && <span className="text-zinc-500"> · “{r.response}”</span>}
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+    </div>
   );
 }

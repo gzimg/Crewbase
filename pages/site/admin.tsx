@@ -3,6 +3,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import SiteShell, { Panel } from "@/components/siteshell";
 import { Badge, Tabs, inputClass, buttonClass, primaryButtonClass, timeAgo } from "@/components/sitebits";
+import { PlanBadge } from "@/components/planbadge";
 
 type RoleUser = { userId: string; username: string | null; picture: string | null; isOwner: boolean };
 type AuditEntry = { at: string; actorId: string; actorName: string | null; action: string; targetId?: string; targetName: string | null; detail?: string };
@@ -16,7 +17,7 @@ type Health = {
   plainSecrets: number;
   cron: { name: string; every: string; lastRun: string | null; ok: boolean }[];
 };
-type Tab = "team" | "settings" | "changelog" | "health" | "audit";
+type Tab = "team" | "settings" | "plans" | "changelog" | "health" | "audit";
 
 const errorText = (e: any) => e?.response?.data?.error || "Something went wrong";
 
@@ -31,6 +32,12 @@ const actionLabels: Record<string, string> = {
   unlock_workspace: "unlocked a workspace",
   encrypt_secrets: "encrypted stored keys",
   publish_changelog: "published an update",
+  update_plan_settings: "changed plan settings",
+  set_workspace_plan: "set a workspace plan",
+  plan_request_approved: "approved a plan request",
+  plan_request_declined: "declined a plan request",
+  add_workspace_badge: "added a badge",
+  remove_workspace_badge: "removed a badge",
   delete_changelog: "deleted an update",
   add_staff_note: "added a staff note on",
   delete_staff_note: "deleted a staff note on",
@@ -50,6 +57,7 @@ export default function SiteAdminPage() {
         tabs={[
           { id: "team", label: "Team" },
           { id: "settings", label: "Site settings" },
+          { id: "plans", label: "Plans" },
           { id: "changelog", label: "What’s new" },
           { id: "health", label: "Health" },
           { id: "audit", label: "Audit log" },
@@ -57,6 +65,7 @@ export default function SiteAdminPage() {
       />
       {tab === "team" && <TeamTab />}
       {tab === "settings" && <SettingsTab />}
+      {tab === "plans" && <PlanSettingsTab />}
       {tab === "changelog" && <ChangelogTab />}
       {tab === "health" && <HealthTab />}
       {tab === "audit" && <AuditTab />}
@@ -442,6 +451,151 @@ function ChangelogTab() {
           </ul>
         )}
       </Panel>
+    </div>
+  );
+}
+
+/* ---------------- Plans ---------------- */
+
+type PlanDef = {
+  name: string; tagline: string; color: string;
+  limits: { members: number; evidenceFiles: number; evidenceFileMb: number; apiKeys: number };
+  features: string[];
+};
+type PlanCfg = {
+  defaultPlan: "starter" | "plus" | "pro";
+  plans: Record<"starter" | "plus" | "pro", PlanDef>;
+  auto: { enabled: boolean; toPlan: "starter" | "plus" | "pro"; minMembers: number; minAgeDays: number };
+  requests: { open: boolean };
+};
+const PLAN_IDS = ["starter", "plus", "pro"] as const;
+
+function PlanSettingsTab() {
+  const [cfg, setCfg] = useState<PlanCfg | null>(null);
+  const [featureLabels, setFeatureLabels] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    axios
+      .get("/api/site/plans/config")
+      .then((r) => {
+        setCfg(r.data.config);
+        setFeatureLabels(r.data.featureLabels);
+      })
+      .catch((e) => toast.error(errorText(e)));
+  }, []);
+
+  if (!cfg) return <p className="text-sm text-zinc-500">Loading…</p>;
+
+  const updatePlan = (id: (typeof PLAN_IDS)[number], patch: Partial<PlanDef>) =>
+    setCfg({ ...cfg, plans: { ...cfg.plans, [id]: { ...cfg.plans[id], ...patch } } });
+  const updateLimit = (id: (typeof PLAN_IDS)[number], key: keyof PlanDef["limits"], value: string) =>
+    updatePlan(id, { limits: { ...cfg.plans[id].limits, [key]: Number(value) } });
+  const toggleFeature = (id: (typeof PLAN_IDS)[number], f: string) => {
+    const has = cfg.plans[id].features.includes(f);
+    updatePlan(id, { features: has ? cfg.plans[id].features.filter((x) => x !== f) : [...cfg.plans[id].features, f] });
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const r = await axios.post("/api/site/plans/config", cfg);
+      setCfg(r.data.config);
+      toast.success("Plan settings saved");
+    } catch (e) {
+      toast.error(errorText(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const num = "w-full rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-white";
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 lg:grid-cols-3">
+        {PLAN_IDS.map((id) => {
+          const p = cfg.plans[id];
+          return (
+            <Panel key={id} title={id === cfg.defaultPlan ? `${p.name} (default)` : p.name}>
+              <div className="space-y-3 text-sm">
+                <PlanBadge name={p.name} color={p.color} size="md" />
+                <div className="flex gap-2">
+                  <label className="flex-1">
+                    <span className="text-xs text-zinc-500">Name</span>
+                    <input value={p.name} maxLength={20} onChange={(e) => updatePlan(id, { name: e.target.value })} className={num} />
+                  </label>
+                  <label>
+                    <span className="text-xs text-zinc-500">Colour</span>
+                    <input type="color" value={p.color} onChange={(e) => updatePlan(id, { color: e.target.value })} className="block h-[34px] w-12 cursor-pointer rounded border border-zinc-300 dark:border-zinc-600" />
+                  </label>
+                </div>
+                <label className="block">
+                  <span className="text-xs text-zinc-500">Tagline</span>
+                  <input value={p.tagline} maxLength={120} onChange={(e) => updatePlan(id, { tagline: e.target.value })} className={num} />
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <label><span className="text-xs text-zinc-500">Members (soft)</span><input type="number" min={1} value={p.limits.members} onChange={(e) => updateLimit(id, "members", e.target.value)} className={num} /></label>
+                  <label><span className="text-xs text-zinc-500">Evidence files</span><input type="number" min={0} value={p.limits.evidenceFiles} onChange={(e) => updateLimit(id, "evidenceFiles", e.target.value)} className={num} /></label>
+                  <label><span className="text-xs text-zinc-500">Max file (MB)</span><input type="number" min={1} max={25} value={p.limits.evidenceFileMb} onChange={(e) => updateLimit(id, "evidenceFileMb", e.target.value)} className={num} /></label>
+                  <label><span className="text-xs text-zinc-500">API keys</span><input type="number" min={0} max={50} value={p.limits.apiKeys} onChange={(e) => updateLimit(id, "apiKeys", e.target.value)} className={num} /></label>
+                </div>
+                <fieldset>
+                  <legend className="text-xs text-zinc-500">Included</legend>
+                  <div className="mt-1 space-y-1">
+                    {Object.entries(featureLabels).map(([f, label]) => (
+                      <label key={f} className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
+                        <input type="checkbox" checked={p.features.includes(f)} onChange={() => toggleFeature(id, f)} className="h-4 w-4 rounded" />
+                        {label}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              </div>
+            </Panel>
+          );
+        })}
+      </div>
+
+      <Panel title="How workspaces get plans">
+        <div className="grid gap-4 text-sm md:grid-cols-3">
+          <label className="block">
+            <span className="text-xs text-zinc-500">Default plan for new workspaces</span>
+            <select value={cfg.defaultPlan} onChange={(e) => setCfg({ ...cfg, defaultPlan: e.target.value as any })} className={num}>
+              {PLAN_IDS.map((id) => <option key={id} value={id}>{cfg.plans[id].name}</option>)}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 pt-5 text-zinc-700 dark:text-zinc-300">
+            <input type="checkbox" checked={cfg.requests.open} onChange={(e) => setCfg({ ...cfg, requests: { open: e.target.checked } })} className="h-4 w-4 rounded" />
+            Workspaces can request a higher plan
+          </label>
+          <label className="flex items-center gap-2 pt-5 text-zinc-700 dark:text-zinc-300">
+            <input type="checkbox" checked={cfg.auto.enabled} onChange={(e) => setCfg({ ...cfg, auto: { ...cfg.auto, enabled: e.target.checked } })} className="h-4 w-4 rounded" />
+            Automatic upgrades
+          </label>
+        </div>
+        {cfg.auto.enabled && (
+          <div className="mt-4 grid gap-4 text-sm md:grid-cols-3">
+            <label className="block">
+              <span className="text-xs text-zinc-500">Upgrade to</span>
+              <select value={cfg.auto.toPlan} onChange={(e) => setCfg({ ...cfg, auto: { ...cfg.auto, toPlan: e.target.value as any } })} className={num}>
+                {PLAN_IDS.map((id) => <option key={id} value={id}>{cfg.plans[id].name}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-xs text-zinc-500">Once they have at least this many members</span>
+              <input type="number" min={1} value={cfg.auto.minMembers} onChange={(e) => setCfg({ ...cfg, auto: { ...cfg.auto, minMembers: Number(e.target.value) } })} className={num} />
+            </label>
+            <label className="block">
+              <span className="text-xs text-zinc-500">And have been on Crewbase this many days</span>
+              <input type="number" min={0} value={cfg.auto.minAgeDays} onChange={(e) => setCfg({ ...cfg, auto: { ...cfg.auto, minAgeDays: Number(e.target.value) } })} className={num} />
+            </label>
+          </div>
+        )}
+        <p className="mt-3 text-xs text-zinc-500">The automatic check runs once a day. It only ever moves workspaces up, never down.</p>
+      </Panel>
+
+      <button disabled={saving} onClick={save} className={`${primaryButtonClass} h-10 px-5`}>{saving ? "Saving…" : "Save plan settings"}</button>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { withSessionRoute } from "@/lib/withSession";
 import prisma from "@/utils/database";
 import { requireSiteRole } from "@/utils/siteRoles";
 import { getReports } from "@/utils/siteSettings";
+import { getAllWorkspacePlans, getPlanConfig } from "@/utils/plans";
 
 /** The report queue for site staff. ?status=open|resolved|dismissed|all */
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -30,10 +31,33 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     : [];
   const wsNames = new Map(workspaces.map((w) => [w.groupId.toString(), w.groupName]));
 
+  // Priority support: reports tied to a workspace whose plan includes it go first
+  const [plans, config] = await Promise.all([getAllWorkspacePlans(), getPlanConfig()]);
+  const hasPriority = (groupId: string) => {
+    const p = plans[groupId];
+    const active = p && (!p.expiresAt || new Date(p.expiresAt).getTime() > Date.now());
+    const planId = active ? p.plan : config.defaultPlan;
+    return config.plans[planId].features.includes("priority_support");
+  };
+  const reporterIds = Array.from(new Set(list.map((r) => r.reporterId)));
+  const memberships = reporterIds.length
+    ? await prisma.workspaceMember.findMany({
+        where: { userId: { in: reporterIds.map((id) => BigInt(id)) } },
+        select: { userId: true, workspaceGroupId: true },
+      })
+    : [];
+  const priorityReporters = new Set(
+    memberships.filter((m) => hasPriority(m.workspaceGroupId.toString())).map((m) => m.userId.toString())
+  );
+  const isPriority = (r: (typeof list)[number]) =>
+    (r.workspaceId ? hasPriority(r.workspaceId) : false) || priorityReporters.has(r.reporterId);
+  list.sort((a, b) => Number(isPriority(b)) - Number(isPriority(a)));
+
   return res.status(200).json({
     success: true,
     counts,
     reports: list.map((r) => ({
+      priority: isPriority(r),
       ...r,
       reporterName: names.get(r.reporterId) ?? null,
       handledByName: r.handledBy ? names.get(r.handledBy) ?? null : null,
