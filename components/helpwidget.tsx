@@ -162,7 +162,7 @@ const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" 
                           </div>
                         </div>
                         <div className="space-y-1">
-                          <a href="https://docs.firefli.net" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-zinc-700 dark:text-zinc-200">
+                          <a href="/help" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-zinc-700 dark:text-zinc-200">
                             <IconBook className="w-4 h-4 text-zinc-500" />
                             <span className="text-sm">Documentation</span>
                           </a>
@@ -176,7 +176,7 @@ const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" 
                               <span className="text-sm">Report a Bug</span>
                             </button>
                           ) : (
-                            <a href="https://feedback.firefli.net/bugs" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-zinc-700 dark:text-zinc-200">
+                            <a href="/report" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-zinc-700 dark:text-zinc-200">
                               <IconBug className="w-4 h-4 text-zinc-500" />
                               <span className="text-sm">Bug Reports</span>
                             </a>
@@ -253,7 +253,7 @@ const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" 
               </div>
               <div className="space-y-1">
                 <a
-                  href="https://docs.firefli.net"
+                  href="/help"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-zinc-700 dark:text-zinc-200"
@@ -280,7 +280,7 @@ const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" 
                   </button>
                 ) : (
                   <a
-                    href="https://feedback.firefli.net/bugs"
+                    href="/report"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-zinc-700 dark:text-zinc-200"
@@ -627,7 +627,7 @@ const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" 
 
                   <div className="mt-6 flex justify-between items-center">
                     <a
-                      href="https://feedback.firefli.net/changelog"
+                      href="/changelog"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-zinc-600 dark:text-zinc-300 hover:underline"

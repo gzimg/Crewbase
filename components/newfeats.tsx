@@ -52,7 +52,7 @@ const newFeatures = ({ onReady }: NewFeaturesProps = {}) => {
                 type: "changelog",
                 title: `What's New: ${latest.title}`,
                 body: latest.content.slice(0, 200).replace(/[#*`]/g, "").trim() || "A new update is available.",
-                href: "https://feedback.firefli.net/changelog",
+                href: "/changelog",
               }),
             });
           }

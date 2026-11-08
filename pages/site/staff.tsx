@@ -106,6 +106,33 @@ function ReportsTab({ onChanged, onOpenUser }: { onChanged: () => void; onOpenUs
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [replies, setReplies] = useState<{ id: string; title: string; text: string }[]>([]);
+  const [newReply, setNewReply] = useState({ title: "", text: "" });
+  const [showReplies, setShowReplies] = useState(false);
+
+  const loadReplies = useCallback(() => {
+    axios.get("/api/site/saved-replies").then((r) => setReplies(r.data.replies)).catch(() => {});
+  }, []);
+  useEffect(loadReplies, [loadReplies]);
+
+  const addReply = async () => {
+    try {
+      await axios.post("/api/site/saved-replies", newReply);
+      setNewReply({ title: "", text: "" });
+      toast.success("Saved reply added");
+      loadReplies();
+    } catch (e) {
+      toast.error(errorText(e));
+    }
+  };
+  const deleteReply = async (id: string) => {
+    try {
+      await axios.delete("/api/site/saved-replies", { params: { id } });
+      loadReplies();
+    } catch (e) {
+      toast.error(errorText(e));
+    }
+  };
 
   const load = useCallback(() => {
     setLoading(true);
@@ -141,6 +168,31 @@ function ReportsTab({ onChanged, onOpenUser }: { onChanged: () => void; onOpenUs
       }
     >
       {loading && reports.length === 0 && <p className="py-6 text-center text-sm text-zinc-500">Loading…</p>}
+      <div className="mb-4">
+        <button onClick={() => setShowReplies(!showReplies)} className="text-sm font-medium text-zinc-600 underline dark:text-zinc-300">
+          {showReplies ? "Hide saved replies" : `Manage saved replies (${replies.length})`}
+        </button>
+        {showReplies && (
+          <div className="mt-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+            <p className="text-xs text-zinc-500">Reusable resolution notes, shared with all site staff.</p>
+            <ul className="mt-2 space-y-1">
+              {replies.map((x) => (
+                <li key={x.id} className="flex items-center justify-between gap-2 text-sm">
+                  <span className="truncate text-zinc-800 dark:text-zinc-200"><strong>{x.title}</strong> · {x.text}</span>
+                  <button onClick={() => deleteReply(x.id)} className="text-xs underline text-zinc-500">Delete</button>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <label htmlFor="sr-title" className="sr-only">Saved reply title</label>
+              <input id="sr-title" value={newReply.title} onChange={(e) => setNewReply({ ...newReply, title: e.target.value })} maxLength={60} placeholder="Title" className={`${inputClass} w-40`} />
+              <label htmlFor="sr-text" className="sr-only">Saved reply text</label>
+              <input id="sr-text" value={newReply.text} onChange={(e) => setNewReply({ ...newReply, text: e.target.value })} maxLength={1000} placeholder="Reply text" className={`${inputClass} min-w-[200px] flex-1`} />
+              <button disabled={!newReply.title.trim() || !newReply.text.trim()} onClick={addReply} className={primaryButtonClass}>Save</button>
+            </div>
+          </div>
+        )}
+      </div>
       {!loading && reports.length === 0 && <p className="py-6 text-center text-sm text-zinc-500">No reports here. Nice.</p>}
       <div className="space-y-3">
         {reports.map((r) => (
@@ -173,6 +225,23 @@ function ReportsTab({ onChanged, onOpenUser }: { onChanged: () => void; onOpenUs
               </div>
             ) : (
               <div className="mt-3 flex flex-wrap gap-2">
+                {replies.length > 0 && (
+                  <>
+                    <label htmlFor={`saved-${r.id}`} className="sr-only">Use a saved reply</label>
+                    <select
+                      id={`saved-${r.id}`}
+                      value=""
+                      onChange={(e) => {
+                        const reply = replies.find((x) => x.id === e.target.value);
+                        if (reply) setNotes({ ...notes, [r.id]: reply.text });
+                      }}
+                      className="rounded-lg border border-zinc-300 bg-white px-2 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-white"
+                    >
+                      <option value="">Saved reply…</option>
+                      {replies.map((x) => <option key={x.id} value={x.id}>{x.title}</option>)}
+                    </select>
+                  </>
+                )}
                 <label htmlFor={`res-${r.id}`} className="sr-only">Resolution note</label>
                 <input
                   id={`res-${r.id}`}

@@ -24,7 +24,7 @@ export default function Error() {
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.5 }}
-                className="text-7xl font-extrabold text-firefli"
+                className="text-7xl font-extrabold text-[#F28C28]"
                 aria-hidden
               >
                 500
@@ -43,7 +43,7 @@ export default function Error() {
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => Router.push('/')}
-                  className="inline-flex items-center justify-center px-5 py-2 rounded-lg bg-firefli text-white font-medium shadow-sm hover:bg-orange-600 transition"
+                  className="inline-flex items-center justify-center px-5 py-2 rounded-lg bg-[#F28C28] text-white font-medium shadow-sm hover:bg-orange-600 transition"
                   aria-label="Return to home"
                 >
                   Return to home
@@ -60,7 +60,7 @@ export default function Error() {
                 </motion.button>
 
                 <Link
-                  href="https://feedback.firefli.net/bugs"
+                  href="/report"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-zinc-300 hover:text-white border border-zinc-700"

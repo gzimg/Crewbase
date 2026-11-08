@@ -257,6 +257,28 @@ export default function Landing({ mode, displayName, avatar }: LandingProps) {
           </div>
         </section>
 
+        {/* Common questions */}
+        <section id="faq" className="scroll-mt-20 border-t border-zinc-800 py-20">
+          <Label>Questions</Label>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Good to know.</h2>
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
+            {[
+              ["Is Crewbase free?", "Yes. It’s a free, open-source hobby project with no paid plans."],
+              ["Do my staff need to install anything?", "No. Staff use Crewbase in their browser. Only the game owner adds the activity script to the group’s game."],
+              ["Who can see our records?", "Your workspace members, based on the roles you set, plus a small Crewbase staff team for support and safety."],
+              ["Is it affiliated with Roblox?", "No. Crewbase is an independent project that works with Roblox groups and games."],
+            ].map(([q, a]) => (
+              <Card key={q}>
+                <h3 className="font-semibold text-zinc-100">{q}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-400">{a}</p>
+              </Card>
+            ))}
+          </div>
+          <Link href="/help" className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-[#F5A55A] hover:underline">
+            More answers in the help center <IconArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        </section>
+
         {/* Closing call to action */}
         <section className="pb-20">
           <Card className="flex flex-col items-start gap-6 p-8 sm:flex-row sm:items-center sm:justify-between sm:p-10">
@@ -281,8 +303,11 @@ export default function Landing({ mode, displayName, avatar }: LandingProps) {
 
       <footer className="border-t border-zinc-800">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <span className="text-zinc-300">© {new Date().getFullYear()} Crewbase</span>
+            <Link href="/help" className="hover:text-zinc-300">Help</Link>
+            <Link href="/changelog" className="hover:text-zinc-300">What’s new</Link>
+            <Link href="/status" className="hover:text-zinc-300">Status</Link>
             <Link href="/terms" className="hover:text-zinc-300">Terms</Link>
             <Link href="/privacy" className="hover:text-zinc-300">Privacy</Link>
           </div>

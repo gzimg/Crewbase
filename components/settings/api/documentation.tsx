@@ -45,7 +45,7 @@ export const ApiDocumentation = ({ triggerToast }: { triggerToast: any }) => {
               <div className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">
                 Check out the{" "}
                 <a
-                  href="https://docs.firefli.net/api-references/introduction"
+                  href="/help"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary underline hover:opacity-80"

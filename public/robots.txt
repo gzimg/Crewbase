@@ -3,6 +3,9 @@ User-agent: *
 Allow: /$
 Allow: /terms
 Allow: /privacy
+Allow: /help
+Allow: /status
+Allow: /changelog
 Disallow: /api/
 Disallow: /workspace/
 Disallow: /workspaces

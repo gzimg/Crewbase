@@ -361,8 +361,8 @@ const ExternalServices: React.FC<ExternalServicesProps> & { title: string } = ({
 
       <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
         Need a hand? Check our documentation at{' '}
-        <a href="https://docs.firefli.net/workspace/external" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-          docs.firefli.net
+        <a href="/help" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+          the Crewbase help center
         </a>
       </p>
 

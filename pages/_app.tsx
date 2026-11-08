@@ -28,6 +28,7 @@ import {
 import { themeState } from "@/state/theme";
 import AuthProvider from "./AuthProvider";
 import HelpWidget from "@/components/helpwidget";
+import CommandPalette from "@/components/commandpalette";
 import axios from "axios";
 import { loginState } from "@/state";
 import { SWRConfig } from 'swr';
@@ -222,6 +223,7 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout) {
         <ThemeHandler />
         <ColorThemeHandler />
         <HelpWidget />
+        <CommandPalette />
 
         {!loading ? (
           <Layout>

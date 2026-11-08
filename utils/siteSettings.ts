@@ -162,3 +162,36 @@ export async function getCronRuns(): Promise<Record<string, string>> {
 export function newId(): string {
   return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
+
+/* ---------- Changelog ("What's new") ---------- */
+
+export type ChangelogEntry = {
+  id: string;
+  title: string;
+  body: string;
+  tag: "new" | "improved" | "fixed";
+  at: string;
+  by: string;
+};
+
+export async function getChangelog(): Promise<ChangelogEntry[]> {
+  const list = await readJson<ChangelogEntry[]>("site_changelog", []);
+  return Array.isArray(list) ? list : [];
+}
+
+export async function saveChangelog(list: ChangelogEntry[]): Promise<void> {
+  await writeJson("site_changelog", list.slice(0, 200));
+}
+
+/* ---------- Saved replies for site staff ---------- */
+
+export type SavedReply = { id: string; title: string; text: string; by: string };
+
+export async function getSavedReplies(): Promise<SavedReply[]> {
+  const list = await readJson<SavedReply[]>("site_saved_replies", []);
+  return Array.isArray(list) ? list : [];
+}
+
+export async function saveSavedReplies(list: SavedReply[]): Promise<void> {
+  await writeJson("site_saved_replies", list.slice(0, 100));
+}

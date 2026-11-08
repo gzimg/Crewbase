@@ -16,7 +16,7 @@ type Health = {
   plainSecrets: number;
   cron: { name: string; every: string; lastRun: string | null; ok: boolean }[];
 };
-type Tab = "team" | "settings" | "health" | "audit";
+type Tab = "team" | "settings" | "changelog" | "health" | "audit";
 
 const errorText = (e: any) => e?.response?.data?.error || "Something went wrong";
 
@@ -30,6 +30,8 @@ const actionLabels: Record<string, string> = {
   lock_workspace: "locked a workspace",
   unlock_workspace: "unlocked a workspace",
   encrypt_secrets: "encrypted stored keys",
+  publish_changelog: "published an update",
+  delete_changelog: "deleted an update",
   add_staff_note: "added a staff note on",
   delete_staff_note: "deleted a staff note on",
   export_user_data: "exported the data of",
@@ -48,12 +50,14 @@ export default function SiteAdminPage() {
         tabs={[
           { id: "team", label: "Team" },
           { id: "settings", label: "Site settings" },
+          { id: "changelog", label: "What’s new" },
           { id: "health", label: "Health" },
           { id: "audit", label: "Audit log" },
         ]}
       />
       {tab === "team" && <TeamTab />}
       {tab === "settings" && <SettingsTab />}
+      {tab === "changelog" && <ChangelogTab />}
       {tab === "health" && <HealthTab />}
       {tab === "audit" && <AuditTab />}
     </SiteShell>
@@ -356,5 +360,88 @@ function AuditTab() {
         </ul>
       )}
     </Panel>
+  );
+}
+
+/* ---------------- What's new ---------------- */
+
+type ChangeEntry = { id: string; title: string; body: string; tag: "new" | "improved" | "fixed"; at: string };
+
+function ChangelogTab() {
+  const [entries, setEntries] = useState<ChangeEntry[]>([]);
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [tag, setTag] = useState<ChangeEntry["tag"]>("new");
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(() => {
+    axios.get("/api/site/changelog").then((r) => setEntries(r.data.entries)).catch(() => {});
+  }, []);
+  useEffect(load, [load]);
+
+  const publish = async () => {
+    setSaving(true);
+    try {
+      await axios.post("/api/site/changelog", { title, body, tag });
+      toast.success("Update published");
+      setTitle("");
+      setBody("");
+      load();
+    } catch (e) {
+      toast.error(errorText(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async (id: string) => {
+    if (!window.confirm("Delete this update?")) return;
+    try {
+      await axios.delete("/api/site/changelog", { params: { id } });
+      toast.success("Deleted");
+      load();
+    } catch (e) {
+      toast.error(errorText(e));
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Panel title="Post an update" action={<a href="/changelog" target="_blank" rel="noopener noreferrer" className={buttonClass}>View page</a>}>
+        <p className="text-sm text-zinc-600 dark:text-zinc-300">Updates appear on the public What’s new page.</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <label htmlFor="cl-title" className="sr-only">Title</label>
+          <input id="cl-title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="e.g. Quick navigation with Ctrl+K" className={`${inputClass} min-w-[220px] flex-1`} />
+          <label htmlFor="cl-tag" className="sr-only">Type</label>
+          <select id="cl-tag" value={tag} onChange={(e) => setTag(e.target.value as any)} className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-white">
+            <option value="new">New</option>
+            <option value="improved">Improved</option>
+            <option value="fixed">Fixed</option>
+          </select>
+        </div>
+        <label htmlFor="cl-body" className="sr-only">Details</label>
+        <textarea id="cl-body" value={body} onChange={(e) => setBody(e.target.value)} rows={4} maxLength={3000} placeholder="What changed and why it helps (optional)" className={`${inputClass} mt-2`} />
+        <button disabled={saving || !title.trim()} onClick={publish} className={`${primaryButtonClass} mt-3`}>Publish</button>
+      </Panel>
+      <Panel title={`Published (${entries.length})`}>
+        {entries.length === 0 ? (
+          <p className="text-sm text-zinc-500">Nothing yet.</p>
+        ) : (
+          <ul className="divide-y divide-zinc-200 dark:divide-zinc-700">
+            {entries.map((e) => (
+              <li key={e.id} className="flex items-start gap-3 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-zinc-900 dark:text-white">
+                    <Badge tone={e.tag === "new" ? "amber" : e.tag === "improved" ? "blue" : "green"}>{e.tag}</Badge> {e.title}
+                  </p>
+                  <p className="mt-0.5 text-xs text-zinc-500">{new Date(e.at).toLocaleDateString()}</p>
+                </div>
+                <button onClick={() => remove(e.id)} className={buttonClass}>Delete</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Panel>
+    </div>
   );
 }
