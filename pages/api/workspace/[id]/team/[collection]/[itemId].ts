@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { withPermissionCheck } from "@/utils/permissionsManager";
 import { COLLECTIONS, Collection, getItem, saveItem, deleteItem, getMemberContext } from "@/utils/teamStore";
 import { RULES, finalize } from "@/utils/teamRules";
+import { onTeamItemChanged } from "@/utils/teamNotify";
 
 /**
  * PATCH: edit an item. DELETE: remove it.
@@ -28,6 +29,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const result = rule.validate({ ...found.item, ...(req.body || {}) }, ctx, found.item);
     if ("error" in result) return res.status(400).json({ success: false, error: result.error });
     const saved = await saveItem(found.rowId, { ...found.item, ...result.data });
+    await onTeamItemChanged(groupId, collection, found.item, saved);
     return res.status(200).json({ success: true, item: finalize(collection, rule.view(saved, ctx) || saved) });
   }
 
@@ -37,6 +39,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const next = action(found.item, req.body, ctx);
     if ("error" in next && typeof next.error === "string" && !("id" in next)) return res.status(400).json({ success: false, error: next.error });
     const saved = await saveItem(found.rowId, next as any);
+    await onTeamItemChanged(groupId, collection, found.item, saved);
     return res.status(200).json({ success: true, item: finalize(collection, rule.view(saved, ctx) || saved) });
   }
 

@@ -13,6 +13,7 @@ const CRON_JOBS = [
   { name: "update-users", every: "day", maxGapMinutes: 60 * 30 },
   { name: "birthdays", every: "day", maxGapMinutes: 60 * 30 },
   { name: "plans", every: "day", maxGapMinutes: 60 * 30 },
+  { name: "team-reminders", every: "hour", maxGapMinutes: 180 },
 ];
 
 /** Checks that the instance is set up correctly. Admins only. */

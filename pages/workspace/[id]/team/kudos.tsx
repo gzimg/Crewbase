@@ -30,7 +30,11 @@ const Kudos: pageWithLayout = () => {
   };
 
   return (
-    <TeamShell title="Kudos" description="Shout out teammates who went above and beyond.">
+    <TeamShell
+      title="Kudos"
+      description="Shout out teammates who went above and beyond. They’ll get a notification."
+      action={t.me.isManager && <a href={`/api/workspace/${t.id}/team/export?type=kudos`} className={btn}>Export CSV</a>}
+    >
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         <div className="space-y-4">
           <Card className="space-y-2">

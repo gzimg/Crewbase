@@ -19,7 +19,14 @@ const Polls: pageWithLayout = () => {
     <TeamShell
       title="Polls"
       description="Ask the team and see what everyone thinks."
-      action={t.me.isManager && <button onClick={() => setOpen(!open)} className={btnPrimary}>{open ? "Close" : "New poll"}</button>}
+      action={
+        t.me.isManager && (
+          <div className="flex gap-2">
+            <a href={`/api/workspace/${t.id}/team/export?type=polls`} className={btn}>Results CSV</a>
+            <button onClick={() => setOpen(!open)} className={btnPrimary}>{open ? "Close" : "New poll"}</button>
+          </div>
+        )
+      }
     >
       {open && (
         <Card className="mb-6 space-y-2">

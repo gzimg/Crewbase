@@ -84,7 +84,7 @@ const Chat: pageWithLayout = () => {
           <button type="submit" disabled={sending || !text.trim()} className={btnPrimary}>Send</button>
         </form>
       </div>
-      <p className="mt-2 text-xs text-zinc-500">Keep it friendly. The latest 1,000 messages are kept. Managers can remove any message.</p>
+      <p className="mt-2 text-xs text-zinc-500">Type @username to notify someone. Keep it friendly. The latest 1,000 messages are kept, and managers can remove any message.</p>
     </TeamShell>
   );
 };

@@ -28,7 +28,11 @@ const Trainings: pageWithLayout = () => {
   };
 
   return (
-    <TeamShell title="Trainings & certifications" description="Track who’s trained for what, and when certifications need renewing.">
+    <TeamShell
+      title="Trainings & certifications"
+      description="Track who’s trained for what, and when certifications need renewing. Members get a reminder a week before one expires."
+      action={isManager && <a href={`/api/workspace/${certs.id}/team/export?type=certifications`} className={btn}>Export CSV</a>}
+    >
       <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
         <div className="space-y-4">
           <h2 className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Certifications</h2>

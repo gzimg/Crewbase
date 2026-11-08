@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { useRecoilState } from "recoil";
+import { workspacestate } from "@/state";
 
 /** Shared pieces for the Team tabs: navigation, data loading and small UI helpers. */
 
@@ -19,15 +21,18 @@ export const TEAM_TABS = [
 
 export function TeamShell({ title, description, action, children }: { title: string; description: string; action?: React.ReactNode; children: React.ReactNode }) {
   const router = useRouter();
+  const [ws] = useRecoilState(workspacestate);
   const id = router.query.id as string;
   const current = router.pathname.split("/").pop();
+  const isManager = !!ws?.isAdmin || !!ws?.yourPermission?.includes("admin");
+  const tabs = isManager ? [...TEAM_TABS, { slug: "settings", label: "⚙ Settings" }] : TEAM_TABS;
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <Head>
         <title>{`${title} - Team`}</title>
       </Head>
       <nav className="-mx-1 mb-6 flex gap-1 overflow-x-auto pb-1" aria-label="Team sections">
-        {TEAM_TABS.map((t) => (
+        {tabs.map((t) => (
           <Link
             key={t.slug}
             href={`/workspace/${id}/team/${t.slug}`}

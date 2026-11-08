@@ -65,7 +65,8 @@ const Events: pageWithLayout = () => {
             <span className="text-xs text-zinc-500" title={going.map((g) => g.name).join(", ")}>
               {going.length} going{rsvps.filter((r) => r.answer === "maybe").length ? ` · ${rsvps.filter((r) => r.answer === "maybe").length} maybe` : ""}
             </span>
-            {t.me.isManager && <button onClick={() => window.confirm("Delete this event?") && t.remove(e.id)} className={`${btn} ml-auto`}>Delete</button>}
+            <a href={`/api/workspace/${t.id}/team/calendar?event=${e.id}`} className={`${btn} ml-auto`}>Add to calendar</a>
+            {t.me.isManager && <button onClick={() => window.confirm("Delete this event?") && t.remove(e.id)} className={btn}>Delete</button>}
           </div>
         </div>
       </Card>
@@ -91,6 +92,8 @@ const Events: pageWithLayout = () => {
               <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className={`rounded-md px-3 py-1 capitalize ${view === v ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900" : "text-zinc-600 dark:text-zinc-300"}`}>{v}</button>
             ))}
           </div>
+          <a href={`/api/workspace/${t.id}/team/calendar`} className={btn} title="Download all events for Google, Apple or Outlook Calendar">Add all to calendar</a>
+          {t.me.isManager && <a href={`/api/workspace/${t.id}/team/export?type=rsvps`} className={btn}>RSVPs CSV</a>}
           {t.me.isManager && <button onClick={() => setOpen(!open)} className={btnPrimary}>{open ? "Close" : "New event"}</button>}
         </div>
       }

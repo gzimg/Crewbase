@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { withPermissionCheck } from "@/utils/permissionsManager";
 import { COLLECTIONS, Collection, listItems, createItem, getMemberContext } from "@/utils/teamStore";
 import { RULES, finalize } from "@/utils/teamRules";
+import { onTeamItemCreated } from "@/utils/teamNotify";
 
 const lastPost = new Map<string, number>();
 
@@ -35,6 +36,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   if ("error" in result) return res.status(400).json({ success: false, error: result.error });
   const author = collection === "feedback" && result.data.anonymous ? null : { id: ctx.id, name: ctx.name };
   const item = await createItem(groupId, collection, result.data, author);
+  await onTeamItemCreated(groupId, collection, item, ctx.id, ctx.name);
   return res.status(200).json({ success: true, item: finalize(collection, item) });
 }
 
