@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { IconX, IconSpeakerphone } from "@tabler/icons-react";
 
+let publicStatus: { at: number; request: Promise<any> } | null = null;
+
 type Announcement = { text: string; tone: "info" | "warning" | "success"; updatedAt: string | null };
 
 /** Site-wide announcement set by Crewbase site admins. Each new announcement can be dismissed once. */
@@ -10,8 +12,11 @@ export default function AnnouncementBanner() {
   const [hidden, setHidden] = useState(true);
 
   useEffect(() => {
-    axios
-      .get("/api/site/public")
+    // Share one request across page changes for a minute
+    if (!publicStatus || Date.now() - publicStatus.at > 60_000) {
+      publicStatus = { at: Date.now(), request: axios.get("/api/site/public") };
+    }
+    publicStatus.request
       .then((r) => {
         const a: Announcement | null = r.data?.announcement;
         if (!a) return;

@@ -53,38 +53,33 @@ export async function handler(
 	if (!req.session.userid) return res.status(401).json({ success: false, error: 'Not authenticated' });
 	if (!req.query.id) return res.status(400).json({ success: false, error: 'Missing required fields' });
 
-	const workspace = await prisma.workspace.findUnique({
-		where: {
-			groupId: parseInt(req.query.id as string)
-		},
-		include: {
-			roles: true
-		}
-	});
-	if (!workspace) return res.status(404).json({ success: false, error: 'Not found' });
-
-	const user = await prisma.user.findFirst({
-		where: {
-			userid: BigInt(req.session.userid)
-		},
-		include: {
-			roles: {
-				where: {
-					workspaceGroupId: workspace.groupId
-				}
+	// Load the workspace, the user and all settings at the same time (one round trip each)
+	const groupIdNum = parseInt(req.query.id as string);
+	const CONFIG_KEYS = ['theme', 'allies', 'policies', 'recommendations', 'moderation', 'applications', 'home'];
+	const [workspace, user, configRows] = await Promise.all([
+		prisma.workspace.findUnique({
+			where: { groupId: groupIdNum },
+			include: { roles: true },
+		}),
+		prisma.user.findFirst({
+			where: { userid: BigInt(req.session.userid) },
+			include: {
+				roles: { where: { workspaceGroupId: groupIdNum } },
+				workspaceMemberships: { where: { workspaceGroupId: groupIdNum } },
 			},
-			workspaceMemberships: {
-				where: {
-					workspaceGroupId: workspace.groupId
-				}
-			}
-		}
-	});
+		}),
+		prisma.config.findMany({
+			where: { workspaceGroupId: groupIdNum, key: { in: CONFIG_KEYS } },
+			select: { key: true, value: true },
+		}),
+	]);
+	if (!workspace) return res.status(404).json({ success: false, error: 'Not found' });
 	if (!user) return res.status(401).json({ success: false, error: 'Unauthorized' });
+	const cfg = (key: string): any => configRows.find((c) => c.key === key)?.value ?? null;
 
 	const groupName = workspace.groupName || 'Unknown Group';
 	const groupLogo = workspace.groupLogo || '';
-	const themeconfig = await getConfig('theme', workspace.groupId);
+	const themeconfig = cfg('theme');
 	const sessionTypes = ["shift", "training", "event", "other"];
 	const sessionPermissions: Record<string, string> = {};
 	
@@ -179,14 +174,14 @@ export async function handler(
 		roles: workspace.roles.map(r => ({ ...r, workspaceGroupId: Number(r.workspaceGroupId) })),
 		yourRole: user.roles[0].id,
 		settings: {
-			alliesEnabled: (await getConfig('allies', workspace.groupId))?.enabled || false,
-			policiesEnabled: (await getConfig('policies', workspace.groupId))?.enabled || false,
-			recommendationsEnabled: (await getConfig('recommendations', workspace.groupId))?.enabled || false,
-			moderationEnabled: (await getConfig('moderation', workspace.groupId))?.enabled || false,
-			applicationsEnabled: (await getConfig('applications', workspace.groupId))?.enabled || false,
-			widgets: (await getConfig('home', workspace.groupId))?.widgets || [],
-			layout: (await getConfig('home', workspace.groupId))?.layout || undefined,
-			hideEmpty: (await getConfig('home', workspace.groupId))?.hideIfEmpty || []
+			alliesEnabled: cfg('allies')?.enabled || false,
+			policiesEnabled: cfg('policies')?.enabled || false,
+			recommendationsEnabled: cfg('recommendations')?.enabled || false,
+			moderationEnabled: cfg('moderation')?.enabled || false,
+			applicationsEnabled: cfg('applications')?.enabled || false,
+			widgets: cfg('home')?.widgets || [],
+			layout: cfg('home')?.layout || undefined,
+			hideEmpty: cfg('home')?.hideIfEmpty || []
 		}
 	} })
 }

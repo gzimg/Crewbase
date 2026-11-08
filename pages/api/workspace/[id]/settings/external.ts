@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { encryptOrNull, decryptSecret, maskSecret } from "@/utils/secrets";
+
+const keyValidationCache = new Map<string, { valid: boolean; at: number }>();
 import prisma from "@/utils/database";
 import { withPermissionCheck } from "@/utils/permissionsManager";
 import { fetchOpenCloudGroupMembers } from "@/utils/openCloud";
@@ -27,13 +29,21 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       const hasKey = !!robloxKey;
       let robloxApiKeyValid: boolean | null = null;
 
-      // If ?validate=true, actually test the stored key
+      // If ?validate=true, test the stored key against Roblox. Results are remembered for
+      // 30 minutes, because this runs every time an admin opens the workspace.
       if (req.query.validate === "true" && robloxKey) {
-        try {
-          await fetchOpenCloudGroupMembers(parseInt(workspaceId), robloxKey, 1);
-          robloxApiKeyValid = true;
-        } catch {
-          robloxApiKeyValid = false;
+        const cacheKey = `${workspaceId}:${robloxKey.slice(-8)}`;
+        const hit = keyValidationCache.get(cacheKey);
+        if (hit && Date.now() - hit.at < 30 * 60_000) {
+          robloxApiKeyValid = hit.valid;
+        } else {
+          try {
+            await fetchOpenCloudGroupMembers(parseInt(workspaceId), robloxKey, 1);
+            robloxApiKeyValid = true;
+          } catch {
+            robloxApiKeyValid = false;
+          }
+          keyValidationCache.set(cacheKey, { valid: robloxApiKeyValid, at: Date.now() });
         }
       }
 

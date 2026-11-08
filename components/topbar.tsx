@@ -6,6 +6,8 @@ import { useRouter } from "next/router";
 import { IconLogout, IconChevronDown, IconPlus, IconCheck, IconHome, IconHeadset, IconShieldLock, IconUserCircle, IconFlag } from "@tabler/icons-react";
 import AnnouncementBanner from "@/components/announcementbanner";
 import { PlanBadge } from "@/components/planbadge";
+
+const planBadgeCache = new Map<string, { value: { name: string; color: string }; at: number }>();
 import Link from "next/link";
 import axios from "axios";
 import { Fragment, useEffect, useState } from "react";
@@ -58,9 +60,19 @@ const Topbar: NextPage = () => {
 			setWorkspacePlan(null);
 			return;
 		}
+		// Remember each workspace's plan badge for 5 minutes, so page changes don't refetch it
+		const cached = planBadgeCache.get(String(id));
+		if (cached && Date.now() - cached.at < 5 * 60_000) {
+			setWorkspacePlan(cached.value);
+			return;
+		}
 		axios
 			.get(`/api/workspace/${id}/plan`, { params: { lite: 1 } })
-			.then((r) => setWorkspacePlan({ name: r.data.plan.name, color: r.data.plan.color }))
+			.then((r) => {
+				const value = { name: r.data.plan.name, color: r.data.plan.color };
+				planBadgeCache.set(String(id), { value, at: Date.now() });
+				setWorkspacePlan(value);
+			})
 			.catch(() => setWorkspacePlan(null));
 	}, [isInWorkspace, router.query.id]);
 	const { partnerIds } = usePartners();

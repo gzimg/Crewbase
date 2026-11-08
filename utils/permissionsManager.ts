@@ -125,9 +125,11 @@ export function withPermissionCheck(
         .json({ success: false, error: "Missing required fields" });
     const workspaceId = parseInt(req.query.id as string);
     // Site-wide checks: suspended accounts and workspaces locked by Crewbase staff
-    if (await isUserSuspended(uid))
+    // Both checks are cached briefly and run at the same time
+    const [suspended, lock] = await Promise.all([isUserSuspended(uid), getWorkspaceLock(workspaceId)]);
+    if (suspended)
       return res.status(403).json({ success: false, error: "account_suspended" });
-    if (await getWorkspaceLock(workspaceId)) {
+    if (lock) {
       const siteRole = await getSiteRole(uid);
       if (!siteRole)
         return res.status(423).json({ success: false, error: "workspace_locked" });
@@ -252,9 +254,10 @@ export function withPermissionCheckSsr(
         },
       };
     const workspaceId = parseInt(query.id as string);
-    if (await isUserSuspended(uid))
+    const [suspended, lock] = await Promise.all([isUserSuspended(uid), getWorkspaceLock(workspaceId)]);
+    if (suspended)
       return { redirect: { destination: "/login?error=account_suspended", permanent: false } };
-    if (await getWorkspaceLock(workspaceId)) {
+    if (lock) {
       const siteRole = await getSiteRole(uid);
       if (!siteRole)
         return { redirect: { destination: "/workspaces?locked=1", permanent: false } };

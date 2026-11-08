@@ -15,7 +15,7 @@ export default function Document() {
             "font-src 'self' https://fonts.gstatic.com https://fonts.intercomcdn.com; " +
             "img-src 'self' data: https: blob:; " +
             "connect-src 'self' https://m.firefli.net https://events.posthog.com https://app.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://us.i.posthog.com https://us-assets.i.posthog.com https://apis.roblox.com https://thumbnails.roblox.com https://users.roblox.com https://api-iam.intercom.io https://api-iam.eu.intercom.io https://api-iam.au.intercom.io wss://nexus-websocket-a.intercom.io wss://nexus-websocket-b.intercom.io wss://*.intercom.io; " +
-            "media-src 'self' https://audio-ssl.itunes.apple.com https://cdn.freesound.org; " +
+            "media-src 'self' https://*.blob.vercel-storage.com https://audio-ssl.itunes.apple.com https://cdn.freesound.org; " +
             "manifest-src 'self' https://firefli.cloudflareaccess.com; " +
             "frame-src 'self' https://www.youtube.com; " +
             "worker-src 'self' blob:; " +

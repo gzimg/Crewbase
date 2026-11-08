@@ -33,21 +33,25 @@ async function writeIdList(key: string, ids: string[]): Promise<void> {
   });
 }
 
+// Checked on most requests, so keep a short cache (cleared whenever roles change on this server)
+let listsCache: { value: { admins: string[]; staff: string[] }; at: number } | null = null;
+
 export async function getSiteRoleLists(): Promise<{ admins: string[]; staff: string[] }> {
+  if (listsCache && Date.now() - listsCache.at < 15_000) return listsCache.value;
   const [admins, staff] = await Promise.all([readIdList(ADMINS_KEY), readIdList(STAFF_KEY)]);
-  return { admins, staff };
+  listsCache = { value: { admins, staff }, at: Date.now() };
+  return listsCache.value;
 }
 
 export async function getSiteRole(userId: number | bigint | string | undefined | null): Promise<SiteRole> {
   if (userId === undefined || userId === null) return null;
   const id = String(userId);
-  const user = await prisma.user.findUnique({
-    where: { userid: BigInt(id) },
-    select: { isOwner: true, banned: true },
-  });
+  const [user, { admins, staff }] = await Promise.all([
+    prisma.user.findUnique({ where: { userid: BigInt(id) }, select: { isOwner: true, banned: true } }),
+    getSiteRoleLists(),
+  ]);
   if (!user || user.banned) return null;
   if (user.isOwner) return "admin";
-  const { admins, staff } = await getSiteRoleLists();
   if (admins.includes(id)) return "admin";
   if (staff.includes(id)) return "staff";
   return null;
@@ -61,6 +65,7 @@ export async function setSiteRole(userId: string, role: "admin" | "staff" | "non
   if (role === "admin") nextAdmins.push(userId);
   if (role === "staff") nextStaff.push(userId);
   await Promise.all([writeIdList(ADMINS_KEY, nextAdmins), writeIdList(STAFF_KEY, nextStaff)]);
+  listsCache = null;
 }
 
 export type SiteAuditEntry = {
