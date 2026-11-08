@@ -81,7 +81,7 @@ const Topbar: NextPage = () => {
 	}
 
 	return (
-		<header className="sticky top-0 z-[60] backdrop-blur-sm bg-white/80 dark:bg-zinc-800/80">
+		<header className="sticky top-0 z-40 backdrop-blur-sm bg-white/80 dark:bg-zinc-800/80">
 			<div className="w-full px-3">
 				<div className="flex justify-between items-center h-12">
 					<div className="flex items-center space-x-3">

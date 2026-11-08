@@ -428,7 +428,7 @@ function UserDrawer({ userId, onClose, onChanged }: { userId: string; onClose: (
   const u = data?.user;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-[70] flex justify-end bg-black/40" onClick={onClose}>
       <aside
         role="dialog"
         aria-modal="true"
