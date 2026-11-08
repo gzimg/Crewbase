@@ -44,7 +44,8 @@ export default function PrivacyPage() {
         <li>Wall posts, docs, application answers, policy sign-offs and anything else you post.</li>
         <li>
           Team tab content: announcements and whether you confirmed reading them, team chat messages, event RSVPs, training
-          certifications, performance reviews, poll votes, kudos and feedback. Anonymous feedback is saved without your name.
+          certifications, performance reviews, poll votes, kudos, feedback, tasks, ideas and votes, onboarding checklists and
+          Staff of the Month nominations. Anonymous feedback is saved without your name.
         </li>
       </ul>
 

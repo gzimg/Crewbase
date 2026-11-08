@@ -127,6 +127,15 @@ export async function onTeamItemCreated(groupId: number, collection: Collection,
     if (collection === "reviews" && item.shared) {
       tasks.push(notifyUsers(groupId, [item.userId], "📝 You have a new review", `Your ${item.period} review is ready to read.`, `${base}/reviews`));
     }
+    if (collection === "tasks" && item.assigneeId && item.assigneeId !== authorId) {
+      tasks.push(notifyUsers(groupId, [item.assigneeId], `✅ New task: ${item.title}`, `${authorName || "Someone"} assigned you a task${item.due ? `, due ${new Date(item.due).toDateString()}` : ""}.`, `${base}/tasks`));
+    }
+    if (collection === "onboarding") {
+      tasks.push(notifyUsers(groupId, [item.userId], `👋 Your ${item.name} checklist`, `You have ${item.steps.length} step${item.steps.length === 1 ? "" : "s"} to complete.`, `${base}/onboarding`));
+    }
+    if (collection === "nominations") {
+      tasks.push(notifyUsers(groupId, [item.nomineeId], "🌟 You’ve been nominated!", `Someone nominated you for Staff of the Month: “${item.reason}”`, `${base}/spotlight`));
+    }
     if (collection === "chat") {
       // @mentions notify the people mentioned
       const names = Array.from(new Set((String(item.text).match(/@([A-Za-z0-9_]{3,20})/g) || []).map((m) => m.slice(1).toLowerCase())));
@@ -153,6 +162,18 @@ export async function onTeamItemChanged(groupId: number, collection: Collection,
     const base = `/workspace/${groupId}/team`;
     if (collection === "reviews" && !before.shared && after.shared) {
       await notifyUsers(groupId, [after.userId], "📝 You have a new review", `Your ${after.period} review is ready to read.`, `${base}/reviews`);
+    }
+    if (collection === "tasks" && after.assigneeId && after.assigneeId !== before.assigneeId && after.assigneeId !== after.createdBy) {
+      await notifyUsers(groupId, [after.assigneeId], `✅ Task assigned: ${after.title}`, "You’ve been assigned a task.", `${base}/tasks`);
+    }
+    if (collection === "tasks" && after.status === "done" && before.status !== "done" && after.createdBy && after.createdBy !== after.assigneeId) {
+      await notifyUsers(groupId, [after.createdBy], `🎉 Task done: ${after.title}`, `${after.assigneeName || "Someone"} finished it.`, `${base}/tasks`);
+    }
+    if (collection === "ideas" && after.status !== before.status && after.createdBy) {
+      await notifyUsers(groupId, [after.createdBy], `💡 Your idea is now ${after.status}`, after.response || after.title, `${base}/ideas`);
+    }
+    if (collection === "nominations" && after.winner && !before.winner) {
+      await notifyAllMembers(groupId, null, `🏆 Staff of the Month: ${after.nomineeName}`, after.reason, `${base}/spotlight`);
     }
     if (collection === "feedback" && after.reply && after.reply !== before.reply && after.createdBy) {
       await notifyUsers(groupId, [after.createdBy], "💬 Leadership replied to your feedback", after.reply, `${base}/reviews`);

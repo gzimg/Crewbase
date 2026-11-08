@@ -17,6 +17,11 @@ export const TEAM_TABS = [
   { slug: "reviews", label: "Reviews" },
   { slug: "polls", label: "Polls" },
   { slug: "kudos", label: "Kudos" },
+  { slug: "tasks", label: "Tasks" },
+  { slug: "ideas", label: "Ideas" },
+  { slug: "onboarding", label: "Onboarding" },
+  { slug: "spotlight", label: "Staff of the Month" },
+  { slug: "links", label: "Links" },
 ];
 
 export function TeamShell({ title, description, action, children }: { title: string; description: string; action?: React.ReactNode; children: React.ReactNode }) {

@@ -29,6 +29,11 @@ const WORKSPACE_PAGES: [string, string, string?][] = [
   ["/team/reviews", "Reviews & feedback", "performance review feedback"],
   ["/team/polls", "Polls", "vote survey"],
   ["/team/kudos", "Kudos", "shoutout thanks recognition"],
+  ["/team/tasks", "Tasks", "todo board assign"],
+  ["/team/ideas", "Ideas board", "suggestions upvote"],
+  ["/team/onboarding", "Onboarding", "checklist new staff"],
+  ["/team/spotlight", "Staff of the Month", "nominate award vote"],
+  ["/team/links", "Links", "resources bookmarks"],
   ["/settings", "Workspace settings", "config roles permissions"],
   ["/plan", "Plan & usage", "upgrade limits badge request"],
 ];

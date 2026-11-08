@@ -227,6 +227,149 @@ export const RULES: Record<Collection, Rule> = {
       },
     },
   },
+
+  tasks: {
+    canCreate: () => true,
+    canEdit: (item, c) => c.isManager || item.createdBy === c.id || item.assigneeId === c.id,
+    canDelete: authorOrManager,
+    view: everyone,
+    validate: (b) => {
+      const title = str(b.title, 160);
+      if (!title) return { error: "Name the task" };
+      const status = ["todo", "doing", "done"].includes(b.status) ? b.status : "todo";
+      const priority = ["low", "normal", "high"].includes(b.priority) ? b.priority : "normal";
+      const assigneeId = userIdOf(b.assigneeId) || null;
+      return {
+        data: {
+          title,
+          description: str(b.description, 2000),
+          status,
+          priority,
+          assigneeId,
+          assigneeName: assigneeId ? str(b.assigneeName, 50) : null,
+          due: isoDate(b.due),
+        },
+      };
+    },
+    actions: {
+      move: (item, b, c) => {
+        if (!(c.isManager || item.createdBy === c.id || item.assigneeId === c.id)) return { error: "Only the assignee, creator or a manager can move this" };
+        if (!["todo", "doing", "done"].includes(b?.status)) return { error: "Invalid status" };
+        return { ...item, status: b.status, completedAt: b.status === "done" ? new Date().toISOString() : null };
+      },
+      claim: (item, _b, c) => (item.assigneeId ? { error: "Someone already has this task" } : { ...item, assigneeId: c.id, assigneeName: c.name }),
+    },
+  },
+
+  ideas: {
+    canCreate: () => true,
+    canEdit: (item, c) => item.createdBy === c.id && item.status === "open",
+    canDelete: authorOrManager,
+    view: everyone,
+    validate: (b, _c, existing) => {
+      const title = str(b.title, 140);
+      if (!title) return { error: "Give your idea a title" };
+      return { data: { title, details: str(b.details, 2000), status: existing?.status || "open", voters: existing?.voters || [] } };
+    },
+    actions: {
+      upvote: (item, _b, c) => {
+        const voters: string[] = item.voters || [];
+        return { ...item, voters: voters.includes(c.id) ? voters.filter((v) => v !== c.id) : [...voters, c.id] };
+      },
+      status: (item, b, c) => {
+        if (!c.isManager) return { error: "Only managers can change an idea’s status" };
+        if (!["open", "planned", "done", "declined"].includes(b?.status)) return { error: "Invalid status" };
+        return { ...item, status: b.status, response: str(b.response, 500) || item.response || "" };
+      },
+    },
+  },
+
+  checklists: {
+    canCreate: managerOnly,
+    canEdit: managerItem,
+    canDelete: managerItem,
+    view: everyone,
+    validate: (b) => {
+      const name = str(b.name, 80);
+      const steps = Array.isArray(b.steps) ? b.steps.map((s: unknown) => str(s, 200)).filter(Boolean).slice(0, 30) : [];
+      if (!name) return { error: "Name the checklist" };
+      if (!steps.length) return { error: "Add at least one step" };
+      return { data: { name, description: str(b.description, 500), steps } };
+    },
+  },
+
+  onboarding: {
+    canCreate: managerOnly,
+    canEdit: managerItem,
+    canDelete: managerItem,
+    // Members see their own onboarding; managers see everyone’s
+    view: (item, c) => (c.isManager || item.userId === c.id ? item : null),
+    validate: (b) => {
+      const userId = userIdOf(b.userId);
+      const steps = Array.isArray(b.steps)
+        ? b.steps
+            .map((s: any) => (typeof s === "string" ? { text: str(s, 200), done: false } : { text: str(s?.text, 200), done: bool(s?.done), doneAt: s?.doneAt || null }))
+            .filter((s: any) => s.text)
+            .slice(0, 30)
+        : [];
+      if (!userId) return { error: "Pick a member" };
+      if (!steps.length) return { error: "The checklist has no steps" };
+      return { data: { userId, username: str(b.username, 50), name: str(b.name, 80) || "Onboarding", steps, due: isoDate(b.due) } };
+    },
+    actions: {
+      toggle: (item, b, c) => {
+        if (!(c.isManager || item.userId === c.id)) return { error: "This isn’t your checklist" };
+        const i = Number(b?.step);
+        if (!Number.isInteger(i) || i < 0 || i >= item.steps.length) return { error: "Invalid step" };
+        const steps = item.steps.map((s: any, j: number) => (j === i ? { ...s, done: !s.done, doneAt: !s.done ? new Date().toISOString() : null } : s));
+        const complete = steps.every((s: any) => s.done);
+        return { ...item, steps, completedAt: complete ? item.completedAt || new Date().toISOString() : null };
+      },
+    },
+  },
+
+  links: {
+    canCreate: managerOnly,
+    canEdit: managerItem,
+    canDelete: managerItem,
+    view: everyone,
+    validate: (b) => {
+      const title = str(b.title, 100);
+      const url = str(b.url, 500);
+      if (!title) return { error: "Add a title" };
+      try {
+        const parsed = new URL(url);
+        if (!["http:", "https:"].includes(parsed.protocol)) throw new Error();
+      } catch {
+        return { error: "Add a full link starting with https://" };
+      }
+      return { data: { title, url, description: str(b.description, 300), category: str(b.category, 40) || "General", pinned: bool(b.pinned) } };
+    },
+  },
+
+  nominations: {
+    canCreate: () => true,
+    canEdit: () => false,
+    canDelete: authorOrManager,
+    view: everyone,
+    validate: (b, c) => {
+      const nomineeId = userIdOf(b.nomineeId);
+      if (!nomineeId) return { error: "Pick who you’re nominating" };
+      if (nomineeId === c.id) return { error: "You can’t nominate yourself" };
+      const reason = str(b.reason, 600);
+      if (reason.length < 10) return { error: "Tell us why (at least 10 characters)" };
+      const month = new Date().toISOString().slice(0, 7);
+      return { data: { nomineeId, nomineeName: str(b.nomineeName, 50), reason, month, voters: [], winner: false } };
+    },
+    actions: {
+      upvote: (item, _b, c) => {
+        if (item.month !== new Date().toISOString().slice(0, 7)) return { error: "Voting for that month has closed" };
+        const voters: string[] = item.voters || [];
+        return { ...item, voters: voters.includes(c.id) ? voters.filter((v) => v !== c.id) : [...voters, c.id] };
+      },
+      winner: (item, _b, c) => (c.isManager ? { ...item, winner: !item.winner } : { error: "Only managers can pick the winner" }),
+    },
+  },
 };
 
 /** Strips who sent anonymous feedback before anyone sees it. */

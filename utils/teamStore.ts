@@ -16,7 +16,7 @@ export type TeamItem = {
   [field: string]: any;
 };
 
-export const COLLECTIONS = ["announcements", "chat", "events", "certifications", "awards", "reviews", "feedback", "polls", "kudos"] as const;
+export const COLLECTIONS = ["announcements", "chat", "events", "certifications", "awards", "reviews", "feedback", "polls", "kudos", "tasks", "ideas", "checklists", "onboarding", "links", "nominations"] as const;
 export type Collection = (typeof COLLECTIONS)[number];
 
 const LIMITS: Record<Collection, number> = {
@@ -29,6 +29,12 @@ const LIMITS: Record<Collection, number> = {
   feedback: 1000,
   polls: 200,
   kudos: 1000,
+  tasks: 1000,
+  ideas: 500,
+  checklists: 50,
+  onboarding: 1000,
+  links: 200,
+  nominations: 1000,
 };
 
 const prefix = (c: Collection) => `team:${c}:`;
@@ -119,10 +125,10 @@ export async function scrubUserFromTeam(userId: string): Promise<number> {
   for (const row of rows) {
     const item = row.value as any;
     const collection = row.key.split(":")[1];
-    const aboutThem = item.userId === userId || item.toUserId === userId;
+    const aboutThem = item.userId === userId || item.toUserId === userId || item.nomineeId === userId;
     const byThem = item.createdBy === userId;
     // Personal content by or about them is deleted
-    if (aboutThem || (byThem && ["chat", "kudos", "feedback"].includes(collection))) {
+    if (aboutThem || (byThem && ["chat", "kudos", "feedback", "nominations"].includes(collection))) {
       await prisma.config.delete({ where: { id: row.id } });
       changed++;
       continue;
@@ -139,8 +145,15 @@ export async function scrubUserFromTeam(userId: string): Promise<number> {
         dirty = true;
       }
     }
-    if (Array.isArray(item.readBy) && item.readBy.includes(userId)) {
-      item.readBy = item.readBy.filter((x: string) => x !== userId);
+    for (const field of ["readBy", "voters", "cheers"]) {
+      if (Array.isArray(item[field]) && item[field].includes(userId)) {
+        item[field] = item[field].filter((x: string) => x !== userId);
+        dirty = true;
+      }
+    }
+    if (item.assigneeId === userId) {
+      item.assigneeId = null;
+      item.assigneeName = null;
       dirty = true;
     }
     if (dirty) {
@@ -159,7 +172,10 @@ export async function exportUserTeamData(userId: string) {
       const v = r.value as any;
       const collection = r.key.split(":")[1];
       if (collection === "reviews" && v.userId === userId) return v.shared === true;
-      return v.createdBy === userId || v.userId === userId || v.toUserId === userId || (v.rsvps && userId in v.rsvps) || (v.votes && userId in v.votes);
+      return (
+        v.createdBy === userId || v.userId === userId || v.toUserId === userId || v.assigneeId === userId || v.nomineeId === userId ||
+        (v.rsvps && userId in v.rsvps) || (v.votes && userId in v.votes) || (Array.isArray(v.voters) && v.voters.includes(userId))
+      );
     })
     .map((r) => ({ workspace: r.workspaceGroupId.toString(), type: r.key.split(":")[1], item: r.value }));
 }
