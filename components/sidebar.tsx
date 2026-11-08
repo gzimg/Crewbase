@@ -23,6 +23,7 @@ import {
   Beach02Icon,
   UserShield01Icon,
   SparklesIcon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons"
 import {
   IconStar,
@@ -287,6 +288,13 @@ const Sidebar: NextPage = () => {
         `/workspace/${workspace.groupId}/policies`,
       ]
     }] : []),
+    {
+      name: "Team",
+      href: `/workspace/${workspace.groupId}/team/announcements`,
+      icon: UserGroupIcon,
+      accessible: true,
+      matchPaths: [`/workspace/${workspace.groupId}/team`],
+    },
     ...(showStaffSection ? [{ 
       name: "Staff", 
       href: staffHref,

@@ -63,6 +63,7 @@ export async function buildUserExport(userId: string) {
     wallPosts: await safe(() => db.wallPost.findMany({ where: { authorId: id }, take: 2000 })),
     applicationSubmissions: await safe(() => db.applicationSubmission.findMany({ where: { userId: id }, take: 500 })),
     sessionsJoined: await safe(() => db.sessionUser.findMany({ where: { userid: id }, take: 5000 })),
+    teamContent: await safe(async () => (await import("@/utils/teamStore")).exportUserTeamData(userId)),
   };
 
   return JSON.stringify(data, (_key, value) => (typeof value === "bigint" ? value.toString() : value), 2);

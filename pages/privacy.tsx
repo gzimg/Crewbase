@@ -42,6 +42,10 @@ export default function PrivacyPage() {
         <li>Userbook entries like warnings, promotions, demotions and notes, plus recommendations, votes and comments.</li>
         <li>Moderation cases about you, including evidence files such as screenshots or videos.</li>
         <li>Wall posts, docs, application answers, policy sign-offs and anything else you post.</li>
+        <li>
+          Team tab content: announcements and whether you confirmed reading them, team chat messages, event RSVPs, training
+          certifications, performance reviews, poll votes, kudos and feedback. Anonymous feedback is saved without your name.
+        </li>
       </ul>
 
       <h3>Integrations a workspace connects</h3>
@@ -122,8 +126,9 @@ export default function PrivacyPage() {
         <li>
           <strong>We delete</strong> your login details, workspace profiles (including birthday, timezone, Discord ID, email, intro
           and favourite song), roles, in-game activity, inactivity notices, policy sign-offs, quota records, session sign-ups,
-          applications, votes and comments, wall posts and reactions, notifications, staff notes about you, and workspace records
-          about you such as warnings, promotions and recommendations.
+          applications, votes and comments, wall posts and reactions, chat messages, kudos, named feedback, event RSVPs, poll
+          votes, notifications, staff notes about you, and workspace records about you such as warnings, promotions,
+          recommendations, reviews and certifications.
         </li>
         <li>
           <strong>We keep, without your name,</strong> things you made that belong to a workspace and that others rely on, like docs,

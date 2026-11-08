@@ -22,6 +22,13 @@ const WORKSPACE_PAGES: [string, string, string?][] = [
   ["/applications", "Applications", "forms hiring"],
   ["/moderation", "Moderation", "cases bans evidence"],
   ["/alliances", "Alliances", "allies groups"],
+  ["/team/announcements", "Announcements", "team news updates"],
+  ["/team/chat", "Team chat", "messages talk"],
+  ["/team/events", "Events", "calendar rsvp meetup"],
+  ["/team/trainings", "Trainings & certifications", "certified training"],
+  ["/team/reviews", "Reviews & feedback", "performance review feedback"],
+  ["/team/polls", "Polls", "vote survey"],
+  ["/team/kudos", "Kudos", "shoutout thanks recognition"],
   ["/settings", "Workspace settings", "config roles permissions"],
   ["/plan", "Plan & usage", "upgrade limits badge request"],
 ];

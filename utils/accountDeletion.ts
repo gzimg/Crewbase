@@ -3,6 +3,7 @@ import { deleteCaseEvidence } from "@/utils/evidenceManager";
 import { getSiteRoleLists, setSiteRole } from "@/utils/siteRoles";
 import { getReports, saveReports, getStaffNotes, saveStaffNotes } from "@/utils/siteSettings";
 import { getPlanRequests, savePlanRequests } from "@/utils/plans";
+import { scrubUserFromTeam } from "@/utils/teamStore";
 
 /**
  * Deletes a user's Crewbase account and personal data, for account deletion requests.
@@ -192,6 +193,9 @@ export async function deleteUserAccount(userId: string, options: DeletionOptions
       await prisma.user.update({ where: { userid: id }, data: scrub });
     }
   }
+
+  // Team tabs: chat messages, kudos, feedback and records about them are removed; other content is anonymised
+  deleted += await scrubUserFromTeam(userId);
 
   // Crewbase site records
   const sid = userId;
