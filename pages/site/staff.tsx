@@ -86,7 +86,10 @@ export default function SiteStaffPage() {
               <li>Work through <strong>Reports</strong> first. Resolve them with a short note so other staff know what you did.</li>
               <li>Open any user in <strong>Users</strong> to see their workspaces, staff notes and reports before you act.</li>
               <li>Suspensions apply to the whole site. Always give a clear reason; it’s saved in the audit log.</li>
-              <li>Account deletion requests come in as reports. Pass them to a site admin, who can export the user’s data first.</li>
+              <li>
+                Account deletion requests come in as reports. A site admin opens the user, exports their data if needed, then uses
+                <strong> Delete account and data</strong>. The request is marked resolved automatically. Aim to finish within 30 days.
+              </li>
             </ul>
           </Panel>
         </div>
@@ -361,6 +364,35 @@ function UsersTab({ onOpenUser, onChanged }: { onOpenUser: (id: string) => void;
 
 function UserDrawer({ userId, onClose, onChanged }: { userId: string; onClose: () => void; onChanged: () => void }) {
   const [data, setData] = useState<UserDetail | null>(null);
+  const [showDelete, setShowDelete] = useState(false);
+  const [deleteCheck, setDeleteCheck] = useState<{ canDelete: boolean; reason: string | null } | null>(null);
+  const [confirmName, setConfirmName] = useState("");
+  const [keepSafety, setKeepSafety] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const openDelete = async () => {
+    setShowDelete(true);
+    setConfirmName("");
+    try {
+      const r = await axios.get(`/api/site/users/${userId}/delete`);
+      setDeleteCheck({ canDelete: r.data.canDelete, reason: r.data.reason });
+    } catch (e) {
+      setDeleteCheck({ canDelete: false, reason: errorText(e) });
+    }
+  };
+  const runDelete = async () => {
+    setDeleting(true);
+    try {
+      const r = await axios.post(`/api/site/users/${userId}/delete`, { confirmUsername: confirmName, keepSafetyRecords: keepSafety });
+      toast.success(`Account deleted. ${r.data.result.deletedRecords} records removed.`, { duration: 6000 });
+      onChanged();
+      onClose();
+    } catch (e) {
+      toast.error(errorText(e));
+    } finally {
+      setDeleting(false);
+    }
+  };
   const [note, setNote] = useState("");
   const [reason, setReason] = useState("");
   const [showSuspend, setShowSuspend] = useState(false);
@@ -500,6 +532,48 @@ function UserDrawer({ userId, onClose, onChanged }: { userId: string; onClose: (
                 </li>
               ))}
             </ul>
+
+            {data!.canExport && (
+              <div className="mt-8 rounded-lg border border-red-200 p-4 dark:border-red-900">
+                <h3 className="text-sm font-semibold text-red-700 dark:text-red-300">Delete account and data</h3>
+                <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+                  For deletion requests. Removes their login, workspace profiles, roles, activity, notices, sign-offs, applications,
+                  wall posts and records about them. Docs and records they wrote about others stay, credited to “Deleted user”.
+                  This can’t be undone, so export their data first if you need to send it to them.
+                </p>
+                {!showDelete ? (
+                  <button onClick={openDelete} className={`${dangerButtonClass} mt-3`}>Start deletion…</button>
+                ) : !deleteCheck ? (
+                  <p className="mt-3 text-sm text-zinc-500">Checking…</p>
+                ) : !deleteCheck.canDelete ? (
+                  <p className="mt-3 text-sm text-red-700 dark:text-red-300">Can’t delete yet: {deleteCheck.reason}</p>
+                ) : (
+                  <div className="mt-3 space-y-3">
+                    <label className="flex items-start gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+                      <input type="checkbox" checked={keepSafety} onChange={(e) => setKeepSafety(e.target.checked)} className="mt-0.5 h-4 w-4 rounded" />
+                      <span>
+                        Keep moderation records about them (cases, evidence and in-game bans), linked only to their Roblox ID. Use this
+                        when they were banned for serious rule-breaking, so the ban keeps working.
+                      </span>
+                    </label>
+                    <label htmlFor="confirm-delete" className="block text-sm text-zinc-700 dark:text-zinc-300">
+                      Type <strong>{u.username}</strong> to confirm
+                    </label>
+                    <input id="confirm-delete" value={confirmName} onChange={(e) => setConfirmName(e.target.value)} autoComplete="off" className={inputClass} />
+                    <div className="flex gap-2">
+                      <button
+                        disabled={deleting || confirmName.trim().toLowerCase() !== (u.username || "").toLowerCase()}
+                        onClick={runDelete}
+                        className="inline-flex h-9 items-center rounded-lg bg-red-600 px-3 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-40"
+                      >
+                        {deleting ? "Deleting…" : "Permanently delete"}
+                      </button>
+                      <button onClick={() => setShowDelete(false)} className={buttonClass}>Cancel</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <h3 className="mt-8 text-xs font-semibold uppercase tracking-wider text-zinc-500">Related reports</h3>
             <ul className="mt-2 space-y-2">

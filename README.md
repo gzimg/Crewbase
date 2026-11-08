@@ -22,6 +22,11 @@ Crewbase is a fork of [Firefli](https://github.com/TeamFirefli/firefli) by Cloud
 - Track inactivity with notices
 - Host staff docs, and create policies for members to sign
 - Communicate with your members directly in Crewbase
+- Free plans (Starter, Plus, Pro) with limits, plan requests, automatic upgrades and workspace badges
+- Site staff and admin panels: reports, suspensions, workspace locks, maintenance mode, announcements, health checks and an audit log
+- Privacy tools: self-service data download, account deletion requests and an admin deletion tool
+- Public help center, status page, plans page and What’s new page
+- Quick navigation with Ctrl+K / ⌘K
 
 Built with TypeScript, Next.js, Tailwind CSS, Prisma and PostgreSQL.
 
@@ -45,7 +50,7 @@ Crewbase can run on Vercel (with a Neon Postgres database and Vercel Blob storag
 - `ROBLOX_OAUTH_ONLY` - force Roblox OAuth as the only login method (`true`/`false`)
 - `NEXT_MULTI` - set to `true` to optimise group sync if you're being rate limited
 
-See `.env.example` for the full list. Firefli's [self-hosting documentation](https://docs.firefli.net) also applies to most of the setup.
+See `.env.example` for the full list. Staff and admins should read [STAFF_GUIDE.md](./STAFF_GUIDE.md).
 
 ## License
 

@@ -6,6 +6,9 @@
   "functions": {
     "pages/api/cron/*.ts": {
       "maxDuration": 300
+    },
+    "pages/api/site/users/[userid]/delete.ts": {
+      "maxDuration": 300
     }
   },
   "crons": [

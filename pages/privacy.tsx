@@ -51,6 +51,14 @@ export default function PrivacyPage() {
         <li>Roblox Open Cloud: an API key the workspace owner provides so Crewbase can read group ranks.</li>
       </ul>
 
+      <h3>Plans and badges</h3>
+      <ul>
+        <li>
+          Each workspace’s plan, how it got it, any end date, plan requests and the reason given, staff replies, and any badges
+          Crewbase staff add. This is about the workspace, but a request also records which admin sent it.
+        </li>
+      </ul>
+
       <h3>Technical information</h3>
       <ul>
         <li>A login cookie that keeps you signed in. It’s essential for the site to work.</li>
@@ -96,19 +104,48 @@ export default function PrivacyPage() {
         <li>Workspace records are kept until the workspace’s admins delete them or the workspace is deleted.</li>
         <li>Moderation evidence is deleted when it, or its case, is deleted.</li>
         <li>Hosting logs are kept for a limited time by our hosting provider.</li>
-        <li>Deleted information may stay in backups for a short time before it’s overwritten.</li>
+        <li>Reports you send are kept while they’re needed to handle them and for our records of how we kept Crewbase safe.</li>
+        <li>The log of actions taken by Crewbase site staff is kept to show how decisions were made.</li>
+        <li>Deleted information may stay in our database provider’s backups for a short time (usually days) before it’s overwritten.</li>
       </ul>
 
       <h2>6. Your choices and rights</h2>
       <p>
         You can download a copy of your data at any time from <Link href="/account">your account page</Link>, and request account
         deletion there too. You can also ask to see, correct, export or delete your personal information by emailing{" "}
-        <ContactEmail />. We’ll respond within 30 days. Some information belongs to a workspace’s records, like warnings or moderation cases. For those, we may
-        need to work with the workspace’s owner, and we may keep information when we need it to keep Crewbase safe or to meet a
-        legal obligation.
+        <ContactEmail />. We’ll respond within 30 days. Parents and guardians can make these requests for their teen.
       </p>
 
-      <h2>7. Security</h2>
+      <h2>7. Deleting your account</h2>
+      <p>When we complete a deletion request:</p>
+      <ul>
+        <li>
+          <strong>We delete</strong> your login details, workspace profiles (including birthday, timezone, Discord ID, email, intro
+          and favourite song), roles, in-game activity, inactivity notices, policy sign-offs, quota records, session sign-ups,
+          applications, votes and comments, wall posts and reactions, notifications, staff notes about you, and workspace records
+          about you such as warnings, promotions and recommendations.
+        </li>
+        <li>
+          <strong>We keep, without your name,</strong> things you made that belong to a workspace and that others rely on, like docs,
+          session notes and records you wrote about other members. These are credited to “Deleted user”.
+        </li>
+        <li>
+          <strong>Moderation records about you</strong>, such as moderation cases, evidence and in-game bans, are deleted too. The
+          only exception is where we need to keep them to protect others or enforce a ban for serious rule-breaking. Then we keep
+          them linked only to your Roblox user ID, with your name and other details removed.
+        </li>
+        <li>
+          <strong>We keep a short note</strong> that an account deletion happened, including your Roblox user ID, in our staff action
+          log, so we can show the request was completed. Reports you sent are kept with your identity removed.
+        </li>
+        <li>Copies in backups disappear on their own within a short time.</li>
+      </ul>
+      <p>
+        You can’t delete an account that owns a workspace until ownership is moved to someone else. Your public Roblox profile
+        isn’t affected, because Roblox, not Crewbase, controls it. If you use Crewbase again later, a new account is created.
+      </p>
+
+      <h2>8. Security</h2>
       <p>
         We use reasonable safeguards to protect your information, including HTTPS encryption, hashed passwords, encrypted
         Discord and Bloxlink credentials, private storage for evidence files with short-lived access links, and limits on who can access
@@ -116,25 +153,25 @@ export default function PrivacyPage() {
         required by law, including New York’s data breach notification law.
       </p>
 
-      <h2>8. Cookies</h2>
+      <h2>9. Cookies</h2>
       <p>
         Crewbase uses one essential cookie to keep you logged in, and your browser’s local storage for preferences. We don’t use
         analytics, advertising or tracking cookies.
       </p>
 
-      <h2>9. Where information is stored</h2>
+      <h2>10. Where information is stored</h2>
       <p>
         Crewbase is run from the United States, and information is stored and processed in the United States. If you use
         Crewbase from somewhere else, your information will be transferred to the United States.
       </p>
 
-      <h2>10. Changes to this policy</h2>
+      <h2>11. Changes to this policy</h2>
       <p>
         We may update this Privacy Policy. If we make important changes, we’ll let you know on the site before they take effect.
         The date at the top shows when it last changed.
       </p>
 
-      <h2>11. Contact</h2>
+      <h2>12. Contact</h2>
       <p>
         For privacy questions or requests, email <ContactEmail />.
       </p>

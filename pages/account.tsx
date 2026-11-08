@@ -63,8 +63,10 @@ export default function AccountPage() {
 
         <Section title="Delete your account">
           <p className="text-sm text-zinc-600 dark:text-zinc-300">
-            Ask Crewbase to delete your account and personal information. Some records may be kept where workspaces or the law
-            need them, as explained in our <Link href="/privacy" className="underline">Privacy Policy</Link>.
+            Ask Crewbase to delete your account and personal information. We’ll finish within 30 days. Docs and records you wrote
+            for a workspace stay, credited to “Deleted user”. If you own a workspace, transfer it to someone else first. Our{" "}
+            <Link href="/privacy" className="underline">Privacy Policy</Link> explains exactly what’s deleted and kept. Download your
+            data first if you want a copy.
           </p>
           {openDeletion ? (
             <p className="mt-4 text-sm font-medium text-amber-700 dark:text-amber-300">Your deletion request is open. We’ll be in touch within 30 days.</p>

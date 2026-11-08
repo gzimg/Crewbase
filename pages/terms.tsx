@@ -101,7 +101,18 @@ export default function TermsPage() {
         copies of anything important.
       </p>
 
-      <h2>11. Disclaimers</h2>
+      <h2>11. Plans and badges</h2>
+      <p>
+        Every Crewbase plan is free. Workspaces can get a higher plan by requesting one, by Crewbase staff giving one, or
+        automatically when they meet the rules shown on the <Link href="/plans">plans page</Link>. Plans and badges aren’t sold,
+        can’t be bought or transferred, and aren’t a contract for any level of service. We decide plan requests at our
+        discretion. We may change what each plan includes, its limits, or the rules for getting it, and we may end or lower a
+        workspace’s plan or remove a badge, for example when a plan was given for a set time or the workspace breaks these Terms.
+        If a workspace goes over a limit, some actions may be paused until it’s back under the limit or gets a higher plan. A
+        badge such as “Verified” or “Partner” only means what we say it means on Crewbase, and isn’t an endorsement by Roblox.
+      </p>
+
+      <h2>12. Disclaimers</h2>
       <p className="uppercase text-zinc-400">
         Crewbase is provided “as is” and “as available”, without warranties of any kind, whether express or implied, including
         warranties of merchantability, fitness for a particular purpose, non-infringement, or that the service will be accurate,
@@ -109,7 +120,7 @@ export default function TermsPage() {
         incomplete, so check anything important before relying on it.
       </p>
 
-      <h2>12. Limitation of liability</h2>
+      <h2>13. Limitation of liability</h2>
       <p className="uppercase text-zinc-400">
         To the fullest extent allowed by law, Crewbase and its operator and volunteers won’t be liable for any indirect,
         incidental, special, consequential or punitive damages, or for any loss of data, ranks, game progress, revenue or
@@ -117,13 +128,15 @@ export default function TermsPage() {
         U.S. dollars (US$50). Some places don’t allow these limits, so they may not fully apply to you.
       </p>
 
-      <h2>13. Ending your use</h2>
+      <h2>14. Ending your use</h2>
       <p>
-        You can stop using Crewbase at any time and ask us to delete your account at <ContactEmail />. Sections of these Terms
-        that by their nature should continue after your account ends (such as sections 5, 7, 11, 12 and 14) will continue.
+        You can stop using Crewbase at any time and request account deletion from <Link href="/account">your account page</Link> or
+        at <ContactEmail />. What we delete and keep is explained in the <Link href="/privacy">Privacy Policy</Link>. If you own a
+        workspace, move ownership to someone else first. We may also close accounts that break these Terms. Sections of these Terms
+        that by their nature should continue after your account ends (such as sections 5, 7, 12, 13 and 15) will continue.
       </p>
 
-      <h2>14. Governing law</h2>
+      <h2>15. Governing law</h2>
       <p>
         These Terms are governed by the laws of the State of {LEGAL.governingState} and applicable U.S. federal law, without
         regard to conflict-of-law rules. Any dispute will be handled in the state or federal courts located in{" "}
@@ -131,13 +144,13 @@ export default function TermsPage() {
         any claim, please contact us first so we can try to sort it out informally.
       </p>
 
-      <h2>15. Changes to these Terms</h2>
+      <h2>16. Changes to these Terms</h2>
       <p>
         We may update these Terms. If we make important changes, we’ll let you know on the site before they take effect. If you
         keep using Crewbase after the changes take effect, you accept the updated Terms.
       </p>
 
-      <h2>16. Contact</h2>
+      <h2>17. Contact</h2>
       <p>
         Questions about these Terms? Email <ContactEmail />.
       </p>

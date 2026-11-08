@@ -30,7 +30,7 @@ const faqs: { section: string; items: Faq[] }[] = [
     section: "Your account",
     items: [
       { q: "I forgot my password.", tags: "reset login", a: <>Use the <Link href="/forgot-password">password reset page</Link>.</> },
-      { q: "How do I download or delete my data?", tags: "export privacy remove", a: <>Go to <Link href="/account">your account page</Link>. You can download your data there and request account deletion. We reply to deletion requests within 30 days.</> },
+      { q: "How do I download or delete my data?", tags: "export privacy remove delete account", a: <>Go to <Link href="/account">your account page</Link>. Download your data there first if you want a copy, then request account deletion. Crewbase staff complete deletion requests within 30 days. Things you made for a workspace, like docs, stay but are credited to “Deleted user”. If you own a workspace, transfer it first. See section 7 of the <Link href="/privacy">Privacy Policy</Link> for the details.</> },
       { q: "My account was suspended. Can I appeal?", tags: "ban suspended appeal", a: <>Yes. {LEGAL.contactEmail ? <>Email <a href={`mailto:${LEGAL.contactEmail}`}>{LEGAL.contactEmail}</a></> : <>Contact Crewbase staff</>} with your Roblox username and why you think the suspension was a mistake.</> },
       { q: "How do I report someone?", tags: "abuse harassment rules", a: <>Use <Link href="/report">Report a problem</Link>. Reports go to Crewbase site staff, not your workspace’s leadership. If someone is in immediate danger, contact local emergency services first.</> },
     ],

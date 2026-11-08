@@ -42,6 +42,7 @@ const actionLabels: Record<string, string> = {
   add_staff_note: "added a staff note on",
   delete_staff_note: "deleted a staff note on",
   export_user_data: "exported the data of",
+  delete_user_account: "deleted the account of",
   report_resolved: "resolved a report from",
   report_dismissed: "dismissed a report from",
   report_open: "reopened a report from",
