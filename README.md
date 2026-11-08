@@ -5,6 +5,8 @@
 
 # Crewbase
 
+**Live at [crewbase.dev](https://crewbase.dev)**
+
 Crewbase is a staff management platform for Roblox groups: a home base for your staff team's roles, activity, sessions, moderation and promotions.
 
 Crewbase is a fork of [Firefli](https://github.com/TeamFirefli/firefli) by Cloudysatrn & Max Croft, which itself continues the open source Tovy and Orbit projects. Huge thanks to everyone who built them.
@@ -32,7 +34,7 @@ Crewbase can run on Vercel (with a Neon Postgres database and Vercel Blob storag
 - `DATABASE_URL` - your PostgreSQL connection string
 - `SESSION_SECRET` - a strong random string (`openssl rand -base64 32`)
 - `ENCRYPTION_KEY` - encrypts your Discord integration (`openssl rand -base64 64`)
-- `NEXTAUTH_URL` - your site address, e.g. `https://crewbase.example.com` (no `/` at the end)
+- `NEXTAUTH_URL` - your site address, e.g. `https://crewbase.dev` (no `/` at the end)
 - `CRON_SECRET` - protects the scheduled jobs in `/api/cron`
 
 **Optional environment variables**

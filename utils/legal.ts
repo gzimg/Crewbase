@@ -4,6 +4,8 @@
  */
 export const LEGAL = {
   siteName: "Crewbase",
+  /** The site's main address. */
+  siteUrl: "https://crewbase.dev",
   /** Email people can use for privacy requests, account deletion, copyright notices and questions. */
   contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "",
   /** Link to this site's source code, as offered under the GPL-3.0 license. */

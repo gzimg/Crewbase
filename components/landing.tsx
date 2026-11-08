@@ -71,6 +71,18 @@ export default function Landing({ mode, displayName, avatar }: LandingProps) {
           name="description"
           content="Crewbase helps Roblox groups run their staff team: activity, sessions, moderation and promotions in one workspace."
         />
+        <link rel="canonical" href="https://crewbase.dev/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Crewbase" />
+        <meta property="og:url" content="https://crewbase.dev/" />
+        <meta property="og:title" content="Crewbase - Home base for your Roblox staff team" />
+        <meta
+          property="og:description"
+          content="Activity, sessions, moderation and promotions for Roblox groups, in one workspace your whole team shares."
+        />
+        <meta property="og:image" content="https://crewbase.dev/crewbase.png" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="theme-color" content="#18181b" />
       </Head>
 
       {/* Top bar, styled like the app's own */}

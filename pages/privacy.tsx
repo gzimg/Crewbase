@@ -6,7 +6,7 @@ export default function PrivacyPage() {
   return (
     <LegalLayout title="Privacy Policy">
       <p>
-        This Privacy Policy explains what information Crewbase collects, how it’s used and the choices you have. Crewbase is a
+        This Privacy Policy explains what information Crewbase collects, how it’s used and the choices you have. Crewbase (<a href={LEGAL.siteUrl}>crewbase.dev</a>) is a
         free, non-commercial hobby project run from {LEGAL.governingState}, United States. If you have questions, email{" "}
         <ContactEmail />.
       </p>

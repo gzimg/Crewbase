@@ -7,7 +7,8 @@ export default function TermsPage() {
     <LegalLayout title="Terms of Service">
       <p>
         These Terms of Service (“Terms”) are an agreement between you and the operator of Crewbase (“Crewbase”, “we”, “us”),
-        a free, non-commercial hobby project run from {LEGAL.governingState}, United States. By creating an account or using
+        a free, non-commercial hobby project available at <a href={LEGAL.siteUrl}>crewbase.dev</a> and run from{" "}
+        {LEGAL.governingState}, United States. By creating an account or using
         Crewbase, you agree to these Terms and to our <Link href="/privacy">Privacy Policy</Link>. If you don’t agree, please
         don’t use Crewbase.
       </p>

@@ -1,0 +1,14 @@
+# Crewbase - https://crewbase.dev
+User-agent: *
+Allow: /$
+Allow: /terms
+Allow: /privacy
+Disallow: /api/
+Disallow: /workspace/
+Disallow: /workspaces
+Disallow: /site/
+Disallow: /account
+Disallow: /report
+Disallow: /welcome
+
+Sitemap: https://crewbase.dev/sitemap.xml

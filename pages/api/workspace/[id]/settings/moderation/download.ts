@@ -48,7 +48,9 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
 
   const host = req.headers.host;
 
-  let currentUrl = new URL(`${protocol}://${host}`);
+  // Prefer the site's main address (e.g. https://crewbase.dev) so scripts keep
+  // working even if they were downloaded from a temporary Vercel address
+  let currentUrl = new URL(process.env.NEXTAUTH_URL || `${protocol}://${host}`);
   let xx = xml_string
     .replace("<apikey>", moderationconfig.key)
     .replace("<url>", currentUrl.origin);
