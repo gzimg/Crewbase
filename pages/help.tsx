@@ -75,8 +75,15 @@ export default function HelpPage() {
       ))}
       <div className="mt-12 rounded-2xl border border-zinc-700/70 bg-zinc-800 p-6">
         <p className="font-semibold">Still stuck?</p>
-        <p className="mt-1 text-zinc-400">
-          <Link href="/report" className="text-white underline">Send a report</Link> to Crewbase staff
+        <button
+          type="button"
+          onClick={() => (window as any).Psstly?.open?.()}
+          className="mt-3 rounded-lg bg-[#F28C28] px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-[#f59d45]"
+        >
+          Chat with us
+        </button>
+        <p className="mt-3 text-zinc-400">
+          Or <Link href="/report" className="text-white underline">send a report</Link> to Crewbase staff
           {LEGAL.contactEmail && <> or email <a href={`mailto:${LEGAL.contactEmail}`} className="text-white underline">{LEGAL.contactEmail}</a></>}.
         </p>
       </div>

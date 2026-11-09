@@ -87,7 +87,8 @@ export default function PrivacyPage() {
       <ul>
         <li><strong>People in your workspace</strong>, based on the roles and permissions the workspace owner sets up.</li>
         <li><strong>Crewbase site staff and admins</strong>, a small group of volunteers who can look up accounts and workspaces to provide support and keep the site safe.</li>
-        <li><strong>Service providers</strong> that help run Crewbase: Vercel (hosting and file storage), Neon (database), Roblox (public profile and group information), Discord and Bloxlink (only when a workspace connects them), and Google Fonts (loads fonts on our public pages, which shares your IP address with Google).</li>
+        <li><strong>Service providers</strong> that help run Crewbase: Vercel (hosting and file storage), Neon (database), Roblox (public profile and group information), Discord and Bloxlink (only when a workspace connects them), Psstly (our support chat, which receives what you type in it
+          and basic details like your browser and the page you’re on), and Google Fonts (loads fonts on our public pages, which shares your IP address with Google).</li>
         <li><strong>When required by law</strong>, or when needed to protect someone’s safety, prevent fraud or respond to a valid legal request.</li>
       </ul>
 
