@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { fetchMe } from "@/lib/me";
 import type { NextPage } from "next";
 import Landing, { LandingMode } from "@/components/landing";
 
@@ -13,8 +13,7 @@ const Home: NextPage = () => {
   const [user, setUser] = useState<{ displayname?: string; thumbnail?: string }>({});
 
   useEffect(() => {
-    axios
-      .get("/api/@me")
+    fetchMe()
       .then((res) => {
         if (res.data?.user) {
           setUser(res.data.user);

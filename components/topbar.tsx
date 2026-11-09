@@ -10,6 +10,7 @@ import { PlanBadge } from "@/components/planbadge";
 const planBadgeCache = new Map<string, { value: { name: string; color: string }; at: number }>();
 import Link from "next/link";
 import axios from "axios";
+import { clearMe } from "@/lib/me";
 import { Fragment, useEffect, useState } from "react";
 import ThemeToggle from "./ThemeToggle";
 import VerifiedBadge from "./partners";
@@ -79,6 +80,7 @@ const Topbar: NextPage = () => {
 
 	async function logout() {
 		await axios.post("/api/auth/logout");
+		clearMe();
 		setLogin({
 			userId: 1,
 			username: '',
@@ -93,7 +95,7 @@ const Topbar: NextPage = () => {
 	}
 
 	return (
-		<header className="sticky top-0 z-40 backdrop-blur-sm bg-white/80 dark:bg-zinc-800/80">
+		<header className="sticky top-0 z-40 bg-white dark:bg-zinc-800">
 			<div className="w-full px-3">
 				<div className="flex justify-between items-center h-12">
 					<div className="flex items-center space-x-3">

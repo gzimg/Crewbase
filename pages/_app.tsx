@@ -13,7 +13,10 @@ import { RecoilRoot, useRecoilState } from "recoil";
 import type { pageWithLayout } from "@/layoutTypes";
 import { useEffect, useState, useRef } from "react";
 import Head from "next/head";
-import Router from "next/router";
+import Router, { useRouter } from "next/router";
+
+// Pages anyone can see: shown straight away instead of waiting for the login check
+const PUBLIC_PAGES = ["/", "/terms", "/privacy", "/help", "/status", "/changelog", "/plans", "/maintenance", "/forgot-password", "/login"];
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -168,17 +171,26 @@ function InstanceError({ missing }: { missing: string[] }) {
 function MyApp({ Component, pageProps }: AppPropsWithLayout) {
   const [loading, setLoading] = useState(true);
   const [instanceError, setInstanceError] = useState<string[] | null>(null);
+  const router = useRouter();
   const Layout =
     Component.layout ||
     (({ children }: { children: React.ReactNode }) => <>{children}</>);
 
   // Check instance configuration on mount
   useEffect(() => {
+    // Only needs checking once per browser session
+    try {
+      if (sessionStorage.getItem("crewbase_instance_ok") === "1") return;
+    } catch {}
     fetch("/api/instance-check")
       .then((r) => r.json())
       .then((data) => {
         if (!data.configured) {
           setInstanceError(data.missing || ["Unknown"]);
+        } else {
+          try {
+            sessionStorage.setItem("crewbase_instance_ok", "1");
+          } catch {}
         }
       })
       .catch(() => {});
@@ -225,7 +237,7 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout) {
         <HelpWidget />
         <CommandPalette />
 
-        {!loading ? (
+        {!loading || PUBLIC_PAGES.includes(router.pathname) ? (
           <Layout>
             <Component {...pageProps} />
           </Layout>

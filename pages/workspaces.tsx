@@ -1,3 +1,4 @@
+import { fetchMe } from "@/lib/me";
 "use client";
 
 import type { NextPage } from "next";
@@ -80,7 +81,7 @@ const Home: NextPage = () => {
     const checkLogin = async () => {
       let req;
       try {
-        req = await axios.get("/api/@me");
+        req = await fetchMe();
       } catch (err: any) {
         if (err.response?.data.error === "Workspace not setup") {
           router.push("/welcome");

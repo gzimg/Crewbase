@@ -2,6 +2,7 @@
 
 import { loginState, workspacestate } from '@/state';
 import axios from 'axios';
+import { fetchMe } from '@/lib/me';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
 import { useRecoilState } from 'recoil';
@@ -32,7 +33,7 @@ export default function AuthProvider({
 
 		const checkLogin = async () => {
 			try {
-				const req = await axios.get('/api/@me');
+				const req = await fetchMe();
 				setLogin({ ...req.data.user, workspaces: req.data.workspaces || [] });
 				setLoading(false);
 			} catch (err: any) {

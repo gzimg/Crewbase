@@ -5,6 +5,7 @@ import { themeState } from "@/state/theme"
 import { useRecoilState } from "recoil"
 import { Menu, Listbox, Dialog, Transition } from "@headlessui/react"
 import { useRouter } from "next/router"
+import { clearMe } from "@/lib/me"
 import ThemeToggle from "./ThemeToggle";
 import { createPortal } from "react-dom";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
@@ -389,6 +390,7 @@ const Sidebar: NextPage = () => {
 
   const logout = async () => {
     await axios.post("/api/auth/logout")
+    clearMe()
     setLogin({
       userId: 1,
       username: "",
