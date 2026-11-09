@@ -1,5 +1,6 @@
-import { fetchMe } from "@/lib/me";
 "use client";
+
+import { fetchMe } from "@/lib/me";
 
 import type { NextPage } from "next";
 import Head from "next/head";
