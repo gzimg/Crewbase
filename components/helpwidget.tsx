@@ -35,7 +35,34 @@ interface ChangelogItem {
   categories: ChangelogCategory[];
 }
 
+/**
+ * The Psstly support chat has its own floating button. Ours only appears as a
+ * backup if Psstly hasn't loaded after a few seconds (blocked, down, etc.).
+ */
+function usePsstlyStatus(): "loading" | "ready" | "failed" {
+  const [status, setStatus] = useState<"loading" | "ready" | "failed">("loading");
+  useEffect(() => {
+    if ((window as any).Psstly) {
+      setStatus("ready");
+      return;
+    }
+    const started = Date.now();
+    const timer = setInterval(() => {
+      if ((window as any).Psstly) {
+        setStatus("ready");
+        clearInterval(timer);
+      } else if (Date.now() - started > 8000) {
+        setStatus("failed");
+        clearInterval(timer);
+      }
+    }, 400);
+    return () => clearInterval(timer);
+  }, []);
+  return status;
+}
+
 const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" }) => {
+  const psstly = usePsstlyStatus();
   const [showCopyright, setShowCopyright] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
   const [changelogItems, setChangelogItems] = useState<ChangelogItem[]>([]);
@@ -205,9 +232,9 @@ const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" 
           </Transition>
         </>
       )}
-      {variant === "floating" && (
+      {variant === "floating" && psstly === "failed" && (
       <Popover
-        className="hidden md:block fixed bottom-24 right-6 z-[9999]">
+        className="hidden md:block fixed bottom-6 right-6 z-[9999]">
         {({ open }) => (
           <>
             <Popover.Button className="w-11 h-11 md:w-14 md:h-14 rounded-full bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:shadow-xl transition-all duration-200 flex items-center justify-center text-zinc-700 dark:text-zinc-200 border border-zinc-100 dark:border-zinc-700">
