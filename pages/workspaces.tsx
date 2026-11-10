@@ -323,6 +323,11 @@ const Home: NextPage = () => {
             </Dialog>
           </Transition>
         </div>
+        <p className="px-4 pb-8 pt-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
+          Crewbase is based on Firefli, Orbit and Tovy, and is open source under GPL-3.0.{" "}
+          <a href="/credits" className="font-semibold text-zinc-700 underline dark:text-zinc-200">Credits</a> ·{" "}
+          <a href={process.env.NEXT_PUBLIC_SOURCE_URL || "https://github.com/TeamFirefli/firefli"} target="_blank" rel="noopener noreferrer" className="font-semibold text-zinc-700 underline dark:text-zinc-200">Source code</a>
+        </p>
       </div>
     </div>
   );

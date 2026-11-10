@@ -165,6 +165,11 @@ const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" 
                           </div>
                         </div>
                         <div className="space-y-1">
+                          <div className="mb-3 rounded-lg border border-orange-200 bg-orange-50 p-3 text-xs leading-relaxed text-zinc-700 dark:border-orange-900/60 dark:bg-orange-950/30 dark:text-zinc-300">
+                            Crewbase is based on <strong>Firefli</strong>, <strong>Orbit</strong> and <strong>Tovy</strong>, and is open source under GPL-3.0.{" "}
+                            <a href="/credits" className="font-semibold underline">Credits</a> ·{" "}
+                            <a href={process.env.NEXT_PUBLIC_SOURCE_URL || "https://github.com/TeamFirefli/firefli"} target="_blank" rel="noopener noreferrer" className="font-semibold underline">Source code</a>
+                          </div>
                           <a href="/help" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-zinc-700 dark:text-zinc-200">
                             <IconBook className="w-4 h-4 text-zinc-500" />
                             <span className="text-sm">Documentation</span>
@@ -255,6 +260,11 @@ const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" 
                 </div>
               </div>
               <div className="space-y-1">
+                <div className="mb-3 rounded-lg border border-orange-200 bg-orange-50 p-3 text-xs leading-relaxed text-zinc-700 dark:border-orange-900/60 dark:bg-orange-950/30 dark:text-zinc-300">
+                  Crewbase is based on <strong>Firefli</strong>, <strong>Orbit</strong> and <strong>Tovy</strong>, and is open source under GPL-3.0.{" "}
+                  <a href="/credits" className="font-semibold underline">Credits</a> ·{" "}
+                  <a href={process.env.NEXT_PUBLIC_SOURCE_URL || "https://github.com/TeamFirefli/firefli"} target="_blank" rel="noopener noreferrer" className="font-semibold underline">Source code</a>
+                </div>
                 <a
                   href="/help"
                   target="_blank"

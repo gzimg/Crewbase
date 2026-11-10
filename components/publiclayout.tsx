@@ -32,11 +32,11 @@ export default function PublicLayout({ title, intro, children }: { title: string
       </main>
       <footer className="border-t border-zinc-800">
         <div className="mx-auto flex max-w-4xl flex-wrap gap-4 px-4 py-8 text-sm text-zinc-500 sm:px-6">
-          <span className="text-zinc-300">© {new Date().getFullYear()} Crewbase</span>
+          <span className="text-zinc-300">© {new Date().getFullYear()} Crewbase. Based on Firefli, Orbit and Tovy.</span>
           <Link href="/terms" className="hover:text-zinc-300">Terms</Link>
           <Link href="/privacy" className="hover:text-zinc-300">Privacy</Link>
           <Link href="/status" className="hover:text-zinc-300">Status</Link>
-          <Link href="/credits" className="hover:text-zinc-300">Credits</Link>
+          <Link href="/credits" className="font-semibold text-zinc-200 hover:text-white">Credits</Link>
         </div>
       </footer>
     </div>

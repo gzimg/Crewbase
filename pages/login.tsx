@@ -963,7 +963,7 @@ const Login: NextPage = () => {
           </div>
         </div>
 
-        <p className="mx-auto mt-8 max-w-md text-center text-xs text-zinc-400">
+        <p className="mx-auto mt-8 max-w-md text-center text-sm text-zinc-300">
           Crewbase is based on Firefli, Orbit and Tovy, and is open source under GPL-3.0.{" "}
           <Link href="/credits" className="underline">Credits</Link> ·{" "}
           <a href={process.env.NEXT_PUBLIC_SOURCE_URL || "https://github.com/TeamFirefli/firefli"} target="_blank" rel="noopener noreferrer" className="underline">Source code</a>

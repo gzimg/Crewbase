@@ -152,6 +152,35 @@ export default function Landing({ mode, displayName, avatar }: LandingProps) {
             </div>
           </div>
         </section>
+        <section className="border-t border-zinc-800" aria-labelledby="credits-heading">
+          <div className="mx-auto max-w-5xl px-5 py-16">
+            <div className="rounded-xl border border-[#F28C28]/40 bg-[#F28C28]/[0.06] p-6 sm:p-8">
+              <h2 id="credits-heading" className="text-2xl font-semibold text-white">Built on open source</h2>
+              <p className="mt-2 max-w-2xl leading-relaxed text-zinc-300">
+                Crewbase is a fork of <strong className="text-white">Firefli</strong>, which grew out of <strong className="text-white">Orbit</strong> and the original{" "}
+                <strong className="text-white">Tovy</strong> project. Huge thanks to everyone who built them. Like them, Crewbase is free and open source under GPL-3.0.
+              </p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                {[
+                  ["Firefli", "by Cloudysatrn and Max Croft", "https://github.com/TeamFirefli/firefli"],
+                  ["Orbit", "by Planetary", ""],
+                  ["Tovy", "the original project", ""],
+                ].map(([name, by, href]) => (
+                  <div key={name} className="rounded-lg border border-zinc-700 bg-zinc-900 p-4">
+                    <p className="font-semibold text-white">
+                      {href ? <a href={href} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:underline">{name}</a> : name}
+                    </p>
+                    <p className="mt-0.5 text-sm text-zinc-400">{by}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link href="/credits" className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-200">See all credits</Link>
+                <a href={process.env.NEXT_PUBLIC_SOURCE_URL || "https://github.com/TeamFirefli/firefli"} target="_blank" rel="noopener noreferrer" className="rounded-md border border-zinc-600 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800">View the source code</a>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="border-t border-zinc-800">
@@ -162,7 +191,7 @@ export default function Landing({ mode, displayName, avatar }: LandingProps) {
             <Link href="/status" className="hover:text-zinc-300">Status</Link>
             <Link href="/terms" className="hover:text-zinc-300">Terms</Link>
             <Link href="/privacy" className="hover:text-zinc-300">Privacy</Link>
-            <Link href="/credits" className="hover:text-zinc-300">Credits</Link>
+            <Link href="/credits" className="font-semibold text-zinc-200 hover:text-white">Credits</Link>
             <a href={process.env.NEXT_PUBLIC_SOURCE_URL || "https://github.com/TeamFirefli/firefli"} target="_blank" rel="noopener noreferrer" className="hover:text-zinc-300">Source code</a>
           </nav>
         </div>
