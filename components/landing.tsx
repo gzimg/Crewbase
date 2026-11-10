@@ -156,13 +156,14 @@ export default function Landing({ mode, displayName, avatar }: LandingProps) {
 
       <footer className="border-t border-zinc-800">
         <div className="mx-auto flex max-w-5xl flex-col gap-3 px-5 py-8 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} Crewbase. Not affiliated with Roblox Corporation.</p>
+          <p>© {new Date().getFullYear()} Crewbase. Based on Firefli, Orbit and Tovy. Not affiliated with Roblox Corporation.</p>
           <nav className="flex flex-wrap gap-x-4 gap-y-1" aria-label="Footer">
             <Link href="/changelog" className="hover:text-zinc-300">What’s new</Link>
             <Link href="/status" className="hover:text-zinc-300">Status</Link>
             <Link href="/terms" className="hover:text-zinc-300">Terms</Link>
             <Link href="/privacy" className="hover:text-zinc-300">Privacy</Link>
             <Link href="/credits" className="hover:text-zinc-300">Credits</Link>
+            <a href={process.env.NEXT_PUBLIC_SOURCE_URL || "https://github.com/TeamFirefli/firefli"} target="_blank" rel="noopener noreferrer" className="hover:text-zinc-300">Source code</a>
           </nav>
         </div>
       </footer>
