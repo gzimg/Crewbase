@@ -36,6 +36,7 @@ export default function PublicLayout({ title, intro, children }: { title: string
           <Link href="/terms" className="hover:text-zinc-300">Terms</Link>
           <Link href="/privacy" className="hover:text-zinc-300">Privacy</Link>
           <Link href="/status" className="hover:text-zinc-300">Status</Link>
+          <Link href="/credits" className="hover:text-zinc-300">Credits</Link>
         </div>
       </footer>
     </div>

@@ -162,7 +162,7 @@ export default function Landing({ mode, displayName, avatar }: LandingProps) {
             <Link href="/status" className="hover:text-zinc-300">Status</Link>
             <Link href="/terms" className="hover:text-zinc-300">Terms</Link>
             <Link href="/privacy" className="hover:text-zinc-300">Privacy</Link>
-            <a href="https://github.com/TeamFirefli/firefli" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-300">Based on Firefli (GPL-3.0)</a>
+            <Link href="/credits" className="hover:text-zinc-300">Credits</Link>
           </nav>
         </div>
       </footer>

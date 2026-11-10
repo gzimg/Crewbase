@@ -33,7 +33,7 @@ export default function LegalLayout({ title, children }: { title: string; childr
       <footer className="border-t border-white/[0.06]">
         <p className="mx-auto max-w-3xl px-6 py-8 text-xs text-zinc-500">
           Crewbase is an independent hobby project. It is not affiliated with, endorsed by or sponsored by Roblox Corporation
-          or Discord Inc.
+          or Discord Inc. See our <Link href="/credits" className="underline">credits</Link>.
         </p>
       </footer>
     </div>

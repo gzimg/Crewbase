@@ -8,6 +8,7 @@ Allow: /status
 Allow: /changelog
 Allow: /plans
 Allow: /bot
+Allow: /credits
 Disallow: /api/
 Disallow: /workspace/
 Disallow: /workspaces
