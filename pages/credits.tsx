@@ -12,12 +12,11 @@ const BUILT_ON: Credit[] = [
 
 const PLATFORMS: Credit[] = [
   { name: "Roblox", what: "Group, user and Open Cloud APIs for ranks, profiles and avatars.", href: "https://www.roblox.com" },
-  { name: "Discord", what: "The Crewbase bot and workspace announcements.", href: "https://discord.com" },
+  { name: "Discord", what: "Our support server, the Crewbase bot and workspace announcements.", href: "https://discord.com" },
   { name: "Bloxlink", what: "Matching Discord accounts to Roblox accounts.", href: "https://blox.link" },
   { name: "RankGun", what: "Optional group ranking for workspaces that connect it." },
   { name: "Vercel", what: "Hosting, scheduled jobs and file storage.", href: "https://vercel.com" },
   { name: "Neon", what: "Our PostgreSQL database.", href: "https://neon.tech" },
-  { name: "Psstly", what: "The support chat on every page.", href: "https://psstly.app" },
   { name: "Google Fonts", what: "Fonts on some of our public pages.", href: "https://fonts.google.com" },
 ];
 

@@ -35,34 +35,10 @@ interface ChangelogItem {
   categories: ChangelogCategory[];
 }
 
-/**
- * The Psstly support chat has its own floating button. Ours only appears as a
- * backup if Psstly hasn't loaded after a few seconds (blocked, down, etc.).
- */
-function usePsstlyStatus(): "loading" | "ready" | "failed" {
-  const [status, setStatus] = useState<"loading" | "ready" | "failed">("loading");
-  useEffect(() => {
-    if ((window as any).Psstly) {
-      setStatus("ready");
-      return;
-    }
-    const started = Date.now();
-    const timer = setInterval(() => {
-      if ((window as any).Psstly) {
-        setStatus("ready");
-        clearInterval(timer);
-      } else if (Date.now() - started > 8000) {
-        setStatus("failed");
-        clearInterval(timer);
-      }
-    }, 400);
-    return () => clearInterval(timer);
-  }, []);
-  return status;
-}
+// Crewbase's support Discord. Set NEXT_PUBLIC_DISCORD_INVITE (for example https://discord.gg/yourcode).
+const DISCORD_INVITE = process.env.NEXT_PUBLIC_DISCORD_INVITE || "";
 
 const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" }) => {
-  const psstly = usePsstlyStatus();
   const [showCopyright, setShowCopyright] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
   const [changelogItems, setChangelogItems] = useState<ChangelogItem[]>([]);
@@ -208,7 +184,7 @@ const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" 
                               <span className="text-sm">Bug Reports</span>
                             </a>
                           )}
-                          <a href="https://discord.gg/WtEkchUKqe" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-zinc-700 dark:text-zinc-200">
+                          <a href={DISCORD_INVITE || "/help"} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-zinc-700 dark:text-zinc-200">
                             <IconBrandDiscord className="w-4 h-4 text-zinc-500" />
                             <span className="text-sm">Community</span>
                           </a>
@@ -232,7 +208,7 @@ const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" 
           </Transition>
         </>
       )}
-      {variant === "floating" && psstly === "failed" && (
+      {variant === "floating" && (
       <Popover
         className="hidden md:block fixed bottom-6 right-6 z-[9999]">
         {({ open }) => (
@@ -317,7 +293,7 @@ const HelpWidget = ({ variant = "floating" }: { variant?: "floating" | "topbar" 
                   </a>
                 )}
                 <a
-                  href="https://discord.gg/WtEkchUKqe"
+                  href={DISCORD_INVITE || "/help"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors text-zinc-700 dark:text-zinc-200"

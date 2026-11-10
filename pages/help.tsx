@@ -76,18 +76,16 @@ export default function HelpPage() {
       ))}
       <div className="mt-12 rounded-2xl border border-zinc-700/70 bg-zinc-800 p-6">
         <p className="font-semibold">Still stuck?</p>
-        <button
-          type="button"
-          onClick={() => {
-            // If the chat can't load, send people to the report form instead
-            const chat = (window as any).Psstly;
-            if (chat?.open) chat.open();
-            else window.location.assign("/report");
-          }}
-          className="mt-3 rounded-lg bg-[#F28C28] px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-[#f59d45]"
-        >
-          Chat with us
-        </button>
+        {process.env.NEXT_PUBLIC_DISCORD_INVITE && (
+          <a
+            href={process.env.NEXT_PUBLIC_DISCORD_INVITE}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-block rounded-lg bg-[#5865F2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#4752c4]"
+          >
+            Get help on our Discord
+          </a>
+        )}
         <p className="mt-3 text-zinc-400">
           Or <Link href="/report" className="text-white underline">send a report</Link> to Crewbase staff
           {LEGAL.contactEmail && <> or email <a href={`mailto:${LEGAL.contactEmail}`} className="text-white underline">{LEGAL.contactEmail}</a></>}.
