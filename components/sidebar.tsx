@@ -233,26 +233,23 @@ const Sidebar: NextPage = () => {
     const hasRecommendationsPermission = workspace.settings?.recommendationsEnabled && (workspace.yourPermission?.includes("view_recommendations") || workspace.isAdmin);
     const hasViewMembersPermission = workspace.yourPermission?.includes("view_members");
     const hasViewDirectoryPermission = workspace.yourPermission?.includes("view_directory");
-    const showStaffSection = hasViewMembersPermission || hasViewDirectoryPermission || hasNoticesPermission || hasRecommendationsPermission;
+    const hasApplicationsPermission = applicationsEnabled && (workspace.yourPermission?.includes("applications.view") || workspace.isAdmin);
+    const showStaffSection = hasViewMembersPermission || hasViewDirectoryPermission || hasNoticesPermission || hasRecommendationsPermission || hasApplicationsPermission;
     const staffHref = hasViewMembersPermission 
       ? `/workspace/${workspace.groupId}/views` 
       : hasViewDirectoryPermission
         ? `/workspace/${workspace.groupId}/directory`
       : hasNoticesPermission
         ? `/workspace/${workspace.groupId}/notices`
-        : `/workspace/${workspace.groupId}/recommendations`;
+        : hasRecommendationsPermission
+          ? `/workspace/${workspace.groupId}/recommendations`
+          : `/workspace/${workspace.groupId}/applications`;
     
     return [
     { 
       name: "Home", 
       href: `/workspace/${workspace.groupId}`, 
       icon: Home07Icon,
-    },
-    { 
-      name: "Wall", 
-      href: `/workspace/${workspace.groupId}/wall`, 
-      icon: Comment01Icon,
-      accessible: workspace.yourPermission?.includes("view_wall") 
     },
     { 
       name: "Activity", 
@@ -294,7 +291,8 @@ const Sidebar: NextPage = () => {
       href: `/workspace/${workspace.groupId}/team/announcements`,
       icon: UserGroupIcon,
       accessible: true,
-      matchPaths: [`/workspace/${workspace.groupId}/team`],
+      // Wall and Alliances are grouped under Team now
+      matchPaths: [`/workspace/${workspace.groupId}/team`, `/workspace/${workspace.groupId}/wall`, `/workspace/${workspace.groupId}/alliances`],
     },
     ...(showStaffSection ? [{ 
       name: "Staff", 
@@ -306,6 +304,7 @@ const Sidebar: NextPage = () => {
         `/workspace/${workspace.groupId}/directory`,
         `/workspace/${workspace.groupId}/notices`,
         `/workspace/${workspace.groupId}/recommendations`,
+        `/workspace/${workspace.groupId}/applications`,
       ]
     }] : []),
     ...(moderationEnabled ? [{
@@ -313,18 +312,6 @@ const Sidebar: NextPage = () => {
       href: `/workspace/${workspace.groupId}/moderation`,
       icon: UserShield01Icon,
       accessible: workspace.yourPermission?.includes("view_moderation") || workspace.isAdmin,
-    }] : []),
-    ...(applicationsEnabled ? [{
-      name: "Applications",
-      href: `/workspace/${workspace.groupId}/applications`,
-      icon: Task01Icon,
-      accessible: workspace.yourPermission?.includes("applications.view") || workspace.isAdmin,
-    }] : []),
-    ...(alliesEnabled ? [{
-      name: "Alliances",
-      href: `/workspace/${workspace.groupId}/alliances`,
-      icon: Agreement01Icon,
-      accessible: true,
     }] : []),
   ];
   };

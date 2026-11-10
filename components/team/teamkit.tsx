@@ -36,7 +36,7 @@ export function TeamShell({ title, description, action, children }: { title: str
       <Head>
         <title>{`${title} - Team`}</title>
       </Head>
-      <nav className="-mx-1 mb-6 flex gap-1 overflow-x-auto pb-1" aria-label="Team sections">
+      <nav className="-mx-1 mb-6 flex gap-1 overflow-x-auto pb-1 md:hidden" aria-label="Team sections">
         {tabs.map((t) => (
           <Link
             key={t.slug}

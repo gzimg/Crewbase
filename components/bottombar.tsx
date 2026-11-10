@@ -20,6 +20,7 @@ import {
   Cancel01Icon,
   SparklesIcon,
   Contact01Icon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons"
 import { Dialog, Transition } from "@headlessui/react"
 import { Fragment } from "react"
@@ -65,6 +66,7 @@ const BottomBar: NextPage = () => {
   ]
 
   const morePages = [
+    { name: "Team", href: `/workspace/${workspace.groupId}/team/announcements`, icon: UserGroupIcon, accessible: true },
     { name: "Wall", href: `/workspace/${workspace.groupId}/wall`, icon: Comment01Icon, accessible: workspace.yourPermission.includes("view_wall") },
     { name: "Staff", href: `/workspace/${workspace.groupId}/views`, icon: UserMultipleIcon, accessible: workspace.yourPermission.includes("view_members") },
     { name: "Directory", href: `/workspace/${workspace.groupId}/directory`, icon: Contact01Icon, accessible: workspace.yourPermission.includes("view_directory") },

@@ -69,6 +69,21 @@ import {
   IconBell,
   IconCoffee,
   IconSchool,
+  IconMessages,
+  IconNews,
+  IconCalendarEvent,
+  IconChecklist,
+  IconChartBar,
+  IconCertificate,
+  IconListCheck,
+  IconMessageStar,
+  IconBulb,
+  IconConfetti,
+  IconAward,
+  IconLink,
+  IconSettings,
+  IconHeartHandshake,
+  IconClipboardList,
 } from "@tabler/icons-react";
 
 const SAVED_VIEW_ICONS: { [key: string]: any } = {
@@ -380,7 +395,58 @@ const workspace: LayoutProps = ({ children }) => {
 			return { title: "Activity", sections, hideHeader: true };
 		}
 
-		const staffPages = ['/views', '/directory', '/notices', '/recommendations'];
+		// Team: the many Team tabs, plus Wall and Alliances, grouped into short sections
+		const teamPaths = ['/team', '/wall', '/alliances'];
+		if (teamPaths.some((p) => path.includes(`/workspace/${id}${p}`))) {
+			const tab = (slug: string, label: string, icon: any): SecondarySidebarItem => ({
+				label,
+				href: `/workspace/${id}/team/${slug}`,
+				icon,
+				active: path.includes(`/workspace/${id}/team/${slug}`),
+			});
+			const canSeeWall = workspace.yourPermission?.includes("view_wall");
+			const isManager = workspace.isAdmin || workspace.yourPermission?.includes("admin");
+			const sections: SecondarySidebarSection[] = [
+				{
+					title: "Talk",
+					items: [
+						tab("announcements", "Announcements", IconSpeakerphone),
+						tab("chat", "Team chat", IconMessages),
+						...(canSeeWall ? [{ label: "Wall", href: `/workspace/${id}/wall`, icon: IconNews, active: path.includes(`/workspace/${id}/wall`) }] : []),
+					],
+				},
+				{
+					title: "Plan",
+					items: [tab("events", "Events", IconCalendarEvent), tab("tasks", "Tasks", IconChecklist), tab("polls", "Polls", IconChartBar)],
+				},
+				{
+					title: "Grow",
+					items: [
+						tab("trainings", "Trainings", IconCertificate),
+						tab("onboarding", "Onboarding", IconListCheck),
+						tab("reviews", "Reviews & feedback", IconMessageStar),
+						tab("ideas", "Ideas", IconBulb),
+					],
+				},
+				{
+					title: "Celebrate",
+					items: [tab("kudos", "Kudos", IconConfetti), tab("spotlight", "Staff of the Month", IconAward)],
+				},
+				{
+					title: "More",
+					items: [
+						tab("links", "Links", IconLink),
+						...(workspace.settings?.alliesEnabled
+							? [{ label: "Alliances", href: `/workspace/${id}/alliances`, icon: IconHeartHandshake, active: path.includes(`/workspace/${id}/alliances`) }]
+							: []),
+						...(isManager ? [tab("settings", "Team settings", IconSettings)] : []),
+					],
+				},
+			];
+			return { title: "Team", sections, hideHeader: true };
+		}
+
+		const staffPages = ['/views', '/directory', '/notices', '/recommendations', '/applications'];
 		const isStaffSectionPage = staffPages.some(page => 
 			path.includes(`/workspace/${id}${page}`)
 		);
@@ -491,6 +557,17 @@ const workspace: LayoutProps = ({ children }) => {
 					href: `/workspace/${id}/recommendations`,
 					icon: IconSparkles,
 					active: isOnRecommendationsPage,
+				});
+			}
+
+			// Applications now live in the Staff section instead of their own sidebar icon
+			const canSeeApplications = workspace.settings?.applicationsEnabled && (workspace.yourPermission?.includes("applications.view") || workspace.isAdmin);
+			if (canSeeApplications) {
+				staffItems.push({
+					label: "Applications",
+					href: `/workspace/${id}/applications`,
+					icon: IconClipboardList,
+					active: path.includes(`/workspace/${id}/applications`),
 				});
 			}
 
