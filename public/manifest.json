@@ -4,8 +4,8 @@
   "description": "Home base for your Roblox staff team",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#14213D",
-  "theme_color": "#14213D",
+  "background_color": "#0B0B0F",
+  "theme_color": "#0B0B0F",
   "orientation": "portrait-primary",
   "icons": [
     {

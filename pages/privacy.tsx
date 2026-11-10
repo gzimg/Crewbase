@@ -53,6 +53,10 @@ export default function PrivacyPage() {
       <ul>
         <li>Discord: the server and channel settings used to post announcements, and encrypted bot credentials.</li>
         <li>Bloxlink: lookups that match Discord accounts to Roblox accounts, using an encrypted key.</li>
+        <li>
+          The Crewbase Discord bot: which Discord servers are linked to which workspace, and, when someone uses a command, their
+          Discord user ID and the command they used. The bot doesn’t read or store your server’s messages.
+        </li>
         <li>Roblox Open Cloud: an API key the workspace owner provides so Crewbase can read group ranks.</li>
       </ul>
 

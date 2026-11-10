@@ -23,6 +23,8 @@ const FEATURES: { name: string; text: string }[] = [
   { name: "Docs and policies", text: "Your handbook, plus rules staff sign to say they’ve read." },
   { name: "Team tab", text: "Announcements, chat, events, tasks, polls, kudos and Staff of the Month." },
   { name: "Trainings and reviews", text: "Track certifications and write proper staff reviews." },
+  { name: "Discord bot", text: "Slash commands for activity, the leaderboard, sessions and events, right in your server." },
+  { name: "Plans", text: "Free plans with room to grow. Bigger groups can ask for higher limits." },
 ];
 
 export default function Landing({ mode, displayName, avatar }: LandingProps) {
@@ -56,6 +58,7 @@ export default function Landing({ mode, displayName, avatar }: LandingProps) {
             <span className="font-semibold">Crewbase</span>
           </Link>
           <div className="flex items-center gap-5 text-sm">
+            <Link href="/bot" className="hidden hover:text-white sm:inline">Discord bot</Link>
             <Link href="/plans" className="hidden hover:text-white sm:inline">Plans</Link>
             <Link href="/help" className="hidden hover:text-white sm:inline">Help</Link>
             {mode === "loggedIn" ? (

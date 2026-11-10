@@ -4,6 +4,7 @@
   <url><loc>https://crewbase.dev/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://crewbase.dev/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://crewbase.dev/help</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://crewbase.dev/bot</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://crewbase.dev/plans</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://crewbase.dev/changelog</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
   <url><loc>https://crewbase.dev/status</loc><changefreq>daily</changefreq><priority>0.4</priority></url>

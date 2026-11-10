@@ -829,7 +829,7 @@ const EditDoc: pageWithLayout<any> = ({ roles, departments, document, canEdit, c
             <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Insert Image</h3>
             <input
               type="url"
-              placeholder="https://cdn.firefli.net/brand/logo.png"
+              placeholder="https://crewbase.dev/crewbase.png"
               value={imageUrl}
               onChange={e => setImageUrl(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
@@ -868,7 +868,7 @@ const EditDoc: pageWithLayout<any> = ({ roles, departments, document, canEdit, c
             <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Insert Link</h3>
             <input
               type="url"
-              placeholder="https://app.firefli.net/"
+              placeholder="https://crewbase.dev/"
               value={linkUrl}
               onChange={e => setLinkUrl(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"

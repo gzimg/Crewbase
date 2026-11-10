@@ -33,6 +33,7 @@ const actionLabels: Record<string, string> = {
   encrypt_secrets: "encrypted stored keys",
   publish_changelog: "published an update",
   update_plan_settings: "changed plan settings",
+  register_bot_commands: "registered the Discord bot’s commands",
   set_workspace_plan: "set a workspace plan",
   plan_request_approved: "approved a plan request",
   plan_request_declined: "declined a plan request",
@@ -161,6 +162,10 @@ function RoleList({ title, people, onChange, other }: { title: string; people: R
 function SettingsTab() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [saving, setSaving] = useState(false);
+  const [botInfo, setBotInfo] = useState<{ configured: boolean; inviteUrl: string | null; interactionsUrl: string; servers: number; commands: string[] } | null>(null);
+  useEffect(() => {
+    axios.get("/api/site/discord-bot").then((r) => setBotInfo(r.data)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     axios.get("/api/site/settings").then((r) => setSettings(r.data.settings)).catch((e) => toast.error(errorText(e)));
@@ -181,9 +186,43 @@ function SettingsTab() {
 
   if (!settings) return <p className="text-sm text-zinc-500">Loading…</p>;
   const a = settings.announcement;
+  const registerBot = async () => {
+    try {
+      const r = await axios.post("/api/site/discord-bot");
+      toast.success(`Registered ${r.data.count} commands`);
+      axios.get("/api/site/discord-bot").then((x) => setBotInfo(x.data)).catch(() => {});
+    } catch (e) {
+      toast.error(errorText(e));
+    }
+  };
 
   return (
     <div className="space-y-6">
+      <Panel title="Crewbase Discord bot">
+        {!botInfo ? (
+          <p className="text-sm text-zinc-500">Loading…</p>
+        ) : !botInfo.configured ? (
+          <div className="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
+            <p>The bot isn’t set up yet. In the Discord Developer Portal, create an application with a bot, then add these in Vercel and redeploy:</p>
+            <p><code>DISCORD_BOT_APPLICATION_ID</code>, <code>DISCORD_BOT_PUBLIC_KEY</code>, <code>DISCORD_BOT_TOKEN</code></p>
+            <p>Then set the application’s <strong>Interactions Endpoint URL</strong> to:</p>
+            <code className="block break-all rounded bg-zinc-100 p-2 dark:bg-zinc-900">{botInfo.interactionsUrl}</code>
+          </div>
+        ) : (
+          <div className="space-y-3 text-sm text-zinc-600 dark:text-zinc-300">
+            <p>
+              <Badge tone="green">Set up</Badge> Connected to {botInfo.servers} server{botInfo.servers === 1 ? "" : "s"}. Interactions URL:{" "}
+              <code className="break-all">{botInfo.interactionsUrl}</code>
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={registerBot} className={primaryButtonClass}>Register slash commands</button>
+              {botInfo.inviteUrl && <a href={botInfo.inviteUrl} target="_blank" rel="noopener noreferrer" className={buttonClass}>Invite link</a>}
+            </div>
+            <p className="text-xs text-zinc-500">Press Register after setting up, and again after any update that adds commands. Commands: {botInfo.commands.map((c) => `/${c}`).join(", ")}</p>
+          </div>
+        )}
+      </Panel>
+
       <Panel title="Announcement banner">
         <p className="text-sm text-zinc-600 dark:text-zinc-300">Shows a banner at the top of the app for every logged-in user. People can dismiss it.</p>
         <label htmlFor="ann-text" className="mt-4 block text-xs font-medium text-zinc-500">Message</label>

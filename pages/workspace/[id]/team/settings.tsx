@@ -20,6 +20,14 @@ const TeamSettings: pageWithLayout = () => {
   const [s, setS] = useState<Settings | null>(null);
   const [webhook, setWebhook] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [bot, setBot] = useState<{ available: boolean; inviteUrl: string | null; servers: { guildId: string; at: string }[] } | null>(null);
+  const [code, setCode] = useState<string | null>(null);
+
+  const loadBot = () => {
+    if (!id) return;
+    axios.get(`/api/workspace/${id}/team/bot`).then((r) => setBot(r.data)).catch(() => {});
+  };
+  useEffect(loadBot, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -78,6 +86,77 @@ const TeamSettings: pageWithLayout = () => {
                   <Toggle k="postKudos" label="Post kudos" />
                 </div>
                 <button onClick={() => save({ discordWebhook: null }, "Discord disconnected")} className={`${btn} mt-3`}>Disconnect Discord</button>
+              </>
+            )}
+          </Card>
+          <Card className="lg:col-span-2">
+            <h2 className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Crewbase bot</h2>
+            {!bot ? (
+              <p className="mt-2 text-sm text-zinc-500">Loading…</p>
+            ) : !bot.available ? (
+              <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">The Crewbase bot isn’t switched on for this site yet.</p>
+            ) : (
+              <>
+                <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+                  Add the bot to your Discord server so staff can check their activity, the leaderboard, sessions and events with slash commands.
+                </p>
+                <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm text-zinc-700 dark:text-zinc-300">
+                  <li>Add the bot to your server.</li>
+                  <li>Get a link code here.</li>
+                  <li>In your server, run <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-700">/link</code> with the code (needs Manage Server).</li>
+                </ol>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  {bot.inviteUrl && <a href={bot.inviteUrl} target="_blank" rel="noopener noreferrer" className={btnPrimary}>Add to Discord</a>}
+                  <button
+                    onClick={async () => {
+                      try {
+                        const r = await axios.post(`/api/workspace/${id}/team/bot`);
+                        setCode(r.data.code);
+                      } catch (e) {
+                        toast.error(errorText(e));
+                      }
+                    }}
+                    className={btn}
+                  >
+                    {code ? "Get a new code" : "Get link code"}
+                  </button>
+                  {code && (
+                    <span className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200">
+                      <code className="rounded-lg bg-zinc-100 px-3 py-1.5 font-mono text-base tracking-widest dark:bg-zinc-700">{code}</code>
+                      <button onClick={() => { navigator.clipboard?.writeText(`/link code:${code}`); toast.success("Copied"); }} className={btn}>Copy</button>
+                      <span className="text-xs text-zinc-500">Works once, for 15 minutes</span>
+                    </span>
+                  )}
+                </div>
+                <p className="mt-4 text-xs text-zinc-500">
+                  For <code>/activity</code> and <code>/profile</code> to find someone, they need their Discord ID in their Crewbase workspace profile.
+                </p>
+                {bot.servers.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-zinc-900 dark:text-white">Connected servers</p>
+                    <ul className="mt-2 divide-y divide-zinc-200 dark:divide-zinc-700">
+                      {bot.servers.map((s) => (
+                        <li key={s.guildId} className="flex items-center justify-between py-2 text-sm text-zinc-700 dark:text-zinc-300">
+                          <span>Server ID {s.guildId} · linked {new Date(s.at).toLocaleDateString()}</span>
+                          <button
+                            onClick={async () => {
+                              try {
+                                await axios.delete(`/api/workspace/${id}/team/bot`, { params: { guildId: s.guildId } });
+                                toast.success("Disconnected");
+                                loadBot();
+                              } catch (e) {
+                                toast.error(errorText(e));
+                              }
+                            }}
+                            className={btn}
+                          >
+                            Disconnect
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </>
             )}
           </Card>
