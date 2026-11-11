@@ -430,7 +430,7 @@ const workspace: LayoutProps = ({ children }) => {
 				{ title: "HR", items: [hr("", "Overview", IconLayoutDashboard)] },
 				{ title: "Discipline", items: [hr("infractions", "Infractions", IconAlertTriangle), hr("appeals", "Appeals", IconGavel)] },
 				{ title: "Cases", items: [hr("complaints", "Complaints", IconMessageReport)] },
-				{ title: "Development", items: [hr("plans", "Improvement plans", IconTrendingUp)] },
+				{ title: "Development", items: [hr("paths", "Promotion paths", IconAward), hr("plans", "Improvement plans", IconTrendingUp)] },
 				{ title: "Offboarding", items: [hr("resignations", "Resignations", IconDoorExit)] },
 				...(canSeeFiles ? [{ title: "Records", items: [hr("files", "Staff files", IconFolderOpen)] }] : []),
 			];

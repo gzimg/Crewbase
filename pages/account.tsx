@@ -41,6 +41,21 @@ export default function AccountPage() {
     axios.get("/api/discord/link").then((r) => setDiscordId(r.data.discordId)).catch(() => setDiscordId(null));
   }, []);
 
+  const [passport, setPassport] = useState<{ passport: { token: string; groupIds: string[] } | null; workspaces: { groupId: string; groupName: string }[] } | null>(null);
+  const [passportPick, setPassportPick] = useState<string[]>([]);
+  const loadPassport = () =>
+    axios.get("/api/me/passport").then((r) => { setPassport(r.data); setPassportPick(r.data.passport?.groupIds || r.data.workspaces.map((w: any) => w.groupId)); }).catch(() => {});
+  useEffect(() => { loadPassport(); }, []);
+  const savePassport = async (regenerate = false) => {
+    try {
+      await axios.post("/api/me/passport", { groupIds: passportPick, regenerate });
+      toast.success(regenerate ? "New link created; the old one stops working" : "Passport saved");
+      loadPassport();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.error || "Something went wrong");
+    }
+  };
+
   const openDeletion = reports.some((r) => r.category === "deletion" && r.status === "open");
 
   return (
@@ -67,7 +82,43 @@ export default function AccountPage() {
               <button onClick={async () => { await axios.delete("/api/discord/link"); setDiscordId(null); toast.success("Discord unlinked"); }} className={buttonClass}>Unlink Discord</button>
             </div>
           ) : (
-            <p className="text-sm text-zinc-600 dark:text-zinc-300">Not linked. Run <code>/verify</code> in any server with the Crewbase bot to link your Discord account.</p>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">Not linked. Link Discord to log in with it, and to get roles in servers using the Crewbase bot.</p>
+              <a href="/api/auth/discord/start?mode=link" className="inline-flex h-9 items-center rounded-lg bg-[#5865F2] px-3 text-sm font-medium text-white hover:bg-[#4752c4]">Link Discord</a>
+            </div>
+          )}
+        </Section>
+
+        <Section title="Staff Passport">
+          <p className="text-sm text-zinc-600 dark:text-zinc-300">
+            A verified record of your staff experience, to share when you apply to another group: your roles, how long you’ve been on
+            each team, certifications, kudos and Staff of the Month wins. It never includes warnings or HR records. It’s off until you
+            turn it on, and only people with the link can see it.
+          </p>
+          {passport && passport.workspaces.length > 0 ? (
+            <>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {passport.workspaces.map((w) => (
+                  <label key={w.groupId} className="flex items-center gap-2 rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
+                    <input type="checkbox" checked={passportPick.includes(w.groupId)} onChange={(e) => setPassportPick(e.target.checked ? [...passportPick, w.groupId] : passportPick.filter((g) => g !== w.groupId))} className="h-4 w-4" />
+                    {w.groupName}
+                  </label>
+                ))}
+              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <button onClick={() => savePassport(false)} disabled={!passportPick.length} className={primaryButtonClass}>{passport.passport ? "Save changes" : "Turn on my passport"}</button>
+                {passport.passport && (
+                  <>
+                    <button onClick={() => { const url = `${window.location.origin}/passport/${passport.passport!.token}`; navigator.clipboard?.writeText(url); toast.success("Link copied"); }} className={buttonClass}>Copy link</button>
+                    <a href={`/passport/${passport.passport.token}`} target="_blank" rel="noopener noreferrer" className={buttonClass}>View</a>
+                    <button onClick={() => savePassport(true)} className={buttonClass}>New link</button>
+                    <button onClick={async () => { await axios.delete("/api/me/passport"); toast.success("Passport turned off"); loadPassport(); }} className={dangerButtonClass}>Turn off</button>
+                  </>
+                )}
+              </div>
+            </>
+          ) : (
+            <p className="mt-3 text-sm text-zinc-500">Join a workspace first to build your passport.</p>
           )}
         </Section>
 

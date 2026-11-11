@@ -38,6 +38,7 @@ const WORKSPACE_PAGES: [string, string, string?][] = [
   ["/hr/infractions", "Infractions", "warning discipline points strike"],
   ["/hr/appeals", "Appeals", "appeal infraction"],
   ["/hr/complaints", "Complaints", "grievance report concern hr"],
+  ["/hr/paths", "Promotion paths", "promotion rank requirements progress"],
   ["/hr/plans", "Improvement plans", "pip performance"],
   ["/hr/resignations", "Resignations", "resign leave quit exit"],
   ["/hr/files", "Staff files", "record personnel"],

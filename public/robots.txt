@@ -10,6 +10,7 @@ Allow: /plans
 Allow: /bot
 Allow: /credits
 Disallow: /api/
+Disallow: /passport/
 Disallow: /workspace/
 Disallow: /workspaces
 Disallow: /site/

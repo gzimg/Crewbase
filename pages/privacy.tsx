@@ -27,6 +27,16 @@ export default function PrivacyPage() {
         </li>
       </ul>
 
+      <h3>Staff Passport (only if you turn it on)</h3>
+      <ul>
+        <li>
+          If you turn on your Staff Passport, anyone with its link can see your Roblox username and avatar, and for the workspaces
+          you choose: the group’s name, your roles, when you joined, your certifications, kudos count, Staff of the Month wins and
+          time in game over the last 90 days. It never shows warnings, infractions or other HR records. You can change what’s
+          included, make a new link, or turn it off at any time on your account page.
+        </li>
+      </ul>
+
       <h3>Reports and support</h3>
       <ul>
         <li>Reports you send to Crewbase site staff, and requests like account deletion.</li>
@@ -67,7 +77,9 @@ export default function PrivacyPage() {
           If you verify with the bot: the link between your Discord user ID and your Roblox account, and each server’s role and
           nickname settings. Servers using the bot can see your Roblox username, profile and Crewbase roles in their linked
           workspace, and the bot may change your roles and nickname in those servers. If a workspace uses Bloxlink, the bot may
-          ask Bloxlink which Roblox account matches your Discord account. You can unlink with /unverify or on your account page.
+          ask Bloxlink which Roblox account matches your Discord account. You can unlink with /unverify or on your account page. If you use
+          “Continue with Discord” to log in or link your account, we only ask Discord for your basic account details (your user
+          ID), never your messages, servers or email.
         </li>
         <li>Roblox Open Cloud: an API key the workspace owner provides so Crewbase can read group ranks.</li>
       </ul>

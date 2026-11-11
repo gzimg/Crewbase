@@ -192,6 +192,30 @@ export default function Landing({ mode, displayName, avatar }: LandingProps) {
           </div>
         </section>
 
+        {/* Signature features */}
+        <section className="mx-auto max-w-6xl px-5 pb-24">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold" style={{ color: ORANGE }}>Only on Crewbase</p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">Fair for staff, not just easy for owners</h2>
+          </div>
+          <div className="mt-12 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border p-7" style={{ borderColor: "rgba(242,140,40,0.35)", backgroundColor: "rgba(242,140,40,0.05)" }}>
+              <h3 className="text-xl font-semibold text-white">Promotion paths</h3>
+              <p className="mt-3 leading-relaxed text-zinc-300">
+                Publish exactly what each promotion takes: time in game, certifications, kudos, reviews and a clean record. Every staff
+                member sees a live checklist of their progress, and leaders see who’s ready. No more “why did they get promoted and not me?”
+              </p>
+            </div>
+            <div className="rounded-2xl border p-7" style={{ borderColor: "rgba(242,140,40,0.35)", backgroundColor: "rgba(242,140,40,0.05)" }}>
+              <h3 className="text-xl font-semibold text-white">Staff Passport</h3>
+              <p className="mt-3 leading-relaxed text-zinc-300">
+                A verified staff record members can take with them. When they apply to a new group, they share one link showing their real
+                roles, time on the team, certifications and recognition, straight from Crewbase. Off by default, and always their choice.
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* Setup */}
         <section className="border-y border-white/[0.06] bg-white/[0.015]">
           <div className="mx-auto max-w-6xl px-5 py-24">

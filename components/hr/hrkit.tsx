@@ -11,6 +11,7 @@ export const HR_TABS = [
   { slug: "infractions", label: "Infractions" },
   { slug: "appeals", label: "Appeals" },
   { slug: "complaints", label: "Complaints" },
+  { slug: "paths", label: "Promotion paths" },
   { slug: "plans", label: "Improvement plans" },
   { slug: "resignations", label: "Resignations" },
   { slug: "files", label: "Staff files", hrOnly: true },

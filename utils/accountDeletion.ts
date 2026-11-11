@@ -194,6 +194,9 @@ export async function deleteUserAccount(userId: string, options: DeletionOptions
     }
   }
 
+  // Staff Passport
+  await (await import("@/utils/passport")).deletePassport(userId).catch(() => {});
+
   // Discord account link used by the Crewbase bot
   {
     const { getDiscordForUser, setLink } = await import("@/utils/discordSync");

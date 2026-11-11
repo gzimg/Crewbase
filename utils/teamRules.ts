@@ -552,6 +552,35 @@ export const RULES: Record<Collection, Rule> = {
       withdraw: (item, _b, c) => (item.createdBy === c.id && item.status === "received" ? { ...item, status: "withdrawn" } : { error: "You can’t withdraw this now" }),
     },
   },
+
+  // Promotion paths: what it takes to move from one role to the next
+  paths: {
+    canCreate: managerOnly,
+    canEdit: managerItem,
+    canDelete: managerItem,
+    view: everyone,
+    validate: (b) => {
+      const fromRole = str(b.fromRole, 60);
+      const toRole = str(b.toRole, 60);
+      if (!fromRole || !toRole) return { error: "Pick the current role and the next role" };
+      const c = b.criteria || {};
+      return {
+        data: {
+          fromRole,
+          toRole,
+          note: str(b.note, 500),
+          criteria: {
+            minHoursPerWeek: Math.min(168, Math.max(0, Number(c.minHoursPerWeek) || 0)),
+            minDaysOnTeam: clampInt(c.minDaysOnTeam, 0, 3650),
+            certIds: Array.isArray(c.certIds) ? c.certIds.map((x: unknown) => str(x, 24)).filter(Boolean).slice(0, 10) : [],
+            noActiveInfractions: bool(c.noActiveInfractions),
+            minKudos: clampInt(c.minKudos, 0, 1000),
+            minReviewAverage: Math.min(5, Math.max(0, Number(c.minReviewAverage) || 0)),
+          },
+        },
+      };
+    },
+  },
 };
 
 /** Strips who sent anonymous feedback before anyone sees it. */
