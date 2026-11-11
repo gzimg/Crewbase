@@ -81,9 +81,16 @@ export default function TermsPage() {
 
       <h2>8. Other services</h2>
       <p>
-        Crewbase works with Roblox, and optionally with Discord and Bloxlink. Those services have their own terms and privacy
-        policies, and we’re not responsible for them. Crewbase is an independent project and is not affiliated with, endorsed by
-        or sponsored by Roblox Corporation, Discord Inc. or Bloxlink. Roblox is a trademark of Roblox Corporation.
+        Crewbase works with Roblox, and optionally with Discord, Bloxlink and RankGun. Those services have their own terms and
+        privacy policies, and we’re not responsible for them. Crewbase is an independent project and is not affiliated with,
+        endorsed by or sponsored by Roblox Corporation, Discord Inc., Bloxlink, RankGun or any other company, platform or
+        community. Roblox is a trademark of Roblox Corporation, and Discord is a trademark of Discord Inc.
+      </p>
+      <p>
+        <strong>The Crewbase Discord bot.</strong> If you add our bot to a Discord server or link a server to a workspace, you
+        confirm you’re allowed to do so for that server, for example because you own it or have the Manage Server permission.
+        The bot answers slash commands with information from the linked workspace, so only link servers whose members should be
+        able to see that information. You can disconnect a server at any time with <code>/unlink</code> or from Team settings.
       </p>
 
       <h2>9. Open source</h2>
@@ -92,6 +99,15 @@ export default function TermsPage() {
         find the source code at <a href={LEGAL.sourceUrl} target="_blank" rel="noopener noreferrer">{LEGAL.sourceUrl}</a>.
         Nothing in these Terms limits the rights the GPL gives you over the code itself. These Terms cover your use of this hosted
         Crewbase site.
+      </p>
+
+      <h3>Our name and logo</h3>
+      <p>
+        The Crewbase name and logo identify this service. Please don’t use them in a way that suggests we endorse, run or are
+        connected with your group, server or project unless we’ve agreed to it. You can still say that your group uses Crewbase.
+        The GPL-3.0 license covers the code, not our name and logo. If you run your own copy of the code, please give it a
+        different name and logo so people don’t confuse the two. The names and logos of other projects, companies and
+        communities mentioned on Crewbase belong to their owners.
       </p>
 
       <h2>10. A free hobby service</h2>

@@ -86,6 +86,11 @@ export default function PrivacyPage() {
       <p>
         We don’t sell or rent personal information, we don’t share it for advertising, and we don’t build advertising profiles.
       </p>
+      <p>
+        Our homepage may show overall totals, such as the number of workspaces, staff members or hours tracked across Crewbase.
+        These are added up across everyone and never name or identify a person, group or workspace. We don’t show the names or
+        logos of groups that use Crewbase without their permission.
+      </p>
 
       <h2>3. Who can see your information</h2>
       <ul>

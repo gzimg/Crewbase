@@ -1,199 +1,305 @@
+import { useEffect, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
+import {
+  IconArrowRight, IconBrandDiscord, IconClock, IconCalendarEvent, IconShieldCheck, IconUsersGroup,
+  IconRobot, IconSparkles, IconChevronDown, IconChecks,
+} from "@tabler/icons-react";
 
 export type LandingMode = "login" | "setup" | "loggedIn";
+type LandingProps = { mode: LandingMode; displayName?: string; avatar?: string };
 
-type LandingProps = {
-  mode: LandingMode;
-  displayName?: string;
-  avatar?: string;
-};
+const ORANGE = "#F28C28";
+const SOURCE = process.env.NEXT_PUBLIC_SOURCE_URL || "https://github.com/TeamFirefli/firefli";
+const DISCORD = process.env.NEXT_PUBLIC_DISCORD_INVITE || "";
 
-/*
-  Kept deliberately plain: the app's own colours and system fonts, a real
-  screenshot instead of a mock-up, and short, direct copy. No animations.
-*/
-
-const FEATURES: { name: string; text: string }[] = [
-  { name: "Activity tracking", text: "A script in your game logs each staff member’s time in game. Set weekly quotas per role." },
-  { name: "Sessions", text: "Schedule trainings and shifts. Staff claim slots, and it can post to your Discord." },
-  { name: "Moderation", text: "Cases for in-game bans and warnings, with screenshots and videos attached." },
-  { name: "Userbook", text: "Every warning, promotion and note for a member, in one place." },
-  { name: "Notices", text: "Staff log time away so a quiet week isn’t mistaken for someone going missing." },
-  { name: "Docs and policies", text: "Your handbook, plus rules staff sign to say they’ve read." },
-  { name: "Team tab", text: "Announcements, chat, events, tasks, polls, kudos and Staff of the Month." },
-  { name: "Trainings and reviews", text: "Track certifications and write proper staff reviews." },
-  { name: "Discord bot", text: "Slash commands for activity, the leaderboard, sessions and events, right in your server." },
-  { name: "Plans", text: "Free plans with room to grow. Bigger groups can ask for higher limits." },
+const FEATURES = [
+  { icon: IconClock, title: "Activity from your game", text: "A script in your Roblox game logs each staff member’s time in game, so weekly quotas track themselves." },
+  { icon: IconCalendarEvent, title: "Sessions and events", text: "Schedule trainings, shifts and events. Staff claim slots and get reminded before they start." },
+  { icon: IconShieldCheck, title: "Moderation records", text: "Cases for in-game bans and warnings, with screenshots and videos kept on the case." },
+  { icon: IconUsersGroup, title: "A home for your team", text: "Announcements, team chat, tasks, polls, trainings, reviews and Staff of the Month." },
+  { icon: IconRobot, title: "Discord bot", text: "Slash commands for activity, the leaderboard, sessions and events, right in your server." },
+  { icon: IconSparkles, title: "Free plans that grow", text: "Every plan is free. Bigger groups can ask for higher limits or unlock them as they grow." },
 ];
+
+const MORE = [
+  "Quotas", "Leaderboards", "Inactivity notices", "Userbook", "Promotions", "Recommendations", "Applications",
+  "Docs", "Policies", "Onboarding checklists", "Ideas board", "Kudos", "Alliances", "Saved staff views",
+  "Public API", "Bloxlink", "Audit logs", "Ctrl+K search",
+];
+
+const FAQ: [string, string][] = [
+  ["What is Crewbase?", "A free website for running a Roblox group’s staff team. It brings activity tracking, sessions, moderation, promotions and team tools into one workspace."],
+  ["How much does it cost?", "Nothing. Every plan is free. Larger groups can request Plus or Pro for higher limits, also free."],
+  ["How does activity tracking work?", "A workspace admin adds our script to the group’s Roblox game. When staff play, their time is sent to Crewbase and counted towards their quota."],
+  ["Do my staff need to install anything?", "No. Crewbase runs in the browser, and staff sign up with their Roblox username."],
+  ["Can we use it in Discord?", "Yes. Add the Crewbase bot to your server and link it to your workspace for slash commands like /activity and /sessions."],
+  ["Is Crewbase open source?", "Yes. It’s licensed under GPL-3.0 and based on Firefli, Orbit and Tovy. The source code is public."],
+  ["Is it made by Roblox?", "No. Crewbase is an independent project and isn’t affiliated with Roblox Corporation or Discord."],
+];
+
+function Stats() {
+  const [s, setS] = useState<{ workspaces: number; members: number; hoursLast30Days: number } | null>(null);
+  useEffect(() => {
+    fetch("/api/site/stats").then((r) => r.json()).then(setS).catch(() => {});
+  }, []);
+  // Only show real totals once they're meaningful; otherwise show plain facts instead
+  const real = s && s.workspaces >= 10;
+  const items = real
+    ? [
+        [s!.workspaces.toLocaleString(), "workspaces"],
+        [s!.members.toLocaleString(), "staff members"],
+        [s!.hoursLast30Days.toLocaleString(), "hours tracked this month"],
+      ]
+    : [
+        ["Free", "on every plan"],
+        ["Open source", "under GPL-3.0"],
+        ["Minutes", "to set up a workspace"],
+      ];
+  return (
+    <dl className="mx-auto mt-14 grid max-w-3xl grid-cols-3 divide-x divide-white/10 rounded-2xl border border-white/10 bg-white/[0.02]">
+      {items.map(([v, l]) => (
+        <div key={l} className="px-3 py-5 text-center">
+          <dt className="sr-only">{l}</dt>
+          <dd className="text-xl font-semibold text-white sm:text-2xl">{v}</dd>
+          <dd className="mt-1 text-xs text-zinc-400 sm:text-sm">{l}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
 
 export default function Landing({ mode, displayName, avatar }: LandingProps) {
   const primary =
-    mode === "loggedIn"
-      ? { href: "/workspaces", label: "Go to your workspace" }
-      : mode === "setup"
-        ? { href: "/welcome", label: "Set up Crewbase" }
-        : { href: "/login", label: "Sign up" };
+    mode === "loggedIn" ? { href: "/workspaces", label: "Open your workspace" } : mode === "setup" ? { href: "/welcome", label: "Set up Crewbase" } : { href: "/login", label: "Get started free" };
 
   return (
-    <div className="min-h-screen bg-zinc-900 text-zinc-300 antialiased">
+    <div className="min-h-screen overflow-x-hidden bg-[#0B0B0F] text-zinc-300 antialiased">
       <Head>
         <title>Crewbase - Staff management for Roblox groups</title>
-        <meta name="description" content="Crewbase is a free staff management site for Roblox groups: activity tracking, sessions, moderation and promotions." />
+        <meta name="description" content="Crewbase is a free, open-source staff management platform for Roblox groups: activity tracking, sessions, moderation, team tools and a Discord bot." />
         <link rel="canonical" href="https://crewbase.dev/" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Crewbase" />
         <meta property="og:url" content="https://crewbase.dev/" />
         <meta property="og:title" content="Crewbase - Staff management for Roblox groups" />
-        <meta property="og:description" content="Free staff management for Roblox groups: activity tracking, sessions, moderation and promotions." />
+        <meta property="og:description" content="Free, open-source staff management for Roblox groups." />
         <meta property="og:image" content="https://crewbase.dev/screenshots/dashboard.jpg" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="theme-color" content="#18181b" />
+        <meta name="theme-color" content="#0B0B0F" />
       </Head>
 
-      <header className="border-b border-zinc-800">
-        <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-5">
-          <Link href="/" className="flex items-center gap-2 text-white" aria-label="Crewbase home">
-            <img src="/crewbase.png" alt="" aria-hidden="true" width={28} height={28} className="h-7 w-7 rounded-md" />
-            <span className="font-semibold">Crewbase</span>
-          </Link>
-          <div className="flex items-center gap-5 text-sm">
-            <Link href="/bot" className="hidden hover:text-white sm:inline">Discord bot</Link>
-            <Link href="/plans" className="hidden hover:text-white sm:inline">Plans</Link>
-            <Link href="/help" className="hidden hover:text-white sm:inline">Help</Link>
+      {/* Nav */}
+      <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#0B0B0F]/90">
+        <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
+          <Link href="/" aria-label="Crewbase home"><img src="/wlogo.svg" alt="Crewbase" className="h-7 w-auto" /></Link>
+          <div className="flex items-center gap-1 text-sm">
+            <a href="#features" className="hidden rounded-lg px-3 py-2 text-zinc-400 hover:text-white md:block">Features</a>
+            <Link href="/plans" className="hidden rounded-lg px-3 py-2 text-zinc-400 hover:text-white md:block">Plans</Link>
+            <Link href="/bot" className="hidden rounded-lg px-3 py-2 text-zinc-400 hover:text-white md:block">Discord bot</Link>
+            <Link href="/help" className="hidden rounded-lg px-3 py-2 text-zinc-400 hover:text-white md:block">Help</Link>
             {mode === "loggedIn" ? (
-              <Link href="/workspaces" className="flex items-center gap-2 font-medium text-white">
-                {avatar && <img src={avatar} alt="" aria-hidden="true" width={24} height={24} className="h-6 w-6 rounded-full bg-zinc-700" />}
-                {displayName || "Your workspaces"}
+              <Link href="/workspaces" className="ml-2 flex items-center gap-2 rounded-lg border border-white/10 px-3 py-1.5 font-medium text-white hover:bg-white/5">
+                {avatar && <img src={avatar} alt="" aria-hidden="true" className="h-6 w-6 rounded-full bg-zinc-700" />}
+                <span className="max-w-[140px] truncate">{displayName || "Your workspaces"}</span>
               </Link>
             ) : (
-              <Link href={mode === "setup" ? "/welcome" : "/login"} className="font-medium text-white">
-                {mode === "setup" ? "Set up" : "Log in"}
-              </Link>
+              <>
+                <Link href="/login" className="rounded-lg px-3 py-2 font-medium text-white hover:bg-white/5">Log in</Link>
+                <Link href={primary.href} className="ml-1 rounded-lg px-3 py-2 font-semibold text-zinc-900" style={{ backgroundColor: ORANGE }}>Sign up</Link>
+              </>
             )}
           </div>
         </nav>
       </header>
 
       <main>
-        <section className="mx-auto max-w-5xl px-5 pt-16 sm:pt-24">
-          <h1 className="max-w-2xl text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl">
-            Staff management for Roblox groups.
-          </h1>
-          <p className="mt-5 max-w-xl text-lg leading-relaxed text-zinc-400">
-            Crewbase tracks your staff’s time in game, organises your sessions and keeps your moderation records in one place.
-            It’s free, and you can set it up for your group in about an evening.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            <Link
-              href={primary.href}
-              className="rounded-md bg-[#F28C28] px-5 py-2.5 font-semibold text-zinc-900 hover:bg-[#f59d45] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
-              {primary.label}
+        {/* Hero */}
+        <section className="relative">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 h-[560px]"
+            style={{ background: "radial-gradient(60% 55% at 50% 0%, rgba(242,140,40,0.18), transparent 70%)" }}
+          />
+          <div className="relative mx-auto max-w-6xl px-5 pb-10 pt-20 text-center sm:pt-28">
+            <Link href="/bot" className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-sm text-zinc-300 hover:border-white/20">
+              <span className="rounded-full px-2 py-0.5 text-xs font-semibold text-zinc-900" style={{ backgroundColor: ORANGE }}>New</span>
+              The Crewbase Discord bot is here
+              <IconArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
-            <Link href="/help" className="font-medium text-white underline-offset-4 hover:underline">
-              How does it work?
-            </Link>
-          </div>
-          {mode === "setup" && <p className="mt-4 text-sm text-zinc-500">The first person to finish setup becomes this site’s owner.</p>}
-
-          <picture>
-            <source srcSet="/screenshots/dashboard.webp" type="image/webp" />
-            <img
-              src="/screenshots/dashboard.jpg"
-              alt="The Crewbase dashboard for a workspace, showing the sidebar, upcoming birthdays and new team members."
-              width={1400}
-              height={953}
-              className="mt-14 w-full rounded-lg border border-zinc-700"
-            />
-          </picture>
-        </section>
-
-        <section className="mx-auto max-w-5xl px-5 py-20">
-          <h2 className="text-2xl font-semibold text-white">What’s in it</h2>
-          <dl className="mt-8 grid gap-x-12 gap-y-7 sm:grid-cols-2">
-            {FEATURES.map((f) => (
-              <div key={f.name}>
-                <dt className="font-medium text-white">{f.name}</dt>
-                <dd className="mt-1 leading-relaxed text-zinc-400">{f.text}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-
-        <section className="border-t border-zinc-800">
-          <div className="mx-auto grid max-w-5xl gap-12 px-5 py-20 md:grid-cols-2">
-            <div>
-              <h2 className="text-2xl font-semibold text-white">Getting started</h2>
-              <ol className="mt-6 list-decimal space-y-4 pl-5 leading-relaxed text-zinc-400 marker:text-zinc-500">
-                <li><span className="text-white">Sign up</span> with your Roblox username.</li>
-                <li><span className="text-white">Create a workspace</span> with your group ID. Your group’s ranks come across as roles.</li>
-                <li><span className="text-white">Add the activity script</span> to your game from the workspace settings.</li>
-                <li><span className="text-white">Invite your staff.</span> Their rank decides what they can see.</li>
-              </ol>
+            <h1 className="mx-auto mt-7 max-w-4xl text-4xl font-bold leading-[1.08] tracking-tight text-white sm:text-6xl">
+              Run your Roblox staff team from <span style={{ color: ORANGE }}>one place.</span>
+            </h1>
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-zinc-400">
+              Crewbase is a free, open-source home for your group’s staff: activity from your game, sessions, moderation, promotions
+              and team tools, with a Discord bot to match.
+            </p>
+            <div className="mt-9 flex flex-wrap justify-center gap-3">
+              <Link href={primary.href} className="inline-flex items-center gap-2 rounded-xl px-6 py-3 font-semibold text-zinc-900 hover:brightness-110" style={{ backgroundColor: ORANGE }}>
+                {primary.label} <IconArrowRight className="h-5 w-5" aria-hidden="true" />
+              </Link>
+              <Link href="/bot" className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-6 py-3 font-semibold text-white hover:bg-white/5">
+                <IconBrandDiscord className="h-5 w-5" aria-hidden="true" /> Add the Discord bot
+              </Link>
             </div>
-            <div>
-              <h2 className="text-2xl font-semibold text-white">Questions</h2>
-              <dl className="mt-6 space-y-5 leading-relaxed">
-                <div>
-                  <dt className="text-white">Is it free?</dt>
-                  <dd className="text-zinc-400">Yes. Larger groups can ask for a <Link href="/plans" className="text-white underline underline-offset-4">higher plan</Link> with bigger limits, also free.</dd>
-                </div>
-                <div>
-                  <dt className="text-white">Who can see our data?</dt>
-                  <dd className="text-zinc-400">People in your workspace, based on the roles you set. Details are in the <Link href="/privacy" className="text-white underline underline-offset-4">privacy policy</Link>.</dd>
-                </div>
-                <div>
-                  <dt className="text-white">Is this made by Roblox?</dt>
-                  <dd className="text-zinc-400">No. It’s an independent hobby project, built on the open-source Firefli.</dd>
-                </div>
-              </dl>
-              <p className="mt-6"><Link href="/help" className="text-white underline underline-offset-4">More in the help center</Link></p>
+            {mode === "setup" && <p className="mt-4 text-sm text-zinc-500">The first person to finish setup becomes this site’s owner.</p>}
+
+            <div className="relative mx-auto mt-16 max-w-5xl">
+              <div aria-hidden="true" className="absolute -inset-x-8 -top-8 bottom-0 rounded-[40px] opacity-60 blur-3xl" style={{ background: "radial-gradient(50% 50% at 50% 40%, rgba(242,140,40,0.25), transparent 70%)" }} />
+              <picture>
+                <source srcSet="/screenshots/dashboard.webp" type="image/webp" />
+                <img
+                  src="/screenshots/dashboard.jpg"
+                  alt="The Crewbase dashboard for a workspace."
+                  width={1400}
+                  height={953}
+                  className="relative w-full rounded-2xl border border-white/10 shadow-2xl"
+                />
+              </picture>
             </div>
+            <Stats />
           </div>
         </section>
-        <section className="border-t border-zinc-800" aria-labelledby="credits-heading">
-          <div className="mx-auto max-w-5xl px-5 py-16">
-            <div className="rounded-xl border border-[#F28C28]/40 bg-[#F28C28]/[0.06] p-6 sm:p-8">
-              <h2 id="credits-heading" className="text-2xl font-semibold text-white">Built on open source</h2>
-              <p className="mt-2 max-w-2xl leading-relaxed text-zinc-300">
-                Crewbase is a fork of <strong className="text-white">Firefli</strong>, which grew out of <strong className="text-white">Orbit</strong> and the original{" "}
-                <strong className="text-white">Tovy</strong> project. Huge thanks to everyone who built them. Like them, Crewbase is free and open source under GPL-3.0.
-              </p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                {[
-                  ["Firefli", "by Cloudysatrn and Max Croft", "https://github.com/TeamFirefli/firefli"],
-                  ["Orbit", "by Planetary", ""],
-                  ["Tovy", "the original project", ""],
-                ].map(([name, by, href]) => (
-                  <div key={name} className="rounded-lg border border-zinc-700 bg-zinc-900 p-4">
-                    <p className="font-semibold text-white">
-                      {href ? <a href={href} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:underline">{name}</a> : name}
-                    </p>
-                    <p className="mt-0.5 text-sm text-zinc-400">{by}</p>
-                  </div>
+
+        {/* Features */}
+        <section id="features" className="scroll-mt-20">
+          <div className="mx-auto max-w-6xl px-5 py-24">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Everything a staff team needs</h2>
+              <p className="mt-4 text-zinc-400">Built for Roblox groups, from a handful of moderators to whole departments.</p>
+            </div>
+            <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {FEATURES.map(({ icon: Icon, title, text }) => (
+                <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 transition-colors hover:border-white/20">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: "rgba(242,140,40,0.12)", color: ORANGE }}>
+                    <Icon className="h-6 w-6" aria-hidden="true" />
+                  </span>
+                  <h3 className="mt-5 text-lg font-semibold text-white">{title}</h3>
+                  <p className="mt-2 leading-relaxed text-zinc-400">{text}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-14 text-center">
+              <p className="text-sm font-medium text-zinc-500">And plenty more</p>
+              <ul className="mx-auto mt-4 flex max-w-4xl flex-wrap justify-center gap-2">
+                {MORE.map((m) => (
+                  <li key={m} className="flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-sm text-zinc-300">
+                    <IconChecks className="h-4 w-4" style={{ color: ORANGE }} aria-hidden="true" /> {m}
+                  </li>
                 ))}
-              </div>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Link href="/credits" className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-200">See all credits</Link>
-                <a href={process.env.NEXT_PUBLIC_SOURCE_URL || "https://github.com/TeamFirefli/firefli"} target="_blank" rel="noopener noreferrer" className="rounded-md border border-zinc-600 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800">View the source code</a>
-              </div>
+              </ul>
             </div>
+          </div>
+        </section>
+
+        {/* Setup */}
+        <section className="border-y border-white/[0.06] bg-white/[0.015]">
+          <div className="mx-auto max-w-6xl px-5 py-24">
+            <h2 className="text-center text-3xl font-bold tracking-tight text-white sm:text-4xl">Set up before your next training</h2>
+            <ol className="mt-14 grid gap-8 md:grid-cols-3">
+              {[
+                ["Create your workspace", "Sign up with your Roblox username and enter your group ID. Your ranks come across as roles."],
+                ["Connect your game", "Add the activity script to your game from workspace settings. Time in game starts counting next time staff play."],
+                ["Bring your team in", "Staff sign up and see what their rank allows. Add the Discord bot to your server too, if you like."],
+              ].map(([t, d], i) => (
+                <li key={t} className="text-center md:text-left">
+                  <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full border text-sm font-bold md:mx-0" style={{ borderColor: ORANGE, color: ORANGE }}>
+                    {i + 1}
+                  </span>
+                  <h3 className="mt-5 text-lg font-semibold text-white">{t}</h3>
+                  <p className="mt-2 leading-relaxed text-zinc-400">{d}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="mx-auto max-w-3xl px-5 py-24">
+          <h2 className="text-center text-3xl font-bold tracking-tight text-white sm:text-4xl">Questions</h2>
+          <div className="mt-10 space-y-3">
+            {FAQ.map(([q, a]) => (
+              <details key={q} className="group rounded-xl border border-white/10 bg-white/[0.02] px-5 py-4 open:border-white/20">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium text-white">
+                  {q}
+                  <IconChevronDown className="h-5 w-5 shrink-0 text-zinc-500 transition-transform group-open:rotate-180" aria-hidden="true" />
+                </summary>
+                <p className="mt-3 leading-relaxed text-zinc-400">{a}</p>
+              </details>
+            ))}
+          </div>
+          <p className="mt-6 text-center text-sm text-zinc-500">
+            More answers in the <Link href="/help" className="text-white underline underline-offset-4">help center</Link>
+            {DISCORD && <>, or ask us on <a href={DISCORD} target="_blank" rel="noopener noreferrer" className="text-white underline underline-offset-4">Discord</a></>}.
+          </p>
+        </section>
+
+        {/* Built on */}
+        <section className="mx-auto max-w-6xl px-5 pb-24" aria-labelledby="credits-heading">
+          <div className="rounded-2xl border p-6 sm:p-8" style={{ borderColor: "rgba(242,140,40,0.35)", backgroundColor: "rgba(242,140,40,0.05)" }}>
+            <h2 id="credits-heading" className="text-2xl font-semibold text-white">Built on open source</h2>
+            <p className="mt-2 max-w-3xl leading-relaxed text-zinc-300">
+              Crewbase is a fork of <strong className="text-white">Firefli</strong> by Cloudysatrn and Max Croft, which grew out of{" "}
+              <strong className="text-white">Orbit</strong> by Planetary and the original <strong className="text-white">Tovy</strong> project. Thank you to everyone who
+              built them. Like them, Crewbase is open source under GPL-3.0.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/credits" className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-200">See all credits</Link>
+              <a href={SOURCE} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-white hover:bg-white/5">View the source code</a>
+            </div>
+          </div>
+        </section>
+
+        {/* Closing */}
+        <section className="relative overflow-hidden border-t border-white/[0.06]">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(50% 80% at 50% 100%, rgba(242,140,40,0.16), transparent 70%)" }} />
+          <div className="relative mx-auto max-w-3xl px-5 py-24 text-center">
+            <img src="/crewbase-mark-white.svg" alt="" aria-hidden="true" className="mx-auto h-14 w-14" />
+            <h2 className="mt-6 text-3xl font-bold tracking-tight text-white sm:text-4xl">Give your staff team a home base</h2>
+            <p className="mt-4 text-zinc-400">Free for every group. Set up in minutes.</p>
+            <Link href={primary.href} className="mt-8 inline-flex items-center gap-2 rounded-xl px-6 py-3 font-semibold text-zinc-900 hover:brightness-110" style={{ backgroundColor: ORANGE }}>
+              {primary.label} <IconArrowRight className="h-5 w-5" aria-hidden="true" />
+            </Link>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-zinc-800">
-        <div className="mx-auto flex max-w-5xl flex-col gap-3 px-5 py-8 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} Crewbase. Based on Firefli, Orbit and Tovy. Not affiliated with Roblox Corporation.</p>
-          <nav className="flex flex-wrap gap-x-4 gap-y-1" aria-label="Footer">
-            <Link href="/changelog" className="hover:text-zinc-300">What’s new</Link>
-            <Link href="/status" className="hover:text-zinc-300">Status</Link>
-            <Link href="/terms" className="hover:text-zinc-300">Terms</Link>
-            <Link href="/privacy" className="hover:text-zinc-300">Privacy</Link>
-            <Link href="/credits" className="font-semibold text-zinc-200 hover:text-white">Credits</Link>
-            <a href={process.env.NEXT_PUBLIC_SOURCE_URL || "https://github.com/TeamFirefli/firefli"} target="_blank" rel="noopener noreferrer" className="hover:text-zinc-300">Source code</a>
-          </nav>
+      {/* Footer */}
+      <footer className="border-t border-white/[0.06]">
+        <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+          <div>
+            <img src="/wlogo.svg" alt="Crewbase" className="h-7 w-auto" />
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-zinc-500">Free, open-source staff management for Roblox groups.</p>
+          </div>
+          {[
+            ["Product", [["Features", "/#features"], ["Plans", "/plans"], ["Discord bot", "/bot"], ["What’s new", "/changelog"], ["Status", "/status"]]],
+            ["Resources", [["Help center", "/help"], ["Report a problem", "/report"], ["Credits", "/credits"], ["Source code", SOURCE], ...(DISCORD ? [["Discord", DISCORD]] : [])]],
+            ["Legal", [["Terms of Service", "/terms"], ["Privacy Policy", "/privacy"], ["License (GPL-3.0)", "https://www.gnu.org/licenses/gpl-3.0.html"]]],
+          ].map(([title, links]) => (
+            <div key={title as string}>
+              <p className="text-sm font-semibold text-white">{title as string}</p>
+              <ul className="mt-4 space-y-2.5 text-sm">
+                {(links as string[][]).map(([label, href]) => (
+                  <li key={label}>
+                    {href.startsWith("http") ? (
+                      <a href={href} target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white">{label}</a>
+                    ) : (
+                      <Link href={href} className="text-zinc-400 hover:text-white">{label}</Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="border-t border-white/[0.06]">
+          <div className="mx-auto max-w-6xl space-y-2 px-5 py-8 text-xs leading-relaxed text-zinc-500">
+            <p>© {new Date().getFullYear()} Crewbase. Crewbase is an independent hobby project based on Firefli, Orbit and Tovy, licensed under the GNU General Public License v3.0.</p>
+            <p>
+              Crewbase isn’t affiliated with, endorsed by or sponsored by Roblox Corporation, Discord Inc., Bloxlink or any other company or community.
+              Roblox is a trademark of Roblox Corporation, and Discord is a trademark of Discord Inc. All other names and logos belong to their owners.
+            </p>
+          </div>
         </div>
       </footer>
     </div>
