@@ -28,7 +28,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   await setLink(entry.discordId, userId);
   let sync = null;
   if (entry.guildId) sync = await syncMember(entry.guildId, entry.discordId).catch(() => null);
-  return res.status(200).json({ success: true, added: sync?.added.length || 0, nickname: sync?.nickname || null });
+  return res.status(200).json({ success: true, added: sync?.added.length || 0, nickname: sync?.nickname || null, problem: sync?.problem || null, failed: sync?.failed || 0 });
 }
 
 export default withSessionRoute(handler);

@@ -1,12 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/utils/database";
+import { waitUntil } from "@vercel/functions";
+import { BOT } from "@/utils/discordBot";
 import {
   verifyDiscordRequest, getWorkspaceForGuild, linkGuild, unlinkGuild, useLinkCode, memberForDiscordUser, minutesInGame,
 } from "@/utils/discordBot";
 import { listItems, createItem } from "@/utils/teamStore";
 import {
   syncMember, getGuildConfig, saveGuildConfig, createVerifyCode, getLinkedUser, setLink, resolveRobloxId, robloxProfile,
-  robloxIdFromUsername, factsFor, BIND_LABELS, BindKind,
+  robloxIdFromUsername, factsFor, BIND_LABELS, BindKind, OFFICIAL_GUILD_ID, OFFICIAL_ONLY_BINDS, SyncResult,
 } from "@/utils/discordSync";
 
 // Discord needs the exact raw body to check the signature
@@ -56,31 +58,59 @@ function profileEmbed(p: { id: string; name: string; displayName: string; create
   });
 }
 
-function describeSync(r: { verified: boolean; username: string | null; added: string[]; removed: string[]; nickname: string | null; failed: number }, self: boolean) {
+function describeSync(r: SyncResult, self: boolean) {
   if (!r.verified) return self ? "You haven’t verified yet. Run **/verify** first." : "That person hasn’t verified yet.";
-  const parts = [`✅ ${self ? "You’re" : `${r.username} is`} verified as **${r.username}**.`];
+  const who = self ? "You’re" : `${r.username} is`;
+  if (r.problem === "no_binds") {
+    return `✅ ${who} verified as **${r.username}**.\nThis server hasn’t set up any automatic roles yet, so there were none to give. Server managers: add some with **/bind add** (for example, type “Everyone verified” and your Member role).`;
+  }
+  if (r.problem === "no_access" || r.problem === "member_lookup") {
+    return `✅ ${who} verified as **${r.username}**, but I couldn’t update roles here. Make sure the **Crewbase** bot is still in this server with the **Manage Roles** permission.`;
+  }
+  const parts = [`✅ ${who} verified as **${r.username}**.`];
   if (r.added.length) parts.push(`Added: ${r.added.map((x) => `<@&${x}>`).join(" ")}`);
   if (r.removed.length) parts.push(`Removed: ${r.removed.map((x) => `<@&${x}>`).join(" ")}`);
-  if (!r.added.length && !r.removed.length) parts.push("Roles are already up to date.");
+  if (!r.added.length && !r.removed.length) parts.push("Your roles are already up to date.");
   if (r.nickname) parts.push(`Nickname: **${r.nickname}**`);
-  if (r.failed) parts.push(`⚠️ ${r.failed} change(s) failed. The Crewbase bot’s role needs to be above those roles, with Manage Roles and Manage Nicknames.`);
+  if (r.failed) parts.push(`⚠️ ${r.failed} change(s) failed. In Server Settings → Roles, the bot’s own **Crewbase** role must be **above** the roles it gives, and it needs **Manage Roles** and **Manage Nicknames**.`);
   return parts.join("\n");
 }
 
+/**
+ * Answers straight away with “thinking…”, then finishes the work in the background
+ * and edits the reply. Discord only waits 3 seconds for an answer, and role syncing
+ * can take longer than that.
+ */
+function deferred(res: NextApiResponse, token: string, work: () => Promise<Record<string, unknown>>) {
+  res.status(200).json({ type: 5, data: { flags: EPHEMERAL } });
+  waitUntil(
+    work()
+      .catch((error) => {
+        console.error("[discord bot] Deferred command failed:", error);
+        return { content: "Something went wrong. Please try again in a moment." };
+      })
+      .then((data) =>
+        fetch(`https://discord.com/api/v10/webhooks/${BOT.appId}/${token}/messages/@original`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ allowed_mentions: { parse: [] }, ...data }),
+        })
+      )
+      .catch(() => {})
+  );
+}
+
 /** /verify and the Verify button: sync if already linked, otherwise send a one-time link. */
-async function verifyFlow(res: NextApiResponse, discordId: string, guildId: string | undefined) {
-  if (guildId && (await getLinkedUser(discordId))) {
-    const r = await syncMember(guildId, discordId);
-    return res.status(200).json({ type: 4, data: { flags: EPHEMERAL, content: describeSync(r, true), allowed_mentions: { parse: [] } } });
-  }
-  const code = await createVerifyCode(discordId, guildId || null);
-  return res.status(200).json({
-    type: 4,
-    data: {
-      flags: EPHEMERAL,
+function verifyFlow(res: NextApiResponse, token: string, discordId: string, guildId: string | undefined) {
+  return deferred(res, token, async () => {
+    if (guildId && (await getLinkedUser(discordId))) {
+      return { content: describeSync(await syncMember(guildId, discordId), true) };
+    }
+    const code = await createVerifyCode(discordId, guildId || null);
+    return {
       embeds: [embed({ title: "Verify your account", description: "Click below and log in to Crewbase with your Roblox account. This link is just for you and works for 15 minutes." })],
       components: [{ type: 1, components: [{ type: 2, style: 5, label: "Verify on Crewbase", url: `${site()}/discord/verify?code=${code}` }] }],
-    },
+    };
   });
 }
 
@@ -95,7 +125,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Buttons: the Verify button posted by /verifypanel
   if (body.type === 3 && body.data?.custom_id === "cb_verify") {
     const who = body.member?.user?.id || body.user?.id;
-    return verifyFlow(res, who, body.guild_id);
+    return verifyFlow(res, body.token, who, body.guild_id);
   }
   if (body.type !== 2) return res.status(400).end();
 
@@ -130,13 +160,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     if (!guildId) return privateReply(res, "Use Crewbase commands inside a server.");
 
-    if (name === "verify") return verifyFlow(res, caller, guildId);
+    if (name === "verify") return verifyFlow(res, body.token, caller, guildId);
 
     if (name === "update") {
       const target = String(option("member") || caller);
       if (target !== caller && !hasPermission(body, 1n << 28n)) return privateReply(res, "You need the Manage Roles permission to update other people.");
-      const r = await syncMember(guildId, target);
-      return privateReply(res, describeSync(r, target === caller));
+      return deferred(res, body.token, async () => ({ content: describeSync(await syncMember(guildId, target), target === caller) }));
     }
 
     if (name === "whois") {
@@ -180,6 +209,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const value = sopt("value") !== undefined ? String(sopt("value")).trim() : undefined;
         const max = sopt("max") !== undefined ? Number(sopt("max")) : undefined;
         if (!BIND_LABELS[kind]) return privateReply(res, "Unknown bind type.");
+        if (OFFICIAL_ONLY_BINDS.includes(kind) && guildId !== OFFICIAL_GUILD_ID) {
+          return privateReply(res, "That bind type is only for the official Crewbase server. In your server, try Everyone verified, workspace members, a Crewbase role or a group rank.");
+        }
         if (["crewbase_role", "rank", "plan"].includes(kind) && !value) return privateReply(res, "This bind type needs a **value**: a Crewbase role name, a rank number, or a plan (starter, plus or pro).");
         if (kind === "rank" && !/^\d+$/.test(value || "")) return privateReply(res, "For a rank bind, the value must be a rank number like 100.");
         if (kind === "plan" && !["starter", "plus", "pro"].includes((value || "").toLowerCase())) return privateReply(res, "Plan must be starter, plus or pro.");

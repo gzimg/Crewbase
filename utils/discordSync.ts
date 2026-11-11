@@ -204,7 +204,14 @@ function renderNickname(template: string, f: Awaited<ReturnType<typeof factsFor>
     .slice(0, 32);
 }
 
-export type SyncResult = { verified: boolean; username: string | null; added: string[]; removed: string[]; nickname: string | null; failed: number; source?: string };
+export type SyncResult = {
+  verified: boolean; username: string | null; added: string[]; removed: string[]; nickname: string | null; failed: number;
+  source?: string; bindCount: number; problem?: string;
+};
+
+// Crewbase’s own Discord server. Some bind types only make sense there.
+export const OFFICIAL_GUILD_ID = process.env.CREWBASE_GUILD_ID || "1568101450100252682";
+export const OFFICIAL_ONLY_BINDS: BindKind[] = ["workspace_owner", "workspace_admin", "plan", "site_staff", "site_admin"];
 
 /** Gives and removes bound roles (and sets the nickname) for one person in one server. */
 export async function syncMember(guildId: string, discordId: string): Promise<SyncResult> {
@@ -214,12 +221,17 @@ export async function syncMember(guildId: string, discordId: string): Promise<Sy
   const boundRoles = new Set(config.binds.map((b) => b.roleId));
   const wanted = new Set(config.binds.filter((b) => matches(b, facts)).map((b) => b.roleId));
 
+  const base = { verified: !!facts, username: facts?.username || null, source: who?.source, bindCount: config.binds.length };
+  if (!config.binds.length && !config.nickname) {
+    return { ...base, added: [], removed: [], nickname: null, failed: 0, problem: "no_binds" };
+  }
+
   let current: string[] = [];
   try {
     const member = await discord("GET", `/guilds/${guildId}/members/${discordId}`);
     current = member?.roles || [];
-  } catch {
-    return { verified: !!facts, username: facts?.username || null, added: [], removed: [], nickname: null, failed: 1 };
+  } catch (e: any) {
+    return { ...base, added: [], removed: [], nickname: null, failed: 1, problem: String(e?.message) === "403" ? "no_access" : "member_lookup" };
   }
   const toAdd = Array.from(wanted).filter((r) => !current.includes(r));
   const toRemove = current.filter((r) => boundRoles.has(r) && !wanted.has(r));
@@ -235,7 +247,7 @@ export async function syncMember(guildId: string, discordId: string): Promise<Sy
     nickname = renderNickname(config.nickname, facts);
     if (nickname) await discord("PATCH", `/guilds/${guildId}/members/${discordId}`, { nick: nickname }).catch(() => { nickname = null; });
   }
-  return { verified: !!facts, username: facts?.username || null, added: toAdd, removed: toRemove, nickname, failed, source: who?.source };
+  return { ...base, added: toAdd, removed: toRemove, nickname, failed };
 }
 
 /** Public Roblox profile lookup for /whois and /roblox. */

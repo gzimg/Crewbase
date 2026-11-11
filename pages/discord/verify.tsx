@@ -25,7 +25,15 @@ export default function DiscordVerify() {
     try {
       const r = await axios.post("/api/discord/link", { code });
       sessionStorage.removeItem("crewbase_discord_code");
-      setMessage(r.data.added ? `You got ${r.data.added} role${r.data.added === 1 ? "" : "s"}${r.data.nickname ? ` and your nickname is now ${r.data.nickname}` : ""}.` : "Your account is linked. Run /update in any server to refresh your roles.");
+      setMessage(
+        r.data.problem === "no_binds"
+          ? "Your account is linked. That server hasn’t set up automatic roles yet, so ask its staff to add them with /bind add."
+          : r.data.failed
+            ? "Your account is linked, but some roles couldn’t be given. The server’s staff need to move the Crewbase bot’s role above those roles."
+            : r.data.added
+              ? `You got ${r.data.added} role${r.data.added === 1 ? "" : "s"}${r.data.nickname ? ` and your nickname is now ${r.data.nickname}` : ""}.`
+              : "Your account is linked. Run /update in the server to refresh your roles."
+      );
       setState("done");
     } catch (e: any) {
       setMessage(e?.response?.data?.error || "Something went wrong.");
