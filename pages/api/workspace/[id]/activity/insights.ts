@@ -72,6 +72,15 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     activeThisWeek: rows.filter((r) => r.weeks[0] > 0).length,
     members: rows.length,
     quietWithoutNotice: rows.filter((r) => r.quiet && !r.onNotice).map((r) => ({ userId: r.userId, username: r.username, lastSeen: r.lastSeen })),
+    // Burnout watch: well above their own normal, or very long weeks back to back
+    mightBeOverdoingIt: rows
+      .filter((r) => {
+        const prevAvg = (r.weeks[1] + r.weeks[2] + r.weeks[3]) / 3;
+        const spike = r.weeks[0] >= 20 * 60 && prevAvg > 0 && r.weeks[0] >= prevAvg * 2;
+        const sustained = r.weeks[0] >= 25 * 60 && r.weeks[1] >= 25 * 60;
+        return spike || sustained;
+      })
+      .map((r) => ({ userId: r.userId, username: r.username, thisWeek: r.weeks[0], lastWeek: r.weeks[1] })),
     rows,
   });
 }

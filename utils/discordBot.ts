@@ -57,6 +57,7 @@ export const COMMANDS = [
     options: [{ type: 6, name: "member", description: "Whose profile to show (defaults to you)", required: false }] },
   { name: "workspace", description: "Which Crewbase workspace this server is connected to", dm_permission: false },
   { name: "online", description: "Who’s in game right now", dm_permission: false },
+  { name: "besttimes", description: "When your staff are usually online, for planning sessions", dm_permission: false },
   { name: "stats", description: "This workspace’s week at a glance", dm_permission: false },
   { name: "kudos", description: "Give a teammate kudos", dm_permission: false,
     options: [

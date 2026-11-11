@@ -111,7 +111,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         embeds: [embed({
           title: "Crewbase bot",
           description:
-            "**/activity** time in game over the last 7 days\n**/leaderboard** most active staff\n**/online** who’s in game now\n**/stats** the week at a glance\n**/sessions** upcoming sessions\n**/events** upcoming Team events\n**/tasks** your open tasks\n**/announcement** the latest announcement\n**/kudos** thank a teammate\n**/standing** your HR standing (private)\n**/profile** someone’s Crewbase profile\n**/workspace** which workspace this server uses\n\n**Verification:** **/verify** link your Roblox account and get roles, **/update** refresh roles, **/whois** someone’s Roblox account, **/roblox** look up a username, **/unverify** unlink.\nServer managers: **/bind** auto-roles, **/nickname** nickname format, **/verifypanel** a Verify button, **/shifts** shift announcements.\n\nServer managers: **/link** connects this server to a workspace, **/unlink** disconnects it.\n\nFor your own stats to show, add your Discord ID to your Crewbase workspace profile.",
+            "**/activity** time in game over the last 7 days\n**/leaderboard** most active staff\n**/online** who’s in game now\n**/besttimes** when staff are usually online\n**/stats** the week at a glance\n**/sessions** upcoming sessions\n**/events** upcoming Team events\n**/tasks** your open tasks\n**/announcement** the latest announcement\n**/kudos** thank a teammate\n**/standing** your HR standing (private)\n**/profile** someone’s Crewbase profile\n**/workspace** which workspace this server uses\n\n**Verification:** **/verify** link your Roblox account and get roles, **/update** refresh roles, **/whois** someone’s Roblox account, **/roblox** look up a username, **/unverify** unlink.\nServer managers: **/bind** auto-roles, **/nickname** nickname format, **/verifypanel** a Verify button, **/shifts** shift announcements.\n\nServer managers: **/link** connects this server to a workspace, **/unlink** disconnects it.\n\nFor your own stats to show, add your Discord ID to your Crewbase workspace profile.",
           url: `${site()}/bot`,
         })],
       });
@@ -319,6 +319,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           title: "Upcoming events",
           description: events.length ? events.map((e) => `**${e.title}** · <t:${Math.floor(new Date(e.start).getTime() / 1000)}:F>${e.location ? ` · ${e.location}` : ""}`).join("\n") : "No upcoming events.",
           url: `${site()}/workspace/${groupId}/team/events`,
+        })],
+      });
+    }
+
+    if (name === "besttimes") {
+      const { availability, nextOccurrence } = await import("@/utils/availability");
+      const a = await availability(parseInt(groupId));
+      if (!a.top.length) return privateReply(res, "Not enough activity yet. Once your game sends activity, I can suggest times.");
+      return reply(res, {
+        embeds: [embed({
+          title: "🕒 Best times to host",
+          description:
+            a.top.map((t, i) => `${["🥇", "🥈", "🥉"][i]} <t:${Math.floor(nextOccurrence(t.how) / 1000)}:F> (weekly) · about **${t.v}** staff usually online`).join("\n") +
+            "\n\nTimes show in your own time zone. Based on the last 4 weeks of activity.",
+          url: `${site()}/workspace/${groupId}/activity/times`,
         })],
       });
     }

@@ -382,7 +382,7 @@ const workspace: LayoutProps = ({ children }) => {
 					label: "Activity",
 					href: `/workspace/${id}/activity`,
 					icon: HourglassIcon,
-					active: path.includes(`/workspace/${id}/activity`) && !path.includes(`/workspace/${id}/activity/insights`),
+					active: path.includes(`/workspace/${id}/activity`) && !path.includes(`/workspace/${id}/activity/insights`) && !path.includes(`/workspace/${id}/activity/times`),
 				},
 				{
 					label: "Quotas",
@@ -397,6 +397,12 @@ const workspace: LayoutProps = ({ children }) => {
 				href: `/workspace/${id}/leaderboard`,
 				icon: ChampionIcon,
 				active: path.includes(`/workspace/${id}/leaderboard`),
+			});
+			activityItems.push({
+				label: "Best times to host",
+				href: `/workspace/${id}/activity/times`,
+				icon: IconCalendarEvent,
+				active: path.includes(`/workspace/${id}/activity/times`),
 			});
 			if (workspace.isAdmin || workspace.yourPermission?.includes("admin") || workspace.yourPermission?.includes("view_members")) {
 				activityItems.push({

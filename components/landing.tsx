@@ -25,7 +25,7 @@ const FEATURES = [
 const MORE = [
   "Quotas", "Leaderboards", "Inactivity notices", "Userbook", "Promotions", "Recommendations", "Applications",
   "Docs", "Policies", "Onboarding checklists", "Ideas board", "Kudos", "Alliances", "Saved staff views",
-  "Public API", "Bloxlink", "Audit logs", "Ctrl+K search",
+  "Public API", "Bloxlink", "Audit logs", "Ctrl+K search", "Best times to host", "Burnout watch",
 ];
 
 const FAQ: [string, string][] = [

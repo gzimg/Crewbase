@@ -57,6 +57,21 @@ const Insights: pageWithLayout = () => {
               ))}
             </div>
           </Card>
+          {data.mightBeOverdoingIt?.length > 0 && (
+            <Card>
+              <h2 className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Might be overdoing it</h2>
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                Much more time in game than their usual, or very long weeks back to back. Staff burnout is real: a thank-you and a reminder that breaks are okay go a long way.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {data.mightBeOverdoingIt.map((m: any) => (
+                  <a key={m.userId} href={`/workspace/${id}/profile/${m.userId}`} className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                    {m.username} <span className="opacity-70">· {fmt(m.thisWeek)} this week</span>
+                  </a>
+                ))}
+              </div>
+            </Card>
+          )}
           {data.quietWithoutNotice.length > 0 && (
             <Card>
               <h2 className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Gone quiet, no notice</h2>

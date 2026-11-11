@@ -34,6 +34,8 @@ const WORKSPACE_PAGES: [string, string, string?][] = [
   ["/team/onboarding", "Onboarding", "checklist new staff"],
   ["/team/spotlight", "Staff of the Month", "nominate award vote"],
   ["/team/links", "Links", "resources bookmarks"],
+  ["/activity/times", "Best times to host", "schedule heatmap availability when online"],
+  ["/activity/insights", "Activity insights", "trends quiet report"],
   ["/hr", "Human resources", "hr discipline"],
   ["/hr/infractions", "Infractions", "warning discipline points strike"],
   ["/hr/appeals", "Appeals", "appeal infraction"],
