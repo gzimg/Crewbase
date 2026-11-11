@@ -63,6 +63,12 @@ export default function PrivacyPage() {
           The Crewbase Discord bot: which Discord servers are linked to which workspace, and, when someone uses a command, their
           Discord user ID and the command they used. The bot doesn’t read or store your server’s messages.
         </li>
+        <li>
+          If you verify with the bot: the link between your Discord user ID and your Roblox account, and each server’s role and
+          nickname settings. Servers using the bot can see your Roblox username, profile and Crewbase roles in their linked
+          workspace, and the bot may change your roles and nickname in those servers. If a workspace uses Bloxlink, the bot may
+          ask Bloxlink which Roblox account matches your Discord account. You can unlink with /unverify or on your account page.
+        </li>
         <li>Roblox Open Cloud: an API key the workspace owner provides so Crewbase can read group ranks.</li>
       </ul>
 

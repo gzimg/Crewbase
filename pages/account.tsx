@@ -36,6 +36,11 @@ export default function AccountPage() {
     }
   };
 
+  const [discordId, setDiscordId] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    axios.get("/api/discord/link").then((r) => setDiscordId(r.data.discordId)).catch(() => setDiscordId(null));
+  }, []);
+
   const openDeletion = reports.some((r) => r.category === "deletion" && r.status === "open");
 
   return (
@@ -52,6 +57,19 @@ export default function AccountPage() {
             <p className="text-sm text-zinc-500 dark:text-zinc-400">@{login?.username} · Roblox ID {login?.userId}</p>
           </div>
         </div>
+
+        <Section title="Discord">
+          {discordId === undefined ? (
+            <p className="text-sm text-zinc-500">Loading…</p>
+          ) : discordId ? (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">Linked to Discord user ID <code>{discordId}</code>. Servers using the Crewbase bot can give you roles.</p>
+              <button onClick={async () => { await axios.delete("/api/discord/link"); setDiscordId(null); toast.success("Discord unlinked"); }} className={buttonClass}>Unlink Discord</button>
+            </div>
+          ) : (
+            <p className="text-sm text-zinc-600 dark:text-zinc-300">Not linked. Run <code>/verify</code> in any server with the Crewbase bot to link your Discord account.</p>
+          )}
+        </Section>
 
         <Section title="Your data">
           <p className="text-sm text-zinc-600 dark:text-zinc-300">

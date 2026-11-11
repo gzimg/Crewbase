@@ -194,6 +194,13 @@ export async function deleteUserAccount(userId: string, options: DeletionOptions
     }
   }
 
+  // Discord account link used by the Crewbase bot
+  {
+    const { getDiscordForUser, setLink } = await import("@/utils/discordSync");
+    const discordId = await getDiscordForUser(userId);
+    if (discordId) await setLink(discordId, null);
+  }
+
   // Team tabs: chat messages, kudos, feedback and records about them are removed; other content is anonymised
   deleted += await scrubUserFromTeam(userId);
 

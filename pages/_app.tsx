@@ -16,7 +16,7 @@ import Head from "next/head";
 import Router, { useRouter } from "next/router";
 
 // Pages anyone can see: shown straight away instead of waiting for the login check
-const PUBLIC_PAGES = ["/", "/terms", "/privacy", "/help", "/status", "/changelog", "/plans", "/maintenance", "/forgot-password", "/login", "/bot", "/credits"];
+const PUBLIC_PAGES = ["/", "/terms", "/privacy", "/help", "/status", "/changelog", "/plans", "/maintenance", "/forgot-password", "/login", "/bot", "/credits", "/discord/verify"];
 import {
   Chart as ChartJS,
   CategoryScale,

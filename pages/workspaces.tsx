@@ -73,6 +73,12 @@ const Home: NextPage = () => {
     }
   };
   useEffect(() => {
+    try {
+      if (sessionStorage.getItem("crewbase_discord_code")) router.replace("/discord/verify");
+    } catch {}
+  }, [router]);
+
+  useEffect(() => {
     if (router.query.locked === "1") {
       toast.error("That workspace has been locked by Crewbase staff. Contact them if you think this is a mistake.", { id: "ws-locked", duration: 8000 });
     }

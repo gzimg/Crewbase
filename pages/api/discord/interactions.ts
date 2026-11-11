@@ -4,6 +4,10 @@ import {
   verifyDiscordRequest, getWorkspaceForGuild, linkGuild, unlinkGuild, useLinkCode, memberForDiscordUser, minutesInGame,
 } from "@/utils/discordBot";
 import { listItems, createItem } from "@/utils/teamStore";
+import {
+  syncMember, getGuildConfig, saveGuildConfig, createVerifyCode, getLinkedUser, setLink, resolveRobloxId, robloxProfile,
+  robloxIdFromUsername, factsFor, BIND_LABELS, BindKind,
+} from "@/utils/discordSync";
 
 // Discord needs the exact raw body to check the signature
 export const config = { api: { bodyParser: false } };
@@ -30,6 +34,56 @@ const privateReply = (res: NextApiResponse, content: string) => reply(res, { con
 const embed = (e: any) => ({ color: ORANGE, footer: { text: "Crewbase" }, ...e });
 const fmtMinutes = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}h ${Math.round(m % 60)}m` : `${Math.round(m)}m`);
 
+function hasPermission(body: any, bit: bigint): boolean {
+  try {
+    const perms = BigInt(body.member?.permissions || "0");
+    return (perms & (1n << 3n)) !== 0n || (perms & bit) !== 0n; // Administrator always counts
+  } catch {
+    return false;
+  }
+}
+
+function profileEmbed(p: { id: string; name: string; displayName: string; created: string; avatar: string | null; isBanned?: boolean }) {
+  return embed({
+    title: p.displayName && p.displayName !== p.name ? `${p.displayName} (@${p.name})` : p.name,
+    url: `https://www.roblox.com/users/${p.id}/profile`,
+    thumbnail: p.avatar ? { url: p.avatar } : undefined,
+    fields: [
+      { name: "Roblox ID", value: p.id, inline: true },
+      { name: "Joined Roblox", value: `<t:${Math.floor(new Date(p.created).getTime() / 1000)}:D>`, inline: true },
+      ...(p.isBanned ? [{ name: "Status", value: "Banned on Roblox", inline: true }] : []),
+    ],
+  });
+}
+
+function describeSync(r: { verified: boolean; username: string | null; added: string[]; removed: string[]; nickname: string | null; failed: number }, self: boolean) {
+  if (!r.verified) return self ? "You haven’t verified yet. Run **/verify** first." : "That person hasn’t verified yet.";
+  const parts = [`✅ ${self ? "You’re" : `${r.username} is`} verified as **${r.username}**.`];
+  if (r.added.length) parts.push(`Added: ${r.added.map((x) => `<@&${x}>`).join(" ")}`);
+  if (r.removed.length) parts.push(`Removed: ${r.removed.map((x) => `<@&${x}>`).join(" ")}`);
+  if (!r.added.length && !r.removed.length) parts.push("Roles are already up to date.");
+  if (r.nickname) parts.push(`Nickname: **${r.nickname}**`);
+  if (r.failed) parts.push(`⚠️ ${r.failed} change(s) failed. The Crewbase bot’s role needs to be above those roles, with Manage Roles and Manage Nicknames.`);
+  return parts.join("\n");
+}
+
+/** /verify and the Verify button: sync if already linked, otherwise send a one-time link. */
+async function verifyFlow(res: NextApiResponse, discordId: string, guildId: string | undefined) {
+  if (guildId && (await getLinkedUser(discordId))) {
+    const r = await syncMember(guildId, discordId);
+    return res.status(200).json({ type: 4, data: { flags: EPHEMERAL, content: describeSync(r, true), allowed_mentions: { parse: [] } } });
+  }
+  const code = await createVerifyCode(discordId, guildId || null);
+  return res.status(200).json({
+    type: 4,
+    data: {
+      flags: EPHEMERAL,
+      embeds: [embed({ title: "Verify your account", description: "Click below and log in to Crewbase with your Roblox account. This link is just for you and works for 15 minutes." })],
+      components: [{ type: 1, components: [{ type: 2, style: 5, label: "Verify on Crewbase", url: `${site()}/discord/verify?code=${code}` }] }],
+    },
+  });
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
   const raw = await readRaw(req).catch(() => "");
@@ -38,6 +92,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const body = JSON.parse(raw);
   if (body.type === 1) return res.status(200).json({ type: 1 }); // Discord's health check
+  // Buttons: the Verify button posted by /verifypanel
+  if (body.type === 3 && body.data?.custom_id === "cb_verify") {
+    const who = body.member?.user?.id || body.user?.id;
+    return verifyFlow(res, who, body.guild_id);
+  }
   if (body.type !== 2) return res.status(400).end();
 
   const name: string = body.data?.name;
@@ -52,12 +111,100 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         embeds: [embed({
           title: "Crewbase bot",
           description:
-            "**/activity** time in game over the last 7 days\n**/leaderboard** most active staff\n**/online** who’s in game now\n**/stats** the week at a glance\n**/sessions** upcoming sessions\n**/events** upcoming Team events\n**/tasks** your open tasks\n**/announcement** the latest announcement\n**/kudos** thank a teammate\n**/standing** your HR standing (private)\n**/profile** someone’s Crewbase profile\n**/workspace** which workspace this server uses\n\nServer managers: **/link** connects this server to a workspace, **/unlink** disconnects it.\n\nFor your own stats to show, add your Discord ID to your Crewbase workspace profile.",
+            "**/activity** time in game over the last 7 days\n**/leaderboard** most active staff\n**/online** who’s in game now\n**/stats** the week at a glance\n**/sessions** upcoming sessions\n**/events** upcoming Team events\n**/tasks** your open tasks\n**/announcement** the latest announcement\n**/kudos** thank a teammate\n**/standing** your HR standing (private)\n**/profile** someone’s Crewbase profile\n**/workspace** which workspace this server uses\n\n**Verification:** **/verify** link your Roblox account and get roles, **/update** refresh roles, **/whois** someone’s Roblox account, **/roblox** look up a username, **/unverify** unlink.\nServer managers: **/bind** auto-roles, **/nickname** nickname format, **/verifypanel** a Verify button.\n\nServer managers: **/link** connects this server to a workspace, **/unlink** disconnects it.\n\nFor your own stats to show, add your Discord ID to your Crewbase workspace profile.",
           url: `${site()}/bot`,
         })],
       });
     }
+    // Commands that work without a linked workspace
+    if (name === "roblox") {
+      const id = await robloxIdFromUsername(String(option("username") || ""));
+      const p = id ? await robloxProfile(id) : null;
+      if (!p) return privateReply(res, "I couldn’t find that Roblox user.");
+      return reply(res, { embeds: [profileEmbed(p)] });
+    }
+    if (name === "unverify") {
+      if (!(await getLinkedUser(caller))) return privateReply(res, "Your Discord isn’t linked to a Crewbase account.");
+      await setLink(caller, null);
+      return privateReply(res, "Unlinked. Your Discord is no longer connected to your Roblox account on Crewbase.");
+    }
     if (!guildId) return privateReply(res, "Use Crewbase commands inside a server.");
+
+    if (name === "verify") return verifyFlow(res, caller, guildId);
+
+    if (name === "update") {
+      const target = String(option("member") || caller);
+      if (target !== caller && !hasPermission(body, 1n << 28n)) return privateReply(res, "You need the Manage Roles permission to update other people.");
+      const r = await syncMember(guildId, target);
+      return privateReply(res, describeSync(r, target === caller));
+    }
+
+    if (name === "whois") {
+      const target = String(option("member") || caller);
+      const who = await resolveRobloxId(target, guildId);
+      if (!who) return privateReply(res, target === caller ? "You haven’t verified yet. Run /verify." : "That person hasn’t verified yet.");
+      const p = await robloxProfile(who.userId);
+      if (!p) return privateReply(res, "Roblox didn’t respond. Try again in a moment.");
+      const linkedGroup = await getWorkspaceForGuild(guildId);
+      const facts = linkedGroup ? await factsFor(who.userId, linkedGroup) : null;
+      const e = profileEmbed(p);
+      if (facts?.roleList.length) e.fields.push({ name: "Crewbase roles", value: facts.roleList.join(", ").slice(0, 1000), inline: false });
+      e.fields.push({ name: "Verified with", value: who.source === "crewbase" ? "Crewbase" : "Bloxlink", inline: true });
+      return reply(res, { embeds: [e] });
+    }
+
+    if (name === "bind") {
+      const sub = body.data?.options?.[0];
+      const sopt = (n: string) => sub?.options?.find((o: any) => o.name === n)?.value;
+      const config = await getGuildConfig(guildId);
+      if (sub?.name === "list") {
+        if (!config.binds.length) return privateReply(res, "No role binds yet. Add one with **/bind add**.");
+        return reply(res, {
+          flags: EPHEMERAL,
+          embeds: [embed({
+            title: "Role binds",
+            description: config.binds.map((b) => `<@&${b.roleId}> ← ${BIND_LABELS[b.kind]}${b.value ? `: **${b.value}${b.max !== undefined ? `–${b.max}` : ""}**` : ""}`).join("\n").slice(0, 3900),
+          })],
+        });
+      }
+      if (sub?.name === "remove") {
+        const roleId = String(sopt("role"));
+        const before = config.binds.length;
+        config.binds = config.binds.filter((b) => b.roleId !== roleId);
+        await saveGuildConfig(guildId, config);
+        return privateReply(res, before === config.binds.length ? "That role had no binds." : `Removed ${before - config.binds.length} bind(s) for <@&${roleId}>.`);
+      }
+      if (sub?.name === "add") {
+        const kind = String(sopt("type")) as BindKind;
+        const roleId = String(sopt("role"));
+        const value = sopt("value") !== undefined ? String(sopt("value")).trim() : undefined;
+        const max = sopt("max") !== undefined ? Number(sopt("max")) : undefined;
+        if (!BIND_LABELS[kind]) return privateReply(res, "Unknown bind type.");
+        if (["crewbase_role", "rank", "plan"].includes(kind) && !value) return privateReply(res, "This bind type needs a **value**: a Crewbase role name, a rank number, or a plan (starter, plus or pro).");
+        if (kind === "rank" && !/^\d+$/.test(value || "")) return privateReply(res, "For a rank bind, the value must be a rank number like 100.");
+        if (kind === "plan" && !["starter", "plus", "pro"].includes((value || "").toLowerCase())) return privateReply(res, "Plan must be starter, plus or pro.");
+        if (config.binds.length >= 100) return privateReply(res, "This server has the maximum of 100 binds.");
+        config.binds.push({ id: Math.random().toString(36).slice(2, 10), kind, roleId, value, max });
+        await saveGuildConfig(guildId, config);
+        return privateReply(res, `Done. <@&${roleId}> now goes to: ${BIND_LABELS[kind]}${value ? ` (${value}${max !== undefined ? `–${max}` : ""})` : ""}. People get it next time they /verify or /update.\nMake sure the **Crewbase** bot role is **above** this role in Server Settings → Roles.`);
+      }
+      return privateReply(res, "Use /bind add, /bind remove or /bind list.");
+    }
+
+    if (name === "nickname") {
+      const format = String(option("format") || "").trim();
+      const config = await getGuildConfig(guildId);
+      config.nickname = format.toLowerCase() === "off" ? null : format;
+      await saveGuildConfig(guildId, config);
+      return privateReply(res, config.nickname ? `Nicknames will look like **${config.nickname}** when people verify or update. Use {roblox}, {display} and {rank}.` : "Nickname changes are off.");
+    }
+
+    if (name === "verifypanel") {
+      return reply(res, {
+        embeds: [embed({ title: "Verify with Crewbase", description: "Click the button to link your Discord to your Roblox account. You’ll get the roles you qualify for, and it only takes a moment." })],
+        components: [{ type: 1, components: [{ type: 2, style: 1, label: "Verify", custom_id: "cb_verify", emoji: { name: "✅" } }] }],
+      });
+    }
 
     if (name === "link") {
       const groupId = await useLinkCode(String(option("code") || ""));

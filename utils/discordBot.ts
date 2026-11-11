@@ -17,8 +17,9 @@ export const BOT = {
 };
 export const botConfigured = () => !!(BOT.appId && BOT.publicKey && BOT.token);
 
-// Send Messages + Embed Links + Use Application Commands
-const INVITE_PERMISSIONS = String((1n << 11n) | (1n << 14n) | (1n << 31n));
+// Send Messages, Embed Links, Use Application Commands, plus Manage Roles and
+// Manage Nicknames for verification and role syncing
+const INVITE_PERMISSIONS = String((1n << 11n) | (1n << 14n) | (1n << 31n) | (1n << 28n) | (1n << 27n));
 export const inviteUrl = () =>
   BOT.appId
     ? `https://discord.com/oauth2/authorize?client_id=${BOT.appId}&scope=bot%20applications.commands&permissions=${INVITE_PERMISSIONS}`
@@ -65,6 +66,42 @@ export const COMMANDS = [
   { name: "tasks", description: "Your open Team tasks", dm_permission: false },
   { name: "announcement", description: "The latest workspace announcement", dm_permission: false },
   { name: "standing", description: "Your HR standing (only you can see the reply)", dm_permission: false },
+  // Verification and roles (like Bloxlink)
+  { name: "verify", description: "Link your Discord to your Roblox account and get your roles", dm_permission: false },
+  { name: "update", description: "Refresh roles and nickname", dm_permission: false,
+    options: [{ type: 6, name: "member", description: "Someone else to update (needs Manage Roles)", required: false }] },
+  { name: "unverify", description: "Unlink your Discord from your Roblox account" },
+  { name: "whois", description: "Someone’s Roblox account", dm_permission: false,
+    options: [{ type: 6, name: "member", description: "Who to look up (defaults to you)", required: false }] },
+  { name: "roblox", description: "Look up a Roblox user by username",
+    options: [{ type: 3, name: "username", description: "Roblox username", required: true, max_length: 20 }] },
+  { name: "bind", description: "Give Discord roles automatically", default_member_permissions: MANAGE_SERVER, dm_permission: false,
+    options: [
+      { type: 1, name: "add", description: "Add a role bind",
+        options: [
+          { type: 3, name: "type", description: "Who gets the role", required: true, choices: [
+            { name: "Everyone verified", value: "verified" },
+            { name: "Everyone not verified", value: "unverified" },
+            { name: "Members of the linked workspace", value: "member" },
+            { name: "A Crewbase role (put its name in value)", value: "crewbase_role" },
+            { name: "A Roblox group rank (rank number in value, optional max)", value: "rank" },
+            { name: "Owns a Crewbase workspace", value: "workspace_owner" },
+            { name: "Admin of a Crewbase workspace", value: "workspace_admin" },
+            { name: "Owns a workspace on a plan (starter, plus or pro in value)", value: "plan" },
+            { name: "Crewbase site staff", value: "site_staff" },
+            { name: "Crewbase site admin", value: "site_admin" },
+            { name: "Staff of the Month", value: "staff_of_month" },
+          ] },
+          { type: 8, name: "role", description: "The Discord role to give", required: true },
+          { type: 3, name: "value", description: "Crewbase role name, rank number, or plan name", required: false, max_length: 60 },
+          { type: 4, name: "max", description: "Highest rank number, for a rank range", required: false, min_value: 0, max_value: 255 },
+        ] },
+      { type: 1, name: "remove", description: "Remove all binds for a role", options: [{ type: 8, name: "role", description: "The Discord role", required: true }] },
+      { type: 1, name: "list", description: "Show this server’s role binds" },
+    ] },
+  { name: "nickname", description: "Set everyone’s nickname format when they update", default_member_permissions: MANAGE_SERVER, dm_permission: false,
+    options: [{ type: 3, name: "format", description: "e.g. {roblox} or {display} (@{roblox}). Type off to stop.", required: true, max_length: 60 }] },
+  { name: "verifypanel", description: "Post a Verify button in this channel", default_member_permissions: MANAGE_SERVER, dm_permission: false },
   { name: "help", description: "What the Crewbase bot can do" },
 ];
 
