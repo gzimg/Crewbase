@@ -112,6 +112,14 @@ export const COMMANDS = [
       { type: 1, name: "list", description: "Show this server’s role binds" },
       { type: 1, name: "roblox", description: "Match your Roblox group’s ranks to Discord roles with the same names",
         options: [{ type: 5, name: "create_missing", description: "Also create Discord roles for ranks that don’t have one", required: false }] },
+      { type: 1, name: "lowerranks", description: "Let higher ranks keep the roles of the ranks below them",
+        options: [
+          { type: 4, name: "from_rank", description: "Roblox rank this starts at (0 turns it off)", required: true, min_value: 0, max_value: 255 },
+          { type: 3, name: "mode", description: "Keep lower-rank roles they already have, or also give them", required: false, choices: [
+            { name: "Keep the lower-rank roles they already have", value: "keep" },
+            { name: "Also give every rank role from that rank up", value: "stack" },
+          ] },
+        ] },
       { type: 1, name: "clear", description: "Remove every bind in this server",
         options: [{ type: 5, name: "confirm", description: "Set to True to confirm", required: true }] },
     ] },

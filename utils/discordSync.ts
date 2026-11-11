@@ -22,7 +22,13 @@ export type BindKind =
   | "workspace_owner" | "workspace_admin" | "plan" | "site_staff" | "site_admin" | "staff_of_month";
 
 export type Bind = { id: string; kind: BindKind; roleId: string; value?: string; max?: number };
-export type GuildConfig = { binds: Bind[]; nickname: string | null; unverifiedRoleId?: string | null };
+export type GuildConfig = {
+  binds: Bind[];
+  nickname: string | null;
+  unverifiedRoleId?: string | null;
+  // People at or above this Roblox rank keep (or also get) the roles for lower ranks
+  lowerRanks?: { fromRank: number; mode: "keep" | "stack" } | null;
+};
 
 export const BIND_LABELS: Record<BindKind, string> = {
   verified: "Everyone who has verified",
@@ -114,7 +120,7 @@ export async function resolveRobloxId(discordId: string, guildId: string): Promi
 export async function getGuildConfig(guildId: string): Promise<GuildConfig> {
   const all = await readJson<Record<string, GuildConfig>>("discordbot_guilds", {});
   const stored = all[guildId];
-  return { binds: stored?.binds || [], nickname: stored?.nickname ?? null, unverifiedRoleId: stored?.unverifiedRoleId ?? null };
+  return { binds: stored?.binds || [], nickname: stored?.nickname ?? null, unverifiedRoleId: stored?.unverifiedRoleId ?? null, lowerRanks: stored?.lowerRanks ?? null };
 }
 export async function saveGuildConfig(guildId: string, config: GuildConfig) {
   const all = await readJson<Record<string, GuildConfig>>("discordbot_guilds", {});
@@ -222,6 +228,17 @@ export async function syncMember(guildId: string, discordId: string): Promise<Sy
   const boundRoles = new Set(config.binds.map((b) => b.roleId));
   const wanted = new Set(config.binds.filter((b) => matches(b, facts)).map((b) => b.roleId));
 
+  // Higher ranks can keep (or also get) the roles for the ranks below them
+  const keep = new Set<string>();
+  const lr = config.lowerRanks;
+  if (lr && facts?.rank !== null && facts?.rank !== undefined && facts.rank >= lr.fromRank) {
+    const lower = config.binds.filter((b) => b.kind === "rank" && Number(b.max ?? b.value) < facts.rank! && Number(b.value) >= 1);
+    for (const b of lower) {
+      if (lr.mode === "stack" && Number(b.value) >= lr.fromRank) wanted.add(b.roleId);
+      keep.add(b.roleId);
+    }
+  }
+
   const base = { verified: !!facts, username: facts?.username || null, source: who?.source, bindCount: config.binds.length };
   if (!config.binds.length && !config.nickname) {
     return { ...base, added: [], removed: [], nickname: null, failed: 0, problem: "no_binds" };
@@ -235,7 +252,7 @@ export async function syncMember(guildId: string, discordId: string): Promise<Sy
     return { ...base, added: [], removed: [], nickname: null, failed: 1, problem: String(e?.message) === "403" ? "no_access" : "member_lookup" };
   }
   const toAdd = Array.from(wanted).filter((r) => !current.includes(r));
-  const toRemove = current.filter((r) => boundRoles.has(r) && !wanted.has(r));
+  const toRemove = current.filter((r) => boundRoles.has(r) && !wanted.has(r) && !keep.has(r));
 
   let failed = 0;
   await Promise.all([

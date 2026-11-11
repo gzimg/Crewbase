@@ -202,6 +202,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           return { content: lines.join("\n").slice(0, 1900) };
         });
       }
+      if (sub?.name === "lowerranks") {
+        const fromRank = Number(sopt("from_rank"));
+        const mode = sopt("mode") === "stack" ? "stack" : "keep";
+        config.lowerRanks = fromRank > 0 ? { fromRank, mode } : null;
+        await saveGuildConfig(guildId, config);
+        if (!config.lowerRanks) return privateReply(res, "Turned off. People will only have the role for their current rank.");
+        return privateReply(res, mode === "stack"
+          ? `Done. People at rank **${fromRank}** or higher now also get every rank role from rank ${fromRank} up to theirs. Run /update to apply it.`
+          : `Done. People at rank **${fromRank}** or higher now keep any lower-rank roles they already have. Run /update to apply it.`);
+      }
       if (sub?.name === "clear") {
         if (sopt("confirm") !== true) return privateReply(res, "Nothing was removed. Set confirm to True to remove every bind.");
         const n = config.binds.length;
@@ -228,7 +238,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           embeds: [embed({
             title: "Role binds",
             description: config.binds.map(describeBind).join("\n").slice(0, 3900),
-            footer: { text: "Change one with /bind edit number:…  ·  Remove one with /bind remove number:…" },
+            footer: { text: `Change one with /bind edit number:…  ·  Remove one with /bind remove number:…${config.lowerRanks ? `  ·  Lower ranks: ${config.lowerRanks.mode} from rank ${config.lowerRanks.fromRank}` : ""}` },
           })],
         });
       }
