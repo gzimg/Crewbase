@@ -83,7 +83,8 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
         const userRank = await getRankInGroup(Number(groupId), userid);
         await checkSpecificUser(userid);
 
-        if (parsedConfig.role && (!userRank || userRank <= parsedConfig.role)) {
+        // The chosen minimum rank itself is tracked; only ranks below it are skipped
+    if (parsedConfig.role && (!userRank || userRank < parsedConfig.role)) {
           continue;
         }
 
