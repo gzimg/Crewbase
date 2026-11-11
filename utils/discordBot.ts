@@ -102,6 +102,17 @@ export const COMMANDS = [
   { name: "nickname", description: "Set everyone’s nickname format when they update", default_member_permissions: MANAGE_SERVER, dm_permission: false,
     options: [{ type: 3, name: "format", description: "e.g. {roblox} or {display} (@{roblox}). Type off to stop.", required: true, max_length: 60 }] },
   { name: "verifypanel", description: "Post a Verify button in this channel", default_member_permissions: MANAGE_SERVER, dm_permission: false },
+  { name: "shifts", description: "Announce upcoming shifts in a channel", default_member_permissions: MANAGE_SERVER, dm_permission: false,
+    options: [
+      { type: 1, name: "setup", description: "Choose where and when to announce shifts",
+        options: [
+          { type: 7, name: "channel", description: "Channel to post in", required: true, channel_types: [0, 5] },
+          { type: 8, name: "ping", description: "Role to ping (optional)", required: false },
+          { type: 4, name: "minutes", description: "How many minutes before a shift starts (default 30)", required: false, min_value: 5, max_value: 1440 },
+        ] },
+      { type: 1, name: "off", description: "Stop announcing shifts" },
+      { type: 1, name: "status", description: "Show the current shift announcement settings" },
+    ] },
   { name: "help", description: "What the Crewbase bot can do" },
 ];
 

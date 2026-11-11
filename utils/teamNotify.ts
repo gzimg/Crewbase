@@ -21,6 +21,15 @@ export type TeamSettings = {
   notifyEvents: boolean;
   notifyPolls: boolean;
   hiddenTabs: string[];
+  // Upcoming shift (session) announcements
+  shifts: {
+    enabled: boolean;
+    via: "bot" | "webhook";
+    guildId: string | null;
+    channelId: string | null;
+    pingRoleId: string | null;
+    leadMinutes: number;
+  };
 };
 
 const DEFAULTS: TeamSettings = {
@@ -32,11 +41,48 @@ const DEFAULTS: TeamSettings = {
   notifyEvents: true,
   notifyPolls: true,
   hiddenTabs: [],
+  shifts: { enabled: false, via: "bot", guildId: null, channelId: null, pingRoleId: null, leadMinutes: 30 },
 };
 
 export async function getTeamSettings(groupId: number | bigint): Promise<TeamSettings> {
   const row = await prisma.config.findFirst({ where: { workspaceGroupId: BigInt(groupId), key: SETTINGS_KEY }, select: { value: true } });
-  return { ...DEFAULTS, ...((row?.value as any) || {}) };
+  const stored = (row?.value as any) || {};
+  return { ...DEFAULTS, ...stored, shifts: { ...DEFAULTS.shifts, ...(stored.shifts || {}) } };
+}
+
+/** Posts a message to a Discord channel as the Crewbase bot. */
+export async function postAsBot(channelId: string, payload: Record<string, unknown>): Promise<boolean> {
+  const token = process.env.DISCORD_BOT_TOKEN;
+  if (!token) return false;
+  try {
+    const res = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
+      method: "POST",
+      headers: { Authorization: `Bot ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(5000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/** Posts a message to the workspace’s saved Discord webhook. */
+export async function postToWebhook(groupId: number | bigint, payload: Record<string, unknown>): Promise<boolean> {
+  const settings = await getTeamSettings(groupId);
+  const url = decryptSecret(settings.discordWebhook);
+  if (!url || !isDiscordWebhook(url)) return false;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "Crewbase", ...payload }),
+      signal: AbortSignal.timeout(5000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 export async function saveTeamSettings(groupId: number | bigint, next: TeamSettings): Promise<void> {

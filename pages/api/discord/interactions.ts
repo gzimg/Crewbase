@@ -111,7 +111,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         embeds: [embed({
           title: "Crewbase bot",
           description:
-            "**/activity** time in game over the last 7 days\n**/leaderboard** most active staff\n**/online** who’s in game now\n**/stats** the week at a glance\n**/sessions** upcoming sessions\n**/events** upcoming Team events\n**/tasks** your open tasks\n**/announcement** the latest announcement\n**/kudos** thank a teammate\n**/standing** your HR standing (private)\n**/profile** someone’s Crewbase profile\n**/workspace** which workspace this server uses\n\n**Verification:** **/verify** link your Roblox account and get roles, **/update** refresh roles, **/whois** someone’s Roblox account, **/roblox** look up a username, **/unverify** unlink.\nServer managers: **/bind** auto-roles, **/nickname** nickname format, **/verifypanel** a Verify button.\n\nServer managers: **/link** connects this server to a workspace, **/unlink** disconnects it.\n\nFor your own stats to show, add your Discord ID to your Crewbase workspace profile.",
+            "**/activity** time in game over the last 7 days\n**/leaderboard** most active staff\n**/online** who’s in game now\n**/stats** the week at a glance\n**/sessions** upcoming sessions\n**/events** upcoming Team events\n**/tasks** your open tasks\n**/announcement** the latest announcement\n**/kudos** thank a teammate\n**/standing** your HR standing (private)\n**/profile** someone’s Crewbase profile\n**/workspace** which workspace this server uses\n\n**Verification:** **/verify** link your Roblox account and get roles, **/update** refresh roles, **/whois** someone’s Roblox account, **/roblox** look up a username, **/unverify** unlink.\nServer managers: **/bind** auto-roles, **/nickname** nickname format, **/verifypanel** a Verify button, **/shifts** shift announcements.\n\nServer managers: **/link** connects this server to a workspace, **/unlink** disconnects it.\n\nFor your own stats to show, add your Discord ID to your Crewbase workspace profile.",
           url: `${site()}/bot`,
         })],
       });
@@ -197,6 +197,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       config.nickname = format.toLowerCase() === "off" ? null : format;
       await saveGuildConfig(guildId, config);
       return privateReply(res, config.nickname ? `Nicknames will look like **${config.nickname}** when people verify or update. Use {roblox}, {display} and {rank}.` : "Nickname changes are off.");
+    }
+
+    if (name === "shifts") {
+      const groupForShifts = await getWorkspaceForGuild(guildId);
+      if (!groupForShifts) return privateReply(res, "Link this server to a workspace first with **/link**.");
+      const { getTeamSettings, saveTeamSettings } = await import("@/utils/teamNotify");
+      const settings = await getTeamSettings(parseInt(groupForShifts));
+      const sub = body.data?.options?.[0];
+      const sopt = (n: string) => sub?.options?.find((o: any) => o.name === n)?.value;
+      if (sub?.name === "off") {
+        await saveTeamSettings(parseInt(groupForShifts), { ...settings, shifts: { ...settings.shifts, enabled: false } });
+        return privateReply(res, "Shift announcements are off.");
+      }
+      if (sub?.name === "status") {
+        const s = settings.shifts;
+        return privateReply(res, s.enabled
+          ? `Shift announcements are **on**: ${s.via === "bot" ? `posting in <#${s.channelId}>` : "posting to your workspace’s webhook"}, **${s.leadMinutes} minutes** before each shift${s.pingRoleId ? `, pinging <@&${s.pingRoleId}>` : ""}.`
+          : "Shift announcements are **off**. Turn them on with **/shifts setup**.");
+      }
+      const channelId = String(sopt("channel"));
+      const pingRoleId = sopt("ping") ? String(sopt("ping")) : null;
+      const leadMinutes = sopt("minutes") ? Number(sopt("minutes")) : settings.shifts.leadMinutes || 30;
+      await saveTeamSettings(parseInt(groupForShifts), { ...settings, shifts: { enabled: true, via: "bot", guildId, channelId, pingRoleId, leadMinutes } });
+      return privateReply(res, `Done! I’ll post upcoming shifts in <#${channelId}> **${leadMinutes} minutes** before they start${pingRoleId ? ` and ping <@&${pingRoleId}>` : ""}.\nMake sure I can see that channel and have **Send Messages** and **Embed Links** there.`);
     }
 
     if (name === "verifypanel") {

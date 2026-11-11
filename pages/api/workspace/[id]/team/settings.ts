@@ -20,6 +20,15 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   for (const k of ["postAnnouncements", "postEvents", "postKudos", "notifyAnnouncements", "notifyEvents", "notifyPolls"] as const) {
     if (typeof b[k] === "boolean") next[k] = b[k];
   }
+  if (b.shifts && typeof b.shifts === "object") {
+    const s = b.shifts;
+    next.shifts = {
+      ...current.shifts,
+      ...(typeof s.enabled === "boolean" ? { enabled: s.enabled } : {}),
+      ...(s.via === "bot" || s.via === "webhook" ? { via: s.via } : {}),
+      ...(Number.isFinite(Number(s.leadMinutes)) ? { leadMinutes: Math.min(1440, Math.max(5, Math.round(Number(s.leadMinutes)))) } : {}),
+    };
+  }
   if (Array.isArray(b.hiddenTabs)) next.hiddenTabs = b.hiddenTabs.filter((t: unknown) => typeof t === "string" && HIDEABLE_TABS.includes(t));
   if (b.discordWebhook === null || b.discordWebhook === "") next.discordWebhook = null;
   else if (typeof b.discordWebhook === "string") {

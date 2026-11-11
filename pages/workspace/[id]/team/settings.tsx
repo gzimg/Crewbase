@@ -15,6 +15,7 @@ const TAB_LABELS: Record<string, string> = {
 
 type Settings = {
   hiddenTabs?: string[];
+  shifts?: { enabled: boolean; via: "bot" | "webhook"; channelId: string | null; pingRoleId: string | null; leadMinutes: number };
   hasWebhook: boolean;
   postAnnouncements: boolean; postEvents: boolean; postKudos: boolean;
   notifyAnnouncements: boolean; notifyEvents: boolean; notifyPolls: boolean;
@@ -94,6 +95,43 @@ const TeamSettings: pageWithLayout = () => {
                 <button onClick={() => save({ discordWebhook: null }, "Discord disconnected")} className={`${btn} mt-3`}>Disconnect Discord</button>
               </>
             )}
+          </Card>
+          <Card className="lg:col-span-2">
+            <h2 className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Shift announcements</h2>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+              Post upcoming shifts and trainings (from Sessions) to Discord before they start, with who’s hosting and how many have signed up.
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-zinc-700 dark:text-zinc-300">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={!!s.shifts?.enabled} onChange={(e) => save({ shifts: { enabled: e.target.checked } }, e.target.checked ? "Shift announcements on" : "Shift announcements off")} className="h-4 w-4" />
+                Announce shifts
+              </label>
+              <label className="flex items-center gap-2">
+                Post using
+                <select value={s.shifts?.via || "bot"} onChange={(e) => save({ shifts: { via: e.target.value } })} className="rounded-lg border border-zinc-300 bg-white px-2 py-1 dark:border-zinc-600 dark:bg-zinc-900">
+                  <option value="bot">the Crewbase bot</option>
+                  <option value="webhook">your Discord webhook</option>
+                </select>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={5}
+                  max={1440}
+                  defaultValue={s.shifts?.leadMinutes || 30}
+                  onBlur={(e) => save({ shifts: { leadMinutes: Number(e.target.value) } })}
+                  className="w-20 rounded-lg border border-zinc-300 bg-white px-2 py-1 dark:border-zinc-600 dark:bg-zinc-900"
+                />
+                minutes before
+              </label>
+            </div>
+            <p className="mt-3 text-xs text-zinc-500">
+              {s.shifts?.via === "webhook"
+                ? s.hasWebhook ? "Posts go to the Discord webhook saved above." : "Save a Discord webhook above first."
+                : s.shifts?.channelId
+                  ? `Posting in the channel picked with /shifts setup (channel ID ${s.shifts.channelId}).`
+                  : "In your Discord server, run /shifts setup and pick a channel (and a role to ping, if you like)."}
+            </p>
           </Card>
           <Card className="lg:col-span-2">
             <h2 className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Customise Team</h2>
