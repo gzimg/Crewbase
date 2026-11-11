@@ -6,7 +6,22 @@ import type { Collection, TeamItem } from "@/utils/teamStore";
  * "Managers" are workspace admins and anyone whose role has the Admin permission.
  */
 
-export type Ctx = { id: string; name: string | null; isManager: boolean };
+export type Ctx = { id: string; name: string | null; isManager: boolean; perms?: string[] };
+
+/* ---------- Human resources ---------- */
+// HR permissions (set on roles in workspace settings). Workspace admins have all of them.
+export const HR_PERMS = ["hr.view", "hr.infractions", "hr.cases", "hr.plans", "hr.resignations"] as const;
+export const hasHR = (c: Ctx, perm: (typeof HR_PERMS)[number]) => c.isManager || !!c.perms?.includes(perm);
+export const isHR = (c: Ctx) => c.isManager || HR_PERMS.some((p) => c.perms?.includes(p));
+
+export const INFRACTION_LEVELS: Record<string, { label: string; points: number; days: number | null }> = {
+  verbal: { label: "Verbal warning", points: 1, days: 30 },
+  written: { label: "Written warning", points: 2, days: 60 },
+  final: { label: "Final warning", points: 4, days: 90 },
+  suspension: { label: "Suspension", points: 5, days: 120 },
+  demotion: { label: "Demotion", points: 6, days: 180 },
+  termination: { label: "Termination", points: 10, days: null },
+};
 type Result = { data: Record<string, any> } | { error: string };
 
 const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
@@ -370,10 +385,177 @@ export const RULES: Record<Collection, Rule> = {
       winner: (item, _b, c) => (c.isManager ? { ...item, winner: !item.winner } : { error: "Only managers can pick the winner" }),
     },
   },
+
+  infractions: {
+    canCreate: (c) => hasHR(c, "hr.infractions"),
+    canEdit: (_i, c) => hasHR(c, "hr.infractions"),
+    canDelete: (_i, c) => hasHR(c, "hr.infractions"),
+    // Members always see infractions given to them; HR sees everyone’s
+    view: (item, c) => (hasHR(c, "hr.view") || hasHR(c, "hr.infractions") || item.userId === c.id ? item : null),
+    validate: (b, _c, existing) => {
+      const userId = userIdOf(b.userId);
+      const level = INFRACTION_LEVELS[b.level] ? b.level : null;
+      const reason = str(b.reason, 200);
+      if (!userId) return { error: "Pick a member" };
+      if (!level) return { error: "Pick an infraction level" };
+      if (!reason) return { error: "Give a reason" };
+      const def = INFRACTION_LEVELS[level];
+      const issued = existing?.issuedAt || new Date().toISOString();
+      const expiresAt = isoDate(b.expiresAt) ?? (def.days ? new Date(new Date(issued).getTime() + def.days * 86_400_000).toISOString() : null);
+      return {
+        data: {
+          userId,
+          username: str(b.username, 50),
+          level,
+          points: clampInt(b.points ?? def.points, 0, 20),
+          reason,
+          details: str(b.details, 3000),
+          issuedAt: issued,
+          expiresAt,
+          status: existing?.status || "active",
+        },
+      };
+    },
+    actions: {
+      revoke: (item, b, c) =>
+        hasHR(c, "hr.infractions") ? { ...item, status: "revoked", revokedReason: str(b?.reason, 300), revokedBy: c.name, revokedAt: new Date().toISOString() } : { error: "You can’t do this" },
+      acknowledge: (item, _b, c) => (item.userId === c.id ? { ...item, acknowledgedAt: new Date().toISOString() } : { error: "Only the member can acknowledge this" }),
+    },
+  },
+
+  complaints: {
+    canCreate: () => true,
+    canEdit: () => false,
+    canDelete: (_i, c) => hasHR(c, "hr.cases"),
+    // HR sees all; the person who raised it sees theirs, but never HR’s private notes
+    view: (item, c) => {
+      if (hasHR(c, "hr.cases") || hasHR(c, "hr.view")) return item;
+      if (item.createdBy === c.id) return { ...item, notes: [] };
+      return null;
+    },
+    validate: (b) => {
+      const subject = str(b.subject, 140);
+      const details = str(b.details, 4000);
+      if (!subject) return { error: "Add a subject" };
+      if (details.length < 20) return { error: "Please describe what happened (at least 20 characters)" };
+      const category = ["conduct", "harassment", "unfair", "safety", "other"].includes(b.category) ? b.category : "other";
+      return { data: { subject, details, category, aboutUserId: userIdOf(b.aboutUserId) || null, aboutUsername: str(b.aboutUsername, 50) || null, anonymous: bool(b.anonymous), status: "new", notes: [], outcome: "" } };
+    },
+    actions: {
+      status: (item, b, c) => {
+        if (!hasHR(c, "hr.cases")) return { error: "You can’t do this" };
+        if (!["new", "investigating", "resolved", "closed"].includes(b?.status)) return { error: "Invalid status" };
+        return { ...item, status: b.status, outcome: str(b.outcome, 1500) || item.outcome, handledBy: c.name };
+      },
+      note: (item, b, c) => {
+        if (!hasHR(c, "hr.cases")) return { error: "You can’t do this" };
+        const text = str(b?.text, 2000);
+        if (!text) return { error: "Write a note" };
+        return { ...item, notes: [...(item.notes || []), { by: c.name, at: new Date().toISOString(), text }].slice(-100) };
+      },
+    },
+  },
+
+  appeals: {
+    canCreate: () => true,
+    canEdit: () => false,
+    canDelete: (_i, c) => hasHR(c, "hr.cases"),
+    view: (item, c) => (hasHR(c, "hr.cases") || hasHR(c, "hr.view") || item.createdBy === c.id ? item : null),
+    validate: (b) => {
+      const infractionId = str(b.infractionId, 24);
+      const reason = str(b.reason, 3000);
+      if (!infractionId) return { error: "Pick the infraction you’re appealing" };
+      if (reason.length < 20) return { error: "Explain why (at least 20 characters)" };
+      return { data: { infractionId, infractionLabel: str(b.infractionLabel, 120), reason, status: "pending", decision: null, response: "" } };
+    },
+    actions: {
+      decide: (item, b, c) => {
+        if (!hasHR(c, "hr.cases")) return { error: "You can’t do this" };
+        if (!["upheld", "overturned", "reduced"].includes(b?.decision)) return { error: "Pick a decision" };
+        return { ...item, status: "decided", decision: b.decision, response: str(b.response, 1500), decidedBy: c.name, decidedAt: new Date().toISOString() };
+      },
+    },
+  },
+
+  pips: {
+    canCreate: (c) => hasHR(c, "hr.plans"),
+    canEdit: (_i, c) => hasHR(c, "hr.plans"),
+    canDelete: (_i, c) => hasHR(c, "hr.plans"),
+    view: (item, c) => (hasHR(c, "hr.plans") || hasHR(c, "hr.view") || item.userId === c.id ? item : null),
+    validate: (b, _c, existing) => {
+      const userId = userIdOf(b.userId);
+      if (!userId) return { error: "Pick a member" };
+      const goals = Array.isArray(b.goals)
+        ? b.goals.map((g: any) => (typeof g === "string" ? { text: str(g, 200), done: false } : { text: str(g?.text, 200), done: bool(g?.done) })).filter((g: any) => g.text).slice(0, 15)
+        : [];
+      if (!goals.length) return { error: "Add at least one goal" };
+      return {
+        data: {
+          userId,
+          username: str(b.username, 50),
+          concern: str(b.concern, 2000),
+          goals,
+          support: str(b.support, 2000),
+          reviewDate: isoDate(b.reviewDate),
+          status: existing?.status || "active",
+          checkins: existing?.checkins || [],
+        },
+      };
+    },
+    actions: {
+      goal: (item, b, c) => {
+        if (!hasHR(c, "hr.plans")) return { error: "You can’t do this" };
+        const i = Number(b?.index);
+        if (!Number.isInteger(i) || i < 0 || i >= item.goals.length) return { error: "Invalid goal" };
+        return { ...item, goals: item.goals.map((g: any, j: number) => (j === i ? { ...g, done: !g.done } : g)) };
+      },
+      checkin: (item, b, c) => {
+        if (!hasHR(c, "hr.plans")) return { error: "You can’t do this" };
+        const text = str(b?.text, 2000);
+        if (!text) return { error: "Write a check-in note" };
+        return { ...item, checkins: [...(item.checkins || []), { by: c.name, at: new Date().toISOString(), text }].slice(-50) };
+      },
+      outcome: (item, b, c) => {
+        if (!hasHR(c, "hr.plans")) return { error: "You can’t do this" };
+        if (!["active", "passed", "extended", "unsuccessful"].includes(b?.status)) return { error: "Invalid outcome" };
+        return { ...item, status: b.status, closedAt: b.status === "active" ? null : new Date().toISOString() };
+      },
+      acknowledge: (item, _b, c) => (item.userId === c.id ? { ...item, acknowledgedAt: new Date().toISOString() } : { error: "Only the member can acknowledge this" }),
+    },
+  },
+
+  resignations: {
+    canCreate: () => true,
+    canEdit: () => false,
+    canDelete: (_i, c) => hasHR(c, "hr.resignations"),
+    view: (item, c) => (hasHR(c, "hr.resignations") || hasHR(c, "hr.view") || item.createdBy === c.id ? item : null),
+    validate: (b) => {
+      const lastDay = isoDate(b.lastDay);
+      if (!lastDay) return { error: "Pick your last day" };
+      return {
+        data: {
+          lastDay,
+          reason: ["time", "school", "other_group", "not_enjoying", "conflict", "personal", "other"].includes(b.reason) ? b.reason : "other",
+          wentWell: str(b.wentWell, 2000),
+          improve: str(b.improve, 2000),
+          wouldReturn: ["yes", "maybe", "no"].includes(b.wouldReturn) ? b.wouldReturn : "maybe",
+          status: "received",
+        },
+      };
+    },
+    actions: {
+      process: (item, b, c) => {
+        if (!hasHR(c, "hr.resignations")) return { error: "You can’t do this" };
+        if (!["received", "processed", "withdrawn"].includes(b?.status)) return { error: "Invalid status" };
+        return { ...item, status: b.status, hrMessage: str(b.message, 1000) || item.hrMessage, processedBy: c.name };
+      },
+      withdraw: (item, _b, c) => (item.createdBy === c.id && item.status === "received" ? { ...item, status: "withdrawn" } : { error: "You can’t withdraw this now" }),
+    },
+  },
 };
 
 /** Strips who sent anonymous feedback before anyone sees it. */
 export function finalize(collection: Collection, item: TeamItem): TeamItem {
-  if (collection === "feedback" && item.anonymous) return { ...item, createdBy: null, createdByName: null };
+  if ((collection === "feedback" || collection === "complaints") && item.anonymous) return { ...item, createdBy: null, createdByName: null };
   return item;
 }

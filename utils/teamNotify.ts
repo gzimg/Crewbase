@@ -67,6 +67,20 @@ export async function notifyAllMembers(groupId: number | bigint, exceptUserId: s
   await notifyUsers(groupId, members.map((m) => m.userId.toString()).filter((id) => id !== exceptUserId), title, body, href);
 }
 
+/** Notifies everyone who handles HR: workspace admins and roles with an HR permission. */
+export async function notifyHR(groupId: number | bigint, exceptUserId: string | null, title: string, body: string, href: string) {
+  const gid = BigInt(groupId);
+  const [admins, roles] = await Promise.all([
+    prisma.workspaceMember.findMany({ where: { workspaceGroupId: gid, isAdmin: true }, select: { userId: true } }),
+    prisma.role.findMany({
+      where: { workspaceGroupId: gid, permissions: { hasSome: ["admin", "hr.view", "hr.cases", "hr.resignations", "hr.infractions", "hr.plans"] } },
+      select: { members: { select: { userid: true } } },
+    }),
+  ]);
+  const ids = [...admins.map((a) => a.userId.toString()), ...roles.flatMap((r) => r.members.map((m) => m.userid.toString()))];
+  await notifyUsers(groupId, ids.filter((id) => id !== exceptUserId), title, body, href);
+}
+
 async function postToDiscord(groupId: number | bigint, embed: { title: string; description?: string; color?: number; fields?: { name: string; value: string; inline?: boolean }[]; url?: string }) {
   const settings = await getTeamSettings(groupId);
   const url = decryptSecret(settings.discordWebhook);
@@ -136,6 +150,18 @@ export async function onTeamItemCreated(groupId: number, collection: Collection,
     if (collection === "nominations") {
       tasks.push(notifyUsers(groupId, [item.nomineeId], "🌟 You’ve been nominated!", `Someone nominated you for Staff of the Month: “${item.reason}”`, `${base}/spotlight`));
     }
+    // Human resources
+    const hr = `/workspace/${groupId}/hr`;
+    if (collection === "infractions") {
+      tasks.push(notifyUsers(groupId, [item.userId], "⚠️ You’ve received an infraction", `${item.reason}. You can read it and appeal from HR.`, `${hr}/infractions`));
+    }
+    if (collection === "pips") {
+      tasks.push(notifyUsers(groupId, [item.userId], "📈 You’ve been placed on an improvement plan", "Read your goals and the support available in HR.", `${hr}/plans`));
+    }
+    if (collection === "complaints" || collection === "appeals" || collection === "resignations") {
+      const what = collection === "complaints" ? "complaint" : collection === "appeals" ? "infraction appeal" : "resignation";
+      tasks.push(notifyHR(groupId, authorId, `📥 New ${what}`, `A new ${what} needs reviewing.`, `${hr}/${collection === "complaints" ? "complaints" : collection}`));
+    }
     if (collection === "chat") {
       // @mentions notify the people mentioned
       const names = Array.from(new Set((String(item.text).match(/@([A-Za-z0-9_]{3,20})/g) || []).map((m) => m.slice(1).toLowerCase())));
@@ -174,6 +200,33 @@ export async function onTeamItemChanged(groupId: number, collection: Collection,
     }
     if (collection === "nominations" && after.winner && !before.winner) {
       await notifyAllMembers(groupId, null, `🏆 Staff of the Month: ${after.nomineeName}`, after.reason, `${base}/spotlight`);
+    }
+    const hr = `/workspace/${groupId}/hr`;
+    if (collection === "infractions" && after.status === "revoked" && before.status !== "revoked") {
+      await notifyUsers(groupId, [after.userId], "✅ An infraction was removed", after.revokedReason || "One of your infractions was revoked.", `${hr}/infractions`);
+    }
+    if (collection === "complaints" && after.status !== before.status && after.createdBy) {
+      await notifyUsers(groupId, [after.createdBy], `📋 Your complaint is now ${after.status}`, after.outcome || after.subject, `${hr}/complaints`);
+    }
+    if (collection === "appeals" && after.status === "decided" && before.status !== "decided") {
+      if (after.createdBy) await notifyUsers(groupId, [after.createdBy], `⚖️ Your appeal was ${after.decision}`, after.response || "HR has reviewed your appeal.", `${hr}/appeals`);
+      // Overturned appeals remove the infraction; reduced appeals halve its points
+      const { getItem, saveItem } = await import("@/utils/teamStore");
+      const inf = await getItem(groupId, "infractions", String(after.infractionId));
+      if (inf && after.decision === "overturned") {
+        await saveItem(inf.rowId, { ...inf.item, status: "revoked", revokedReason: "Overturned on appeal", revokedBy: after.decidedBy, revokedAt: new Date().toISOString() });
+      } else if (inf && after.decision === "reduced") {
+        await saveItem(inf.rowId, { ...inf.item, points: Math.floor((inf.item.points || 0) / 2), reducedOnAppeal: true });
+      }
+    }
+    if (collection === "pips" && (after.checkins || []).length > (before.checkins || []).length) {
+      await notifyUsers(groupId, [after.userId], "📈 New check-in on your improvement plan", after.checkins[after.checkins.length - 1].text, `${hr}/plans`);
+    }
+    if (collection === "pips" && after.status !== before.status && after.status !== "active") {
+      await notifyUsers(groupId, [after.userId], `📈 Your improvement plan: ${after.status}`, "HR has updated your improvement plan.", `${hr}/plans`);
+    }
+    if (collection === "resignations" && after.status === "processed" && before.status !== "processed" && after.createdBy) {
+      await notifyUsers(groupId, [after.createdBy], "👋 Your resignation has been processed", after.hrMessage || "Thank you for your time on the team.", `${hr}/resignations`);
     }
     if (collection === "feedback" && after.reply && after.reply !== before.reply && after.createdBy) {
       await notifyUsers(groupId, [after.createdBy], "💬 Leadership replied to your feedback", after.reply, `${base}/reviews`);

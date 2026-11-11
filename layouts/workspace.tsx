@@ -84,6 +84,12 @@ import {
   IconSettings,
   IconHeartHandshake,
   IconClipboardList,
+  IconLayoutDashboard,
+  IconGavel,
+  IconMessageReport,
+  IconTrendingUp,
+  IconDoorExit,
+  IconFolderOpen,
 } from "@tabler/icons-react";
 
 const SAVED_VIEW_ICONS: { [key: string]: any } = {
@@ -393,6 +399,27 @@ const workspace: LayoutProps = ({ children }) => {
 				},
 			];
 			return { title: "Activity", sections, hideHeader: true };
+		}
+
+		// Human resources
+		if (path.includes(`/workspace/${id}/hr`)) {
+			const hr = (slug: string, label: string, icon: any): SecondarySidebarItem => ({
+				label,
+				href: `/workspace/${id}/hr${slug ? `/${slug}` : ""}`,
+				icon,
+				active: slug ? path.includes(`/workspace/${id}/hr/${slug}`) : path.split("?")[0] === `/workspace/${id}/hr`,
+			});
+			const hrPerms = ["hr.view", "hr.infractions", "hr.cases", "hr.plans", "hr.resignations"];
+			const canSeeFiles = workspace.isAdmin || workspace.yourPermission?.includes("admin") || hrPerms.some((p) => workspace.yourPermission?.includes(p));
+			const sections: SecondarySidebarSection[] = [
+				{ title: "HR", items: [hr("", "Overview", IconLayoutDashboard)] },
+				{ title: "Discipline", items: [hr("infractions", "Infractions", IconAlertTriangle), hr("appeals", "Appeals", IconGavel)] },
+				{ title: "Cases", items: [hr("complaints", "Complaints", IconMessageReport)] },
+				{ title: "Development", items: [hr("plans", "Improvement plans", IconTrendingUp)] },
+				{ title: "Offboarding", items: [hr("resignations", "Resignations", IconDoorExit)] },
+				...(canSeeFiles ? [{ title: "Records", items: [hr("files", "Staff files", IconFolderOpen)] }] : []),
+			];
+			return { title: "Human resources", sections, hideHeader: true };
 		}
 
 		// Team: the many Team tabs, plus Wall and Alliances, grouped into short sections

@@ -153,6 +153,13 @@ const RolesManager: FC<Props> = ({ roles, setRoles, grouproles }) => {
       "Upload evidence": "upload_evidence",
       "Delete evidence": "delete_evidence",
     },
+    "Human resources": {
+      "View HR records and staff files": "hr.view",
+      "Issue and revoke infractions": "hr.infractions",
+      "Handle complaints and appeals": "hr.cases",
+      "Manage improvement plans": "hr.plans",
+      "Handle resignations": "hr.resignations",
+    },
     Applications: {
       "View applications": "applications.view",
       "Manage applications": "applications.manage",

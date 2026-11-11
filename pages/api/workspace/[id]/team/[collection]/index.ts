@@ -34,7 +34,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const result = rule.validate(req.body || {}, ctx);
   if ("error" in result) return res.status(400).json({ success: false, error: result.error });
-  const author = collection === "feedback" && result.data.anonymous ? null : { id: ctx.id, name: ctx.name };
+
+  // Appeals: only for your own active infraction, one open appeal at a time
+  if (collection === "appeals") {
+    const { getItem } = await import("@/utils/teamStore");
+    const inf = await getItem(groupId, "infractions", String(result.data.infractionId));
+    if (!inf || inf.item.userId !== ctx.id) return res.status(400).json({ success: false, error: "You can only appeal your own infractions" });
+    if (inf.item.status !== "active") return res.status(400).json({ success: false, error: "That infraction isn’t active" });
+    const open = (await listItems(groupId, "appeals")).some((a) => a.infractionId === inf.item.id && a.status === "pending");
+    if (open) return res.status(400).json({ success: false, error: "You already have an appeal waiting for this infraction" });
+  }
+  const author = (collection === "feedback" || collection === "complaints") && result.data.anonymous ? null : { id: ctx.id, name: ctx.name };
   const item = await createItem(groupId, collection, result.data, author);
   await onTeamItemCreated(groupId, collection, item, ctx.id, ctx.name);
   return res.status(200).json({ success: true, item: finalize(collection, item) });

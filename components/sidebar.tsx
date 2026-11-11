@@ -25,6 +25,7 @@ import {
   UserShield01Icon,
   SparklesIcon,
   UserGroupIcon,
+  Briefcase01Icon,
 } from "@hugeicons/core-free-icons"
 import {
   IconStar,
@@ -307,6 +308,13 @@ const Sidebar: NextPage = () => {
         `/workspace/${workspace.groupId}/applications`,
       ]
     }] : []),
+    {
+      name: "HR",
+      href: `/workspace/${workspace.groupId}/hr`,
+      icon: Briefcase01Icon,
+      accessible: true,
+      matchPaths: [`/workspace/${workspace.groupId}/hr`],
+    },
     ...(moderationEnabled ? [{
       name: "Moderation",
       href: `/workspace/${workspace.groupId}/moderation`,

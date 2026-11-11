@@ -34,6 +34,13 @@ const WORKSPACE_PAGES: [string, string, string?][] = [
   ["/team/onboarding", "Onboarding", "checklist new staff"],
   ["/team/spotlight", "Staff of the Month", "nominate award vote"],
   ["/team/links", "Links", "resources bookmarks"],
+  ["/hr", "Human resources", "hr discipline"],
+  ["/hr/infractions", "Infractions", "warning discipline points strike"],
+  ["/hr/appeals", "Appeals", "appeal infraction"],
+  ["/hr/complaints", "Complaints", "grievance report concern hr"],
+  ["/hr/plans", "Improvement plans", "pip performance"],
+  ["/hr/resignations", "Resignations", "resign leave quit exit"],
+  ["/hr/files", "Staff files", "record personnel"],
   ["/settings", "Workspace settings", "config roles permissions"],
   ["/plan", "Plan & usage", "upgrade limits badge request"],
 ];

@@ -16,7 +16,7 @@ export type TeamItem = {
   [field: string]: any;
 };
 
-export const COLLECTIONS = ["announcements", "chat", "events", "certifications", "awards", "reviews", "feedback", "polls", "kudos", "tasks", "ideas", "checklists", "onboarding", "links", "nominations"] as const;
+export const COLLECTIONS = ["announcements", "chat", "events", "certifications", "awards", "reviews", "feedback", "polls", "kudos", "tasks", "ideas", "checklists", "onboarding", "links", "nominations", "infractions", "complaints", "appeals", "pips", "resignations"] as const;
 export type Collection = (typeof COLLECTIONS)[number];
 
 const LIMITS: Record<Collection, number> = {
@@ -35,6 +35,11 @@ const LIMITS: Record<Collection, number> = {
   onboarding: 1000,
   links: 200,
   nominations: 1000,
+  infractions: 5000,
+  complaints: 2000,
+  appeals: 2000,
+  pips: 1000,
+  resignations: 2000,
 };
 
 const prefix = (c: Collection) => `team:${c}:`;
@@ -115,6 +120,7 @@ export async function getMemberContext(userId: number | bigint, groupId: number 
     name: user?.username ?? null,
     picture: user?.picture ?? null,
     isManager: !!membership?.isAdmin || perms.includes("admin"),
+    perms,
   };
 }
 
@@ -125,10 +131,10 @@ export async function scrubUserFromTeam(userId: string): Promise<number> {
   for (const row of rows) {
     const item = row.value as any;
     const collection = row.key.split(":")[1];
-    const aboutThem = item.userId === userId || item.toUserId === userId || item.nomineeId === userId;
+    const aboutThem = item.userId === userId || item.toUserId === userId || item.nomineeId === userId || item.aboutUserId === userId;
     const byThem = item.createdBy === userId;
     // Personal content by or about them is deleted
-    if (aboutThem || (byThem && ["chat", "kudos", "feedback", "nominations"].includes(collection))) {
+    if (aboutThem || (byThem && ["chat", "kudos", "feedback", "nominations", "complaints", "appeals", "resignations"].includes(collection))) {
       await prisma.config.delete({ where: { id: row.id } });
       changed++;
       continue;

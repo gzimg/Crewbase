@@ -47,6 +47,12 @@ export default function PrivacyPage() {
           certifications, performance reviews, poll votes, kudos, feedback, tasks, ideas and votes, onboarding checklists and
           Staff of the Month nominations. Anonymous feedback is saved without your name.
         </li>
+        <li>
+          Human resources records: infractions you receive (with reasons and points), appeals, complaints you raise or that are
+          about you, improvement plans and check-ins, and resignations with your exit survey answers. HR records are only visible
+          to people with HR access in that workspace, and to you for records about you. You aren’t shown complaints made about
+          you, to protect the people who raise them. Anonymous complaints are saved without your name.
+        </li>
       </ul>
 
       <h3>Integrations a workspace connects</h3>
