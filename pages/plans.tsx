@@ -13,6 +13,7 @@ type Plan = {
   features: string[];
 };
 type Data = {
+  requirements?: Record<string, { minGroupMembers: number; minWorkspaceDays: number }>;
   defaultPlan: string;
   auto: { enabled: boolean; toPlan: string; minMembers: number; minAgeDays: number };
   requestsOpen: boolean;
@@ -58,6 +59,8 @@ export default function PlansPage() {
                     ? "Every new workspace starts here."
                     : data.auto.enabled && data.auto.toPlan === p.id
                       ? `Unlocks automatically at ${data.auto.minMembers}+ members after ${data.auto.minAgeDays} days, or on request.`
+                      : data.requirements?.[p.id] && (data.requirements[p.id].minGroupMembers > 0 || data.requirements[p.id].minWorkspaceDays > 0)
+                      ? `Available on request for groups with ${data.requirements[p.id].minGroupMembers.toLocaleString()}+ members and workspaces at least ${data.requirements[p.id].minWorkspaceDays} days old.`
                       : "Available on request."}
                 </p>
               </div>

@@ -685,6 +685,7 @@ type PlanWorkspace = {
 type PlanRequestRow = {
   id: string; groupId: string; groupName: string | null; plan: string; status: string; reason: string;
   memberCount: number; createdAt: string; requestedByName: string | null; response?: string;
+  groupMembers?: number | null; discordInvite?: string; staffCount?: number;
 };
 
 function PlansTab({ onChanged }: { onChanged: () => void }) {
@@ -771,6 +772,12 @@ function PlansTab({ onChanged }: { onChanged: () => void }) {
                 <PlanBadge name={planInfo(r.plan).name} color={planInfo(r.plan).color} />
                 <span className="text-zinc-500">· {r.memberCount} members · by {r.requestedByName || "unknown"} · {timeAgo(r.createdAt)}</span>
               </div>
+              <p className="mt-1 text-xs text-zinc-500">
+                Roblox group: {typeof r.groupMembers === "number" ? `${r.groupMembers.toLocaleString()} members` : "unknown size"}
+                {typeof r.staffCount === "number" && ` · says ${r.staffCount} staff`}
+                {" · "}<a href={`https://www.roblox.com/groups/${r.groupId}`} target="_blank" rel="noopener noreferrer" className="underline">view group</a>
+                {r.discordInvite && <> · <a href={r.discordInvite} target="_blank" rel="noopener noreferrer" className="underline">Discord</a></>}
+              </p>
               <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-800 dark:text-zinc-200">{r.reason}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <label htmlFor={`pr-${r.id}`} className="sr-only">Response</label>

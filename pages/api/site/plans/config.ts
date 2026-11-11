@@ -44,6 +44,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     next.auto.minAgeDays = clampInt(body.auto.minAgeDays, 0, 3650, next.auto.minAgeDays);
   }
   if (body.requests && typeof body.requests.open === "boolean") next.requests.open = body.requests.open;
+  if (body.requirements) {
+    for (const id of PLAN_ORDER) {
+      const r = body.requirements[id];
+      if (!r) continue;
+      next.requirements[id] = {
+        minGroupMembers: clampInt(r.minGroupMembers, 0, 10_000_000, next.requirements[id].minGroupMembers),
+        minWorkspaceDays: clampInt(r.minWorkspaceDays, 0, 3650, next.requirements[id].minWorkspaceDays),
+      };
+    }
+  }
 
   await savePlanConfig(next);
   await logSiteAction({ actorId: caller.userId, action: "update_plan_settings" });

@@ -11,6 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     defaultPlan: config.defaultPlan,
     auto: config.auto,
     requestsOpen: config.requests.open,
+    requirements: config.requirements,
     features: FEATURE_LABELS,
     plans: PLAN_ORDER.map((id) => ({ id, ...config.plans[id] })),
   });

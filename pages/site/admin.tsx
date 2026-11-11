@@ -550,6 +550,7 @@ type PlanCfg = {
   plans: Record<"starter" | "plus" | "pro", PlanDef>;
   auto: { enabled: boolean; toPlan: "starter" | "plus" | "pro"; minMembers: number; minAgeDays: number };
   requests: { open: boolean };
+  requirements?: Record<"starter" | "plus" | "pro", { minGroupMembers: number; minWorkspaceDays: number }>;
 };
 const PLAN_IDS = ["starter", "plus", "pro"] as const;
 
@@ -676,6 +677,26 @@ function PlanSettingsTab() {
           </div>
         )}
         <p className="mt-3 text-xs text-zinc-500">The automatic check runs once a day. It only ever moves workspaces up, never down.</p>
+      </Panel>
+
+      <Panel title="What a workspace needs to request each plan">
+        <div className="grid gap-4 text-sm md:grid-cols-2">
+          {(["plus", "pro"] as const).map((id) => {
+            const r = cfg.requirements?.[id] || { minGroupMembers: 0, minWorkspaceDays: 0 };
+            const set = (patch: Partial<typeof r>) =>
+              setCfg({ ...cfg, requirements: { ...(cfg.requirements as any), [id]: { ...r, ...patch } } });
+            return (
+              <div key={id} className="space-y-2">
+                <PlanBadge name={cfg.plans[id].name} color={cfg.plans[id].color} />
+                <label className="block"><span className="text-xs text-zinc-500">Minimum Roblox group members</span>
+                  <input type="number" min={0} value={r.minGroupMembers} onChange={(e) => set({ minGroupMembers: Number(e.target.value) })} className={num} /></label>
+                <label className="block"><span className="text-xs text-zinc-500">Minimum workspace age (days)</span>
+                  <input type="number" min={0} value={r.minWorkspaceDays} onChange={(e) => set({ minWorkspaceDays: Number(e.target.value) })} className={num} /></label>
+              </div>
+            );
+          })}
+        </div>
+        <p className="mt-3 text-xs text-zinc-500">Workspaces that don’t meet these can’t send a request yet, and see what they’re missing. Staff can still give any plan directly.</p>
       </Panel>
 
       <button disabled={saving} onClick={save} className={`${primaryButtonClass} h-10 px-5`}>{saving ? "Saving…" : "Save plan settings"}</button>

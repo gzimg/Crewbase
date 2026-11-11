@@ -40,6 +40,8 @@ export type PlanConfig = {
   plans: Record<PlanId, PlanDefinition>;
   auto: { enabled: boolean; toPlan: PlanId; minMembers: number; minAgeDays: number };
   requests: { open: boolean };
+  // What a workspace needs before it can request each plan
+  requirements: Record<PlanId, { minGroupMembers: number; minWorkspaceDays: number }>;
 };
 
 export const DEFAULT_PLAN_CONFIG: PlanConfig = {
@@ -69,6 +71,11 @@ export const DEFAULT_PLAN_CONFIG: PlanConfig = {
   },
   auto: { enabled: true, toPlan: "plus", minMembers: 25, minAgeDays: 14 },
   requests: { open: true },
+  requirements: {
+    starter: { minGroupMembers: 0, minWorkspaceDays: 0 },
+    plus: { minGroupMembers: 50, minWorkspaceDays: 7 },
+    pro: { minGroupMembers: 500, minWorkspaceDays: 30 },
+  },
 };
 
 export type WorkspacePlan = {
@@ -90,6 +97,9 @@ export type PlanRequest = {
   requestedBy: string;
   reason: string;
   memberCount: number;
+  groupMembers?: number | null;
+  discordInvite?: string;
+  staffCount?: number;
   createdAt: string;
   handledBy?: string;
   handledAt?: string;
@@ -122,6 +132,9 @@ export async function getPlanConfig(fresh = false): Promise<PlanConfig> {
     ) as Record<PlanId, PlanDefinition>,
     auto: { ...DEFAULT_PLAN_CONFIG.auto, ...(stored.auto || {}) },
     requests: { ...DEFAULT_PLAN_CONFIG.requests, ...(stored.requests || {}) },
+    requirements: Object.fromEntries(
+      PLAN_ORDER.map((id) => [id, { ...DEFAULT_PLAN_CONFIG.requirements[id], ...((stored as any).requirements?.[id] || {}) }])
+    ) as PlanConfig["requirements"],
   };
   configCache = { value, at: Date.now() };
   return value;
@@ -156,6 +169,43 @@ export async function setWorkspacePlan(groupId: string, plan: WorkspacePlan | nu
   if (plan) all[groupId] = plan;
   else delete all[groupId];
   await writeJson("site_workspace_plans", all);
+  // Keep a short history of plan changes for the workspace’s Plan page
+  const history = await readJson<Record<string, PlanHistoryEntry[]>>("site_plan_history", {});
+  const config = await getPlanConfig();
+  const entry: PlanHistoryEntry = { at: new Date().toISOString(), plan: plan?.plan || config.defaultPlan, source: plan?.source || "default", expiresAt: plan?.expiresAt ?? null };
+  history[groupId] = [entry, ...(history[groupId] || [])].slice(0, 30);
+  await writeJson("site_plan_history", history);
+}
+
+export type PlanHistoryEntry = { at: string; plan: PlanId; source: string; expiresAt: string | null };
+
+export async function getPlanHistory(groupId: string): Promise<PlanHistoryEntry[]> {
+  const history = await readJson<Record<string, PlanHistoryEntry[]>>("site_plan_history", {});
+  return history[groupId] || [];
+}
+
+/** How a workspace measures up against each plan’s request requirements. */
+export async function getEligibility(groupId: string) {
+  const config = await getPlanConfig();
+  const { getGroupInfo } = await import("@/utils/roblox");
+  const [info, seenRow, firstMember] = await Promise.all([
+    getGroupInfo(Number(groupId)).catch(() => null) as Promise<any>,
+    prisma.instanceConfig.findUnique({ where: { key: "site_workspace_first_seen" } }),
+    prisma.workspaceMember.findFirst({ where: { workspaceGroupId: BigInt(groupId) }, orderBy: { joinDate: "asc" }, select: { joinDate: true } }),
+  ]);
+  const groupMembers: number | null = typeof info?.memberCount === "number" ? info.memberCount : null;
+  const firstSeen = (seenRow?.value as any)?.[groupId] || firstMember?.joinDate || null;
+  const ageDays = firstSeen ? Math.floor((Date.now() - new Date(firstSeen).getTime()) / 86_400_000) : 0;
+  const plans = Object.fromEntries(
+    PLAN_ORDER.map((id) => {
+      const r = config.requirements[id];
+      const missing: string[] = [];
+      if (r.minGroupMembers && (groupMembers ?? 0) < r.minGroupMembers) missing.push(`${r.minGroupMembers.toLocaleString()}+ members in your Roblox group`);
+      if (r.minWorkspaceDays && ageDays < r.minWorkspaceDays) missing.push(`a workspace at least ${r.minWorkspaceDays} days old`);
+      return [id, { eligible: missing.length === 0, missing, requirements: r }];
+    })
+  ) as Record<PlanId, { eligible: boolean; missing: string[]; requirements: { minGroupMembers: number; minWorkspaceDays: number } }>;
+  return { groupMembers, ageDays, plans };
 }
 
 export async function getPlanDefinition(groupId: string | number | bigint): Promise<{ id: PlanId; def: PlanDefinition; record: WorkspacePlan }> {

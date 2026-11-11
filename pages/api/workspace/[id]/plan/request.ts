@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { withPermissionCheck } from "@/utils/permissionsManager";
-import { getPlanDefinition, getPlanConfig, getPlanRequests, savePlanRequests, getWorkspaceUsage, PLAN_ORDER, PlanId } from "@/utils/plans";
+import { getPlanDefinition, getPlanConfig, getPlanRequests, savePlanRequests, getWorkspaceUsage, getEligibility, PLAN_ORDER, PlanId } from "@/utils/plans";
 import { newId } from "@/utils/siteSettings";
 
 /**
@@ -40,9 +40,24 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   );
   if (recentDeclined) return res.status(429).json({ success: false, error: "A request was declined recently. You can ask again 7 days after it was declined." });
 
+  // Each plan can require a minimum group size and workspace age
+  const eligibility = await getEligibility(groupId);
+  if (!eligibility.plans[plan].eligible) {
+    return res.status(400).json({ success: false, error: `To request this plan you need ${eligibility.plans[plan].missing.join(" and ")}.` });
+  }
+
+  const invite = typeof req.body?.discordInvite === "string" ? req.body.discordInvite.trim().slice(0, 100) : "";
+  if (invite && !/^https:\/\/(discord\.gg|discord\.com\/invite)\/[\w-]+$/.test(invite)) {
+    return res.status(400).json({ success: false, error: "That doesn’t look like a Discord invite link (https://discord.gg/...)" });
+  }
+  const staffCount = Number.isFinite(Number(req.body?.staffCount)) ? Math.max(0, Math.min(100000, Math.round(Number(req.body.staffCount)))) : undefined;
+
   const usage = await getWorkspaceUsage(groupId);
   await savePlanRequests([
-    { id: newId(), groupId, plan, status: "pending", requestedBy: userId, reason, memberCount: usage.members, createdAt: new Date().toISOString() },
+    {
+      id: newId(), groupId, plan, status: "pending", requestedBy: userId, reason, memberCount: usage.members,
+      groupMembers: eligibility.groupMembers, discordInvite: invite || undefined, staffCount, createdAt: new Date().toISOString(),
+    },
     ...requests,
   ]);
   return res.status(200).json({ success: true });

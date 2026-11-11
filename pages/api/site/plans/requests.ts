@@ -41,6 +41,24 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       expiresAt,
     });
   }
+  // Let the person who asked (and the workspace’s admins) know
+  try {
+    const prisma = (await import("@/utils/database")).default;
+    const { notifyUsers } = await import("@/utils/teamNotify");
+    const config = await (await import("@/utils/plans")).getPlanConfig();
+    const admins = await prisma.workspaceMember.findMany({ where: { workspaceGroupId: BigInt(request.groupId), isAdmin: true }, select: { userId: true } });
+    const planName = config.plans[request.plan].name;
+    await notifyUsers(
+      BigInt(request.groupId),
+      [request.requestedBy, ...admins.map((a) => a.userId.toString())],
+      decision === "approve" ? `🎉 Your workspace is now on ${planName}` : `Your ${planName} request wasn’t approved`,
+      response || (decision === "approve" ? "Thanks for using Crewbase! Your new limits and features are ready." : "You can ask again in 7 days."),
+      `/workspace/${request.groupId}/plan`
+    );
+  } catch (error) {
+    console.error("[plans] Couldn’t send decision notification", error);
+  }
+
   await logSiteAction({ actorId: caller.userId, action: `plan_request_${request.status}`, detail: `${request.groupId} → ${request.plan}` });
   return res.status(200).json({ success: true });
 }

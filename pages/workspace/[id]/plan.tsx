@@ -28,6 +28,12 @@ type Data = {
   badges: { id: string; label: string; color: string; description?: string }[];
   requestsOpen: boolean;
   requests: { id: string; plan: string; status: string; reason: string; createdAt: string; response?: string }[];
+  eligibility: {
+    groupMembers: number | null;
+    ageDays: number;
+    plans: Record<string, { eligible: boolean; missing: string[]; requirements: { minGroupMembers: number; minWorkspaceDays: number } }>;
+  } | null;
+  history: { at: string; plan: string; source: string; expiresAt: string | null }[];
 };
 
 const FEATURE_LABELS: Record<string, string> = {
@@ -50,6 +56,8 @@ const PlanPage: pageWithLayout = () => {
   const [data, setData] = useState<Data | null>(null);
   const [requestPlan, setRequestPlan] = useState<string>("");
   const [reason, setReason] = useState("");
+  const [discordInvite, setDiscordInvite] = useState("");
+  const [staffCount, setStaffCount] = useState("");
   const [sending, setSending] = useState(false);
   const id = router.query.id as string;
 
@@ -70,7 +78,7 @@ const PlanPage: pageWithLayout = () => {
   const send = async () => {
     setSending(true);
     try {
-      await axios.post(`/api/workspace/${id}/plan/request`, { plan: requestPlan, reason });
+      await axios.post(`/api/workspace/${id}/plan/request`, { plan: requestPlan, reason, discordInvite, staffCount: staffCount ? Number(staffCount) : undefined });
       toast.success("Request sent to Crewbase staff");
       setReason("");
       load();
@@ -189,17 +197,53 @@ const PlanPage: pageWithLayout = () => {
           ) : (
             <div className="mt-3 space-y-3">
               <div className="flex flex-wrap gap-2">
-                {higherPlans.map((plan) => (
-                  <button
-                    key={plan.id}
-                    onClick={() => setRequestPlan(plan.id)}
-                    aria-pressed={requestPlan === plan.id}
-                    className="rounded-lg border px-3 py-2 text-sm font-medium dark:text-zinc-100"
-                    style={{ borderColor: requestPlan === plan.id ? plan.color : undefined }}
-                  >
-                    {plan.name}
-                  </button>
-                ))}
+                {higherPlans.map((plan) => {
+                  const el = data.eligibility?.plans?.[plan.id];
+                  return (
+                    <button
+                      key={plan.id}
+                      onClick={() => setRequestPlan(plan.id)}
+                      aria-pressed={requestPlan === plan.id}
+                      className="rounded-lg border px-3 py-2 text-left text-sm font-medium dark:text-zinc-100"
+                      style={{ borderColor: requestPlan === plan.id ? plan.color : undefined }}
+                    >
+                      {plan.name}
+                      <span className={`block text-xs font-normal ${el?.eligible === false ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                        {el?.eligible === false ? "Not eligible yet" : "Eligible"}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {(() => {
+                const el = data.eligibility?.plans?.[requestPlan];
+                const r = el?.requirements;
+                return (
+                  <div className="rounded-lg bg-zinc-50 p-3 text-sm text-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-300">
+                    <p>
+                      Your group: <strong>{data.eligibility?.groupMembers?.toLocaleString() ?? "unknown"}</strong> members · workspace{" "}
+                      <strong>{data.eligibility?.ageDays ?? 0}</strong> days old
+                    </p>
+                    {r && (r.minGroupMembers > 0 || r.minWorkspaceDays > 0) && (
+                      <p className="mt-1 text-xs text-zinc-500">
+                        This plan needs {r.minGroupMembers > 0 && <>{r.minGroupMembers.toLocaleString()}+ group members</>}
+                        {r.minGroupMembers > 0 && r.minWorkspaceDays > 0 && " and "}
+                        {r.minWorkspaceDays > 0 && <>a workspace at least {r.minWorkspaceDays} days old</>}.
+                      </p>
+                    )}
+                    {el && !el.eligible && <p className="mt-1 text-xs font-medium text-red-600 dark:text-red-400">You still need {el.missing.join(" and ")}.</p>}
+                  </div>
+                );
+              })()}
+              <div className="grid gap-2 sm:grid-cols-2">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                  How many staff do you have?
+                  <input type="number" min={0} value={staffCount} onChange={(e) => setStaffCount(e.target.value)} className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-white" />
+                </label>
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                  Discord server invite (optional)
+                  <input value={discordInvite} onChange={(e) => setDiscordInvite(e.target.value)} placeholder="https://discord.gg/..." className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-white" />
+                </label>
               </div>
               <label htmlFor="plan-reason" className="block text-sm font-medium text-zinc-700 dark:text-zinc-200">Tell us about your group</label>
               <textarea
@@ -212,7 +256,7 @@ const PlanPage: pageWithLayout = () => {
                 className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-white"
               />
               <button
-                disabled={sending || reason.trim().length < 20}
+                disabled={sending || reason.trim().length < 20 || data.eligibility?.plans?.[requestPlan]?.eligible === false}
                 onClick={send}
                 className="h-10 rounded-lg px-4 text-sm font-semibold text-white disabled:opacity-40"
                 style={{ backgroundColor: data.plans.find((x) => x.id === requestPlan)?.color || "#18181b" }}
@@ -237,6 +281,24 @@ const PlanPage: pageWithLayout = () => {
                 {r.response && <p className="mt-1 text-zinc-500">Crewbase staff: {r.response}</p>}
               </li>
             ))}
+          </ul>
+        </section>
+      )}
+
+      {data.history.length > 0 && (
+        <section className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
+          <h2 className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500 dark:text-zinc-400">Plan history</h2>
+          <ul className="mt-3 space-y-2 text-sm">
+            {data.history.map((h, i) => {
+              const plan = data.plans.find((x) => x.id === h.plan);
+              return (
+                <li key={i} className="flex flex-wrap items-center gap-2 text-zinc-700 dark:text-zinc-300">
+                  {plan && <PlanBadge name={plan.name} color={plan.color} />}
+                  <span>{SOURCE_LABELS[h.source] || h.source}</span>
+                  <span className="text-xs text-zinc-500">· {new Date(h.at).toLocaleDateString()}{h.expiresAt ? ` · until ${new Date(h.expiresAt).toLocaleDateString()}` : ""}</span>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}

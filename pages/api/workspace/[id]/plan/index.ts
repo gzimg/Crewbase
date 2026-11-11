@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { withPermissionCheck } from "@/utils/permissionsManager";
-import { getPlanDefinition, getPlanConfig, getWorkspaceUsage, getWorkspaceBadges, getPlanRequests, PLAN_ORDER } from "@/utils/plans";
+import { getPlanDefinition, getPlanConfig, getWorkspaceUsage, getWorkspaceBadges, getPlanRequests, getEligibility, getPlanHistory, PLAN_ORDER } from "@/utils/plans";
 
 /** The workspace's plan, usage, badges and recent plan requests. Any member can view it. */
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -13,12 +13,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(200).json({ success: true, plan: { id, name: def.name, color: def.color } });
   }
 
-  const [{ id, def, record }, config, usage, badges, requests] = await Promise.all([
+  const [{ id, def, record }, config, usage, badges, requests, eligibility, history] = await Promise.all([
     getPlanDefinition(groupId),
     getPlanConfig(),
     getWorkspaceUsage(groupId),
     getWorkspaceBadges(groupId),
     getPlanRequests(),
+    getEligibility(groupId).catch(() => null),
+    getPlanHistory(groupId),
   ]);
 
   return res.status(200).json({
@@ -28,6 +30,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     usage,
     badges: badges.map(({ by, ...b }) => b),
     requestsOpen: config.requests.open,
+    eligibility,
+    history,
     requests: requests
       .filter((r) => r.groupId === groupId)
       .slice(0, 10)
