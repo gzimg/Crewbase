@@ -123,7 +123,13 @@ export async function registerCommands(): Promise<{ ok: boolean; count?: number;
     headers: { Authorization: `Bot ${BOT.token}`, "Content-Type": "application/json" },
     body: JSON.stringify(COMMANDS),
   });
-  if (!res.ok) return { ok: false, error: `Discord said ${res.status}: ${(await res.text()).slice(0, 300)}` };
+  if (!res.ok) {
+    const text = await res.text();
+    const hint =
+      res.status === 401 ? " The bot token is wrong or was reset." :
+      res.status === 403 || res.status === 404 ? " The Application ID doesn’t match the bot token." : "";
+    return { ok: false, error: `Discord said ${res.status}.${hint} Details: ${text.slice(0, 600)}` };
+  }
   const data = await res.json();
   return { ok: true, count: Array.isArray(data) ? data.length : COMMANDS.length };
 }
@@ -204,4 +210,46 @@ export async function minutesInGame(groupId: string, userIds: bigint[], days = 7
     totals.set(s.userId.toString(), (totals.get(s.userId.toString()) || 0) + minutes);
   }
   return totals;
+}
+
+/** Checks the bot’s setup with Discord, so the admin page can say exactly what’s wrong. */
+export async function diagnoseBot() {
+  const checks: { name: string; ok: boolean; detail: string }[] = [];
+  const env = { appId: !!BOT.appId, publicKey: !!BOT.publicKey, token: !!BOT.token };
+  checks.push({ name: "Environment variables", ok: env.appId && env.publicKey && env.token, detail: env.appId && env.publicKey && env.token ? "All three are set" : `Missing: ${[!env.appId && "DISCORD_BOT_APPLICATION_ID", !env.publicKey && "DISCORD_BOT_PUBLIC_KEY", !env.token && "DISCORD_BOT_TOKEN"].filter(Boolean).join(", ")}` });
+  if (!env.token) return { checks, registered: 0 };
+
+  const expectedUrl = `${(process.env.NEXTAUTH_URL || "https://crewbase.dev").replace(/\/+$/, "")}/api/discord/interactions`;
+  let registered = 0;
+  try {
+    const res = await fetch("https://discord.com/api/v10/applications/@me", { headers: { Authorization: `Bot ${BOT.token}` }, signal: AbortSignal.timeout(4000) });
+    if (res.status === 401) {
+      checks.push({ name: "Bot token", ok: false, detail: "Discord rejected the token. Reset it in the Developer Portal (Bot → Reset Token), update DISCORD_BOT_TOKEN in Vercel, and redeploy." });
+      return { checks, registered };
+    }
+    const app = await res.json();
+    checks.push({ name: "Bot token", ok: true, detail: `Works for the app “${app.name}”` });
+    checks.push({
+      name: "Application ID matches the token",
+      ok: String(app.id) === BOT.appId,
+      detail: String(app.id) === BOT.appId ? `App ID ${app.id}` : `The token belongs to app ${app.id}, but DISCORD_BOT_APPLICATION_ID is ${BOT.appId}. Use the ID from the same app.`,
+    });
+    checks.push({
+      name: "Public key matches",
+      ok: !app.verify_key || app.verify_key === BOT.publicKey,
+      detail: app.verify_key === BOT.publicKey ? "Matches" : "DISCORD_BOT_PUBLIC_KEY doesn’t match this app’s Public Key. Copy it again from General Information.",
+    });
+    const url = app.interactions_endpoint_url || "";
+    checks.push({
+      name: "Interactions Endpoint URL",
+      ok: url === expectedUrl,
+      detail: url ? (url === expectedUrl ? url : `Set to ${url}, but it should be ${expectedUrl}`) : `Not set. In the Developer Portal → General Information, set it to ${expectedUrl}`,
+    });
+    const cmds = await fetch(`https://discord.com/api/v10/applications/${app.id}/commands`, { headers: { Authorization: `Bot ${BOT.token}` }, signal: AbortSignal.timeout(4000) });
+    if (cmds.ok) registered = (await cmds.json()).length;
+    checks.push({ name: "Slash commands registered", ok: registered >= COMMANDS.length, detail: `${registered} of ${COMMANDS.length} registered with Discord` });
+  } catch {
+    checks.push({ name: "Reaching Discord", ok: false, detail: "Couldn’t reach Discord. Try again in a minute." });
+  }
+  return { checks, registered };
 }

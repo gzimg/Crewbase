@@ -163,7 +163,8 @@ function RoleList({ title, people, onChange, other }: { title: string; people: R
 function SettingsTab() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [saving, setSaving] = useState(false);
-  const [botInfo, setBotInfo] = useState<{ configured: boolean; inviteUrl: string | null; interactionsUrl: string; servers: number; commands: string[] } | null>(null);
+  const [botInfo, setBotInfo] = useState<{ configured: boolean; inviteUrl: string | null; interactionsUrl: string; servers: number; commands: string[]; checks?: { name: string; ok: boolean; detail: string }[]; registered?: number } | null>(null);
+  const [botError, setBotError] = useState<string | null>(null);
   useEffect(() => {
     axios.get("/api/site/discord-bot").then((r) => setBotInfo(r.data)).catch(() => {});
   }, []);
@@ -188,12 +189,15 @@ function SettingsTab() {
   if (!settings) return <p className="text-sm text-zinc-500">Loading…</p>;
   const a = settings.announcement;
   const registerBot = async () => {
+    setBotError(null);
     try {
       const r = await axios.post("/api/site/discord-bot");
       toast.success(`Registered ${r.data.count} commands`);
       axios.get("/api/site/discord-bot").then((x) => setBotInfo(x.data)).catch(() => {});
-    } catch (e) {
-      toast.error(errorText(e));
+    } catch (e: any) {
+      const msg = errorText(e);
+      setBotError(msg === "Invalid request origin" ? "Invalid request origin: open Crewbase at the exact address in NEXTAUTH_URL (https://crewbase.dev, not the vercel.app address) and try again." : msg);
+      toast.error("Registering failed. See the details in the bot panel.");
     }
   };
 
@@ -219,7 +223,24 @@ function SettingsTab() {
               <button onClick={registerBot} className={primaryButtonClass}>Register slash commands</button>
               {botInfo.inviteUrl && <a href={botInfo.inviteUrl} target="_blank" rel="noopener noreferrer" className={buttonClass}>Invite link</a>}
             </div>
-            <p className="text-xs text-zinc-500">Press Register after setting up, and again after any update that adds commands. Commands: {botInfo.commands.map((c) => `/${c}`).join(", ")}</p>
+            {botError && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">{botError}</p>}
+            {botInfo.checks && botInfo.checks.length > 0 && (
+              <ul className="divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-700 dark:border-zinc-700">
+                {botInfo.checks.map((c) => (
+                  <li key={c.name} className="flex items-start gap-3 px-3 py-2">
+                    <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${c.ok ? "bg-emerald-500" : "bg-red-500"}`} aria-hidden="true" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-zinc-900 dark:text-white">{c.name} <span className="sr-only">{c.ok ? "OK" : "problem"}</span></p>
+                      <p className="break-words text-xs text-zinc-500">{c.detail}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="text-xs text-zinc-500">
+              Press Register after setting up, and again after any update that adds commands. New commands can take a minute to appear;
+              restart Discord (Ctrl+R or ⌘R) if they don’t. Commands: {botInfo.commands.map((c) => `/${c}`).join(", ")}
+            </p>
           </div>
         )}
       </Panel>

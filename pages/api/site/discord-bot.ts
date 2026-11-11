@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { withSessionRoute } from "@/lib/withSession";
 import { requireSiteRole, logSiteAction } from "@/utils/siteRoles";
-import { botConfigured, inviteUrl, registerCommands, getGuildLinks, COMMANDS } from "@/utils/discordBot";
+import { botConfigured, inviteUrl, registerCommands, getGuildLinks, COMMANDS, diagnoseBot } from "@/utils/discordBot";
 
 /** GET: bot setup status. POST: register (or refresh) the slash commands with Discord. Admins only. */
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -11,7 +11,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (req.method === "GET") {
     const links = await getGuildLinks().catch(() => ({}));
+    const diagnostics = await diagnoseBot().catch(() => ({ checks: [], registered: 0 }));
     return res.status(200).json({
+      checks: diagnostics.checks,
+      registered: diagnostics.registered,
       success: true,
       configured: botConfigured(),
       inviteUrl: inviteUrl(),
