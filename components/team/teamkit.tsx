@@ -30,7 +30,13 @@ export function TeamShell({ title, description, action, children }: { title: str
   const id = router.query.id as string;
   const current = router.pathname.split("/").pop();
   const isManager = !!ws?.isAdmin || !!ws?.yourPermission?.includes("admin");
-  const tabs = isManager ? [...TEAM_TABS, { slug: "settings", label: "⚙ Settings" }] : TEAM_TABS;
+  const [hidden, setHidden] = useState<string[]>([]);
+  useEffect(() => {
+    if (!id) return;
+    axios.get(`/api/workspace/${id}/team/features`).then((r) => setHidden(r.data.hiddenTabs || [])).catch(() => {});
+  }, [id]);
+  const visible = TEAM_TABS.filter((t) => !hidden.includes(t.slug));
+  const tabs = isManager ? [...visible, { slug: "settings", label: "⚙ Settings" }] : visible;
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <Head>
@@ -68,20 +74,32 @@ export type Item = { id: string; createdAt: string; createdBy: string | null; cr
 
 export const errorText = (e: any) => e?.response?.data?.error || "Something went wrong";
 
+// Remembers recent results so pages open instantly when you come back to them
+const teamCache = new Map<string, { items: Item[]; me: { id: string; isManager: boolean } }>();
+
 /** Loads a Team collection and gives helpers to create, edit, delete and act on items. */
 export function useTeam(collection: string) {
   const router = useRouter();
   const id = router.query.id as string;
   const base = `/api/workspace/${id}/team/${collection}`;
-  const [items, setItems] = useState<Item[]>([]);
-  const [me, setMe] = useState<{ id: string; isManager: boolean }>({ id: "", isManager: false });
-  const [loading, setLoading] = useState(true);
+  const cached = id ? teamCache.get(base) : undefined;
+  const [items, setItemsState] = useState<Item[]>(cached?.items || []);
+  const [me, setMe] = useState<{ id: string; isManager: boolean }>(cached?.me || { id: "", isManager: false });
+  const [loading, setLoading] = useState(!cached);
+  const setItems: typeof setItemsState = (v) =>
+    setItemsState((prev) => {
+      const next = typeof v === "function" ? (v as any)(prev) : v;
+      const c = teamCache.get(base);
+      if (c) teamCache.set(base, { ...c, items: next });
+      return next;
+    });
 
   const load = useCallback(async () => {
     if (!id) return;
     try {
       const r = await axios.get(base);
-      setItems(r.data.items);
+      teamCache.set(base, { items: r.data.items, me: r.data.me });
+      setItemsState(r.data.items);
       setMe(r.data.me);
     } catch (e) {
       toast.error(errorText(e));
@@ -121,13 +139,24 @@ export function useTeam(collection: string) {
 
 export type Member = { userId: string; username: string; picture: string | null };
 
+const membersCache = new Map<string, { at: number; members: Member[] }>();
+
 export function useMembers() {
   const router = useRouter();
   const id = router.query.id as string;
-  const [members, setMembers] = useState<Member[]>([]);
+  const [members, setMembers] = useState<Member[]>(() => (id && membersCache.get(id)?.members) || []);
   useEffect(() => {
     if (!id) return;
-    axios.get(`/api/workspace/${id}/team/members`).then((r) => setMembers(r.data.members)).catch(() => {});
+    const hit = membersCache.get(id);
+    if (hit) setMembers(hit.members);
+    if (hit && Date.now() - hit.at < 2 * 60_000) return;
+    axios
+      .get(`/api/workspace/${id}/team/members`)
+      .then((r) => {
+        membersCache.set(id, { at: Date.now(), members: r.data.members });
+        setMembers(r.data.members);
+      })
+      .catch(() => {});
   }, [id]);
   return members;
 }

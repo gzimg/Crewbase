@@ -62,6 +62,8 @@ model config {
   updatedAt        DateTime  @updatedAt
   workspaceGroupId BigInt
   workspace        workspace @relation(fields: [workspaceGroupId], references: [groupId])
+
+  @@index([workspaceGroupId, key])
 }
 
 model instanceConfig {

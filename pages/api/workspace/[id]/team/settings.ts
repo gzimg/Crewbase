@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { withPermissionCheck } from "@/utils/permissionsManager";
 import { getMemberContext } from "@/utils/teamStore";
-import { getTeamSettings, saveTeamSettings, isDiscordWebhook, encryptWebhook } from "@/utils/teamNotify";
+import { getTeamSettings, saveTeamSettings, isDiscordWebhook, encryptWebhook, HIDEABLE_TABS } from "@/utils/teamNotify";
 
 /** Team settings: notifications and the Discord webhook. Managers only. */
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -20,6 +20,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   for (const k of ["postAnnouncements", "postEvents", "postKudos", "notifyAnnouncements", "notifyEvents", "notifyPolls"] as const) {
     if (typeof b[k] === "boolean") next[k] = b[k];
   }
+  if (Array.isArray(b.hiddenTabs)) next.hiddenTabs = b.hiddenTabs.filter((t: unknown) => typeof t === "string" && HIDEABLE_TABS.includes(t));
   if (b.discordWebhook === null || b.discordWebhook === "") next.discordWebhook = null;
   else if (typeof b.discordWebhook === "string") {
     const url = b.discordWebhook.trim();

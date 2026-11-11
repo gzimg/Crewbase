@@ -8,7 +8,13 @@ import { withPermissionCheckSsr } from "@/utils/permissionsManager";
 export const getServerSideProps = withPermissionCheckSsr(async () => ({ props: {} }));
 import { TeamShell, Card, inputClass, btn, btnPrimary, errorText } from "@/components/team/teamkit";
 
+const TAB_LABELS: Record<string, string> = {
+  chat: "Team chat", events: "Events", tasks: "Tasks", polls: "Polls", trainings: "Trainings", onboarding: "Onboarding",
+  reviews: "Reviews & feedback", ideas: "Ideas", kudos: "Kudos", spotlight: "Staff of the Month", links: "Links",
+};
+
 type Settings = {
+  hiddenTabs?: string[];
   hasWebhook: boolean;
   postAnnouncements: boolean; postEvents: boolean; postKudos: boolean;
   notifyAnnouncements: boolean; notifyEvents: boolean; notifyPolls: boolean;
@@ -88,6 +94,31 @@ const TeamSettings: pageWithLayout = () => {
                 <button onClick={() => save({ discordWebhook: null }, "Discord disconnected")} className={`${btn} mt-3`}>Disconnect Discord</button>
               </>
             )}
+          </Card>
+          <Card className="lg:col-span-2">
+            <h2 className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Customise Team</h2>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">Choose which Team tabs your workspace uses. Hidden tabs disappear from the menu for everyone; nothing is deleted.</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              {Object.entries(TAB_LABELS).map(([slug, label]) => {
+                const shown = !(s.hiddenTabs || []).includes(slug);
+                return (
+                  <label key={slug} className="flex items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
+                    <input
+                      type="checkbox"
+                      checked={shown}
+                      onChange={() => {
+                        const hidden = new Set(s.hiddenTabs || []);
+                        if (shown) hidden.add(slug); else hidden.delete(slug);
+                        save({ hiddenTabs: Array.from(hidden) }, shown ? `${label} hidden` : `${label} shown`);
+                      }}
+                      className="h-4 w-4"
+                    />
+                    {label}
+                  </label>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs text-zinc-500">Changes show in the menu after a page refresh.</p>
           </Card>
           <Card className="lg:col-span-2">
             <h2 className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Crewbase bot</h2>

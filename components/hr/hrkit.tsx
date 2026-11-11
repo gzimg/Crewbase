@@ -18,13 +18,22 @@ export const HR_TABS = [
 
 export type HrMe = { id: string; isHR: boolean; can: { view: boolean; infractions: boolean; cases: boolean; plans: boolean; resignations: boolean } };
 
+const hrMeCache = new Map<string, HrMe>();
+
 export function useHrMe() {
   const router = useRouter();
   const id = router.query.id as string;
-  const [me, setMe] = useState<HrMe | null>(null);
+  const [me, setMe] = useState<HrMe | null>(() => (id && hrMeCache.get(id)) || null);
   useEffect(() => {
     if (!id) return;
-    axios.get(`/api/workspace/${id}/hr/me`).then((r) => setMe(r.data)).catch(() => {});
+    if (hrMeCache.has(id)) setMe(hrMeCache.get(id)!);
+    axios
+      .get(`/api/workspace/${id}/hr/me`)
+      .then((r) => {
+        hrMeCache.set(id, r.data);
+        setMe(r.data);
+      })
+      .catch(() => {});
   }, [id]);
   return me;
 }

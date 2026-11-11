@@ -3,7 +3,7 @@ import prisma from "@/utils/database";
 import {
   verifyDiscordRequest, getWorkspaceForGuild, linkGuild, unlinkGuild, useLinkCode, memberForDiscordUser, minutesInGame,
 } from "@/utils/discordBot";
-import { listItems } from "@/utils/teamStore";
+import { listItems, createItem } from "@/utils/teamStore";
 
 // Discord needs the exact raw body to check the signature
 export const config = { api: { bodyParser: false } };
@@ -52,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         embeds: [embed({
           title: "Crewbase bot",
           description:
-            "**/activity** time in game over the last 7 days\n**/leaderboard** most active staff\n**/sessions** upcoming sessions\n**/events** upcoming Team events\n**/profile** someone’s Crewbase profile\n**/workspace** which workspace this server uses\n\nServer managers: **/link** connects this server to a workspace, **/unlink** disconnects it.\n\nFor your own stats to show, add your Discord ID to your Crewbase workspace profile.",
+            "**/activity** time in game over the last 7 days\n**/leaderboard** most active staff\n**/online** who’s in game now\n**/stats** the week at a glance\n**/sessions** upcoming sessions\n**/events** upcoming Team events\n**/tasks** your open tasks\n**/announcement** the latest announcement\n**/kudos** thank a teammate\n**/standing** your HR standing (private)\n**/profile** someone’s Crewbase profile\n**/workspace** which workspace this server uses\n\nServer managers: **/link** connects this server to a workspace, **/unlink** disconnects it.\n\nFor your own stats to show, add your Discord ID to your Crewbase workspace profile.",
           url: `${site()}/bot`,
         })],
       });
@@ -150,6 +150,96 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           url: `${site()}/workspace/${groupId}/team/events`,
         })],
       });
+    }
+
+    if (name === "online") {
+      const live = await prisma.activitySession.findMany({
+        where: { workspaceGroupId: BigInt(groupId), active: true, archived: { not: true } },
+        select: { userId: true, startTime: true },
+        take: 50,
+      });
+      const users = live.length ? await prisma.user.findMany({ where: { userid: { in: live.map((l) => l.userId) } }, select: { userid: true, username: true } }) : [];
+      const names = new Map(users.map((u) => [u.userid.toString(), u.username]));
+      return reply(res, {
+        embeds: [embed({
+          title: `🟢 ${live.length} in game now`,
+          description: live.length ? live.map((l) => `**${names.get(l.userId.toString()) || l.userId}** · for ${fmtMinutes((Date.now() - l.startTime.getTime()) / 60000)}`).join("\n").slice(0, 3900) : "Nobody’s in game right now.",
+        })],
+      });
+    }
+
+    if (name === "stats") {
+      const [members, live] = await Promise.all([
+        prisma.workspaceMember.findMany({ where: { workspaceGroupId: BigInt(groupId) }, select: { userId: true }, take: 3000 }),
+        prisma.activitySession.count({ where: { workspaceGroupId: BigInt(groupId), active: true, archived: { not: true } } }),
+      ]);
+      const totals = await minutesInGame(groupId, members.map((m) => m.userId));
+      const all = Array.from(totals.values());
+      const minutes = all.reduce((a, b) => a + b, 0);
+      return reply(res, {
+        embeds: [embed({
+          title: "This week at a glance",
+          fields: [
+            { name: "Staff", value: String(members.length), inline: true },
+            { name: "Active this week", value: String(all.filter((m) => m > 0).length), inline: true },
+            { name: "In game now", value: String(live), inline: true },
+            { name: "Time in game (7 days)", value: fmtMinutes(minutes), inline: true },
+          ],
+        })],
+      });
+    }
+
+    if (name === "announcement") {
+      const list = await listItems(parseInt(groupId), "announcements", { take: 20 });
+      const a = list.find((x) => x.pinned) || list[0];
+      if (!a) return privateReply(res, "There are no announcements yet.");
+      return reply(res, { embeds: [embed({ title: `📣 ${a.title}`, description: String(a.body || "").slice(0, 3500), url: `${site()}/workspace/${groupId}/team/announcements` })] });
+    }
+
+    if (name === "tasks" || name === "standing" || name === "kudos") {
+      const me = await memberForDiscordUser(groupId, caller);
+      if (!me) return privateReply(res, "I couldn’t find you in this workspace. Add your Discord ID to your Crewbase workspace profile, then try again.");
+      const myId = me.userId.toString();
+
+      if (name === "tasks") {
+        const tasks = (await listItems(parseInt(groupId), "tasks")).filter((t) => t.assigneeId === myId && t.status !== "done").slice(0, 10);
+        return reply(res, {
+          flags: EPHEMERAL,
+          embeds: [embed({
+            title: "Your open tasks",
+            description: tasks.length ? tasks.map((t) => `**${t.title}**${t.due ? ` · due <t:${Math.floor(new Date(t.due).getTime() / 1000)}:R>` : ""}${t.status === "doing" ? " · in progress" : ""}`).join("\n") : "You have no open tasks. 🎉",
+            url: `${site()}/workspace/${groupId}/team/tasks`,
+          })],
+        });
+      }
+
+      if (name === "standing") {
+        const now = Date.now();
+        const active = (await listItems(parseInt(groupId), "infractions")).filter((i) => i.userId === myId && i.status === "active" && (!i.expiresAt || new Date(i.expiresAt).getTime() > now));
+        const points = active.reduce((s, i) => s + (i.points || 0), 0);
+        return reply(res, {
+          flags: EPHEMERAL,
+          embeds: [embed({
+            title: "Your HR standing",
+            description: active.length
+              ? `**${points}** active point${points === 1 ? "" : "s"} from ${active.length} infraction${active.length === 1 ? "" : "s"}.\n${active.map((i) => `• ${i.reason}${i.expiresAt ? ` (expires <t:${Math.floor(new Date(i.expiresAt).getTime() / 1000)}:R>)` : ""}`).join("\n")}`
+              : "You’re in good standing, with no active infractions. 👍",
+            url: `${site()}/workspace/${groupId}/hr`,
+          })],
+        });
+      }
+
+      // kudos
+      const target = String(option("member") || "");
+      const message = String(option("message") || "").trim().slice(0, 400);
+      if (target === caller) return privateReply(res, "Kudos are for other people. 🙂");
+      const them = await memberForDiscordUser(groupId, target);
+      if (!them) return privateReply(res, "That person hasn’t added their Discord ID to their Crewbase profile yet.");
+      if (message.length < 3) return privateReply(res, "Say a little about why they deserve it.");
+      const item = await createItem(parseInt(groupId), "kudos", { toUserId: them.userId.toString(), toUsername: them.user?.username || "", message, emoji: "⭐" }, { id: myId, name: me.user?.username || null });
+      const { onTeamItemCreated } = await import("@/utils/teamNotify");
+      await onTeamItemCreated(parseInt(groupId), "kudos", item, myId, me.user?.username || null);
+      return reply(res, { embeds: [embed({ title: `⭐ Kudos for ${them.user?.username}`, description: `${message}\n\n— ${me.user?.username}` })] });
     }
 
     return privateReply(res, "I don’t know that command yet.");

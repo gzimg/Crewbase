@@ -9,6 +9,8 @@ import type { Collection, TeamItem } from "@/utils/teamStore";
  */
 
 const SETTINGS_KEY = "team:settings";
+// Team tabs that can be hidden (Announcements and Settings always stay)
+export const HIDEABLE_TABS = ["chat", "events", "tasks", "polls", "trainings", "onboarding", "reviews", "ideas", "kudos", "spotlight", "links"];
 
 export type TeamSettings = {
   discordWebhook: string | null; // encrypted
@@ -18,6 +20,7 @@ export type TeamSettings = {
   notifyAnnouncements: boolean;
   notifyEvents: boolean;
   notifyPolls: boolean;
+  hiddenTabs: string[];
 };
 
 const DEFAULTS: TeamSettings = {
@@ -28,6 +31,7 @@ const DEFAULTS: TeamSettings = {
   notifyAnnouncements: true,
   notifyEvents: true,
   notifyPolls: true,
+  hiddenTabs: [],
 };
 
 export async function getTeamSettings(groupId: number | bigint): Promise<TeamSettings> {

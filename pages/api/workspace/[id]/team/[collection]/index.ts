@@ -16,7 +16,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (req.method === "GET") {
     const since = typeof req.query.since === "string" && !isNaN(Date.parse(req.query.since)) ? new Date(req.query.since) : undefined;
-    const take = req.query.take ? Math.max(1, Math.min(500, Number(req.query.take) || 100)) : undefined;
+    const take = req.query.take ? Math.max(1, Math.min(500, Number(req.query.take) || 100)) : collection === "chat" ? 150 : 300;
     const items = await listItems(groupId, collection, { since, take });
     const visible = items.map((i) => rule.view(i, ctx)).filter(Boolean).map((i) => finalize(collection, i!));
     return res.status(200).json({ success: true, items: visible, me: { id: ctx.id, isManager: ctx.isManager } });

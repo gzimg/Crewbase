@@ -55,6 +55,16 @@ export const COMMANDS = [
   { name: "profile", description: "Someone’s Crewbase profile", dm_permission: false,
     options: [{ type: 6, name: "member", description: "Whose profile to show (defaults to you)", required: false }] },
   { name: "workspace", description: "Which Crewbase workspace this server is connected to", dm_permission: false },
+  { name: "online", description: "Who’s in game right now", dm_permission: false },
+  { name: "stats", description: "This workspace’s week at a glance", dm_permission: false },
+  { name: "kudos", description: "Give a teammate kudos", dm_permission: false,
+    options: [
+      { type: 6, name: "member", description: "Who it’s for", required: true },
+      { type: 3, name: "message", description: "What did they do?", required: true, min_length: 3, max_length: 400 },
+    ] },
+  { name: "tasks", description: "Your open Team tasks", dm_permission: false },
+  { name: "announcement", description: "The latest workspace announcement", dm_permission: false },
+  { name: "standing", description: "Your HR standing (only you can see the reply)", dm_permission: false },
   { name: "help", description: "What the Crewbase bot can do" },
 ];
 

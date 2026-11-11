@@ -360,6 +360,13 @@ const workspace: LayoutProps = ({ children }) => {
 		checkApiKey();
 	}, [workspace?.groupId, workspace?.ownerId, workspace?.isAdmin, login?.userId]);
 
+	// Team tabs a workspace has chosen to hide (Team → Settings → Customise)
+	const [hiddenTeamTabs, setHiddenTeamTabs] = useState<string[]>([]);
+	useEffect(() => {
+		if (!router.query.id) return;
+		axios.get(`/api/workspace/${router.query.id}/team/features`).then((r) => setHiddenTeamTabs(r.data.hiddenTabs || [])).catch(() => {});
+	}, [router.query.id]);
+
 	const getSecondarySidebar = useMemo(() => {
 		const path = router.asPath;
 		const id = router.query.id;
@@ -375,7 +382,7 @@ const workspace: LayoutProps = ({ children }) => {
 					label: "Activity",
 					href: `/workspace/${id}/activity`,
 					icon: HourglassIcon,
-					active: path.includes(`/workspace/${id}/activity`),
+					active: path.includes(`/workspace/${id}/activity`) && !path.includes(`/workspace/${id}/activity/insights`),
 				},
 				{
 					label: "Quotas",
@@ -391,6 +398,14 @@ const workspace: LayoutProps = ({ children }) => {
 				icon: ChampionIcon,
 				active: path.includes(`/workspace/${id}/leaderboard`),
 			});
+			if (workspace.isAdmin || workspace.yourPermission?.includes("admin") || workspace.yourPermission?.includes("view_members")) {
+				activityItems.push({
+					label: "Insights",
+					href: `/workspace/${id}/activity/insights`,
+					icon: IconChartBar,
+					active: path.includes(`/workspace/${id}/activity/insights`),
+				});
+			}
 
 			const sections: SecondarySidebarSection[] = [
 				{
@@ -470,7 +485,11 @@ const workspace: LayoutProps = ({ children }) => {
 					],
 				},
 			];
-			return { title: "Team", sections, hideHeader: true };
+			// Leave out tabs the workspace hid, and any section left empty
+			const visibleSections = sections
+				.map((sec) => ({ ...sec, items: sec.items.filter((it) => !hiddenTeamTabs.some((slug) => it.href?.endsWith(`/team/${slug}`))) }))
+				.filter((sec) => sec.items.length > 0);
+			return { title: "Team", sections: visibleSections, hideHeader: true };
 		}
 
 		const staffPages = ['/views', '/directory', '/notices', '/recommendations', '/applications'];
@@ -761,7 +780,7 @@ const workspace: LayoutProps = ({ children }) => {
 		}
 
 		return null;
-	}, [router.asPath, router.query.id, router.query.section, savedViews, localViews, router, workspace.isAdmin, workspace.yourPermission, workspace.settings?.guidesEnabled, workspace.settings?.policiesEnabled, workspace.settings?.sessionsEnabled, workspace.settings?.recommendationsEnabled, deleteSavedView, pendingPolicyCount, pendingNoticesCount]);
+	}, [router.asPath, router.query.id, router.query.section, savedViews, localViews, router, workspace.isAdmin, workspace.yourPermission, workspace.settings?.guidesEnabled, workspace.settings?.policiesEnabled, workspace.settings?.sessionsEnabled, workspace.settings?.recommendationsEnabled, deleteSavedView, pendingPolicyCount, pendingNoticesCount, hiddenTeamTabs]);
 
 	const showSecondarySidebar = !!getSecondarySidebar;
 	const workspaceBg = workspace && workspace.groupTheme ? "" : "bg-firefli";
