@@ -9,6 +9,8 @@ export type SiteSettings = {
   maintenance: { enabled: boolean; message: string };
   registrations: { open: boolean };
   announcement: { enabled: boolean; text: string; tone: "info" | "warning" | "success"; updatedAt: string | null };
+  // Who can create workspaces for their Roblox groups
+  workspaces: { open: boolean; perUserLimit: number; minRank: number };
 };
 
 export type WorkspaceLock = { by: string; at: string; reason: string };
@@ -33,6 +35,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   maintenance: { enabled: false, message: "Crewbase is down for maintenance. We’ll be back soon." },
   registrations: { open: true },
   announcement: { enabled: false, text: "", tone: "info", updatedAt: null },
+  workspaces: { open: true, perUserLimit: 3, minRank: 25 },
 };
 
 async function readJson<T>(key: string, fallback: T): Promise<T> {
@@ -60,6 +63,7 @@ export async function getSiteSettings(fresh = false): Promise<SiteSettings> {
     maintenance: { ...DEFAULT_SETTINGS.maintenance, ...(stored.maintenance || {}) },
     registrations: { ...DEFAULT_SETTINGS.registrations, ...(stored.registrations || {}) },
     announcement: { ...DEFAULT_SETTINGS.announcement, ...(stored.announcement || {}) },
+    workspaces: { ...DEFAULT_SETTINGS.workspaces, ...(stored.workspaces || {}) },
   };
   settingsCache = { value, at: Date.now() };
   return value;
@@ -194,4 +198,27 @@ export async function getSavedReplies(): Promise<SavedReply[]> {
 
 export async function saveSavedReplies(list: SavedReply[]): Promise<void> {
   await writeJson("site_saved_replies", list.slice(0, 100));
+}
+
+/**
+ * Whether someone may create another workspace: the instance owner and Crewbase
+ * site staff always can; everyone else can while creation is open and they’re under
+ * the per-person limit.
+ */
+export async function canCreateWorkspace(userId: string | number | bigint): Promise<{ allowed: boolean; reason?: string; minRank: number }> {
+  const [site, user, owned] = await Promise.all([
+    getSiteSettings(),
+    prisma.user.findUnique({ where: { userid: BigInt(userId) }, select: { isOwner: true, banned: true } }),
+    prisma.workspace.count({ where: { ownerId: BigInt(userId) } }),
+  ]);
+  const minRank = site.workspaces.minRank;
+  if (!user || user.banned) return { allowed: false, reason: "Your account can’t create workspaces", minRank };
+  if (user.isOwner) return { allowed: true, minRank };
+  const { getSiteRole } = await import("@/utils/siteRoles");
+  if (await getSiteRole(String(userId))) return { allowed: true, minRank };
+  if (!site.workspaces.open) return { allowed: false, reason: "Creating new workspaces is paused right now", minRank };
+  if (owned >= site.workspaces.perUserLimit) {
+    return { allowed: false, reason: `You can own up to ${site.workspaces.perUserLimit} workspace${site.workspaces.perUserLimit === 1 ? "" : "s"}`, minRank };
+  }
+  return { allowed: true, minRank };
 }

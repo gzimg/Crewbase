@@ -74,16 +74,10 @@ export async function handler(
 		req.session.destroy();
 		return res.status(401).json({ success: false, error: 'Your account has been suspended' });
 	}
-	let canMakeWorkspace = false;
-	if (process.env.NEXT_PUBLIC_FIREFLI_LIMIT === 'true') {
-		const limit = 2;
-		const workspaceCount = await prisma.workspace.count({
-			where: { ownerId: BigInt(userId) }
-		});
-		canMakeWorkspace = workspaceCount < limit;
-	} else {
-		canMakeWorkspace = dbuser?.isOwner || false;
-	}
+	// Anyone can create a workspace for a group they rank high enough in, within the
+	// site's limits (Site admin → Site settings → Workspace creation)
+	const { canCreateWorkspace } = await import('@/utils/siteSettings');
+	const canMakeWorkspace = (await canCreateWorkspace(userId).catch(() => ({ allowed: false }))).allowed;
 
 	let siteRole: 'admin' | 'staff' | null = null;
 	if (dbuser?.isOwner) {

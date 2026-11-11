@@ -10,6 +10,7 @@ type AuditEntry = { at: string; actorId: string; actorName: string | null; actio
 type Settings = {
   maintenance: { enabled: boolean; message: string };
   registrations: { open: boolean };
+  workspaces: { open: boolean; perUserLimit: number; minRank: number };
   announcement: { enabled: boolean; text: string; tone: "info" | "warning" | "success"; updatedAt: string | null };
 };
 type Health = {
@@ -248,6 +249,27 @@ function SettingsTab() {
           {a.enabled && <button disabled={saving} onClick={() => save({ announcement: { ...a, enabled: false } })} className={buttonClass}>Hide banner</button>}
           {a.enabled ? <Badge tone="green">Live</Badge> : <Badge tone="zinc">Hidden</Badge>}
         </div>
+      </Panel>
+
+      <Panel title="Workspace creation">
+        <p className="text-sm text-zinc-600 dark:text-zinc-300">
+          Let people create workspaces for their own Roblox groups. You and site staff can always create them.
+        </p>
+        <div className="mt-4 flex flex-wrap items-end gap-4 text-sm">
+          <label className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
+            <input type="checkbox" checked={settings.workspaces?.open ?? true} onChange={(e) => save({ workspaces: { ...settings.workspaces, open: e.target.checked } })} className="h-4 w-4" />
+            Anyone can create a workspace
+          </label>
+          <label className="block text-xs text-zinc-500">
+            Workspaces per person
+            <input type="number" min={1} max={50} defaultValue={settings.workspaces?.perUserLimit ?? 3} onBlur={(e) => save({ workspaces: { ...settings.workspaces, perUserLimit: Number(e.target.value) } })} className={`${inputClass} w-24`} />
+          </label>
+          <label className="block text-xs text-zinc-500">
+            Lowest group rank allowed (1–255)
+            <input type="number" min={1} max={255} defaultValue={settings.workspaces?.minRank ?? 25} onBlur={(e) => save({ workspaces: { ...settings.workspaces, minRank: Number(e.target.value) } })} className={`${inputClass} w-24`} />
+          </label>
+        </div>
+        <p className="mt-2 text-xs text-zinc-500">The rank check stops people claiming a group they don’t help run. Group owners are rank 255.</p>
       </Panel>
 
       <Panel title="New sign-ups">

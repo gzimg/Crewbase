@@ -67,24 +67,17 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
   if (typeof groupId !== "number" || isNaN(groupId))
     return res.status(400).json({ success: false, error: "Invalid groupId" });
 
-  if (process.env.NEXT_PUBLIC_FIREFLI_LIMIT === "true") {
-    const limit = 2;
-    const workspaceCount = await prisma.workspace.count({
-      where: { ownerId: BigInt(req.session.userid) },
-    });
-    if (workspaceCount >= limit) {
-      return res.status(403).json({ success: false, error: `You have reached the maximum of ${limit} workspaces` });
-    }
+  const { canCreateWorkspace } = await import("@/utils/siteSettings");
+  const permission = await canCreateWorkspace(req.session.userid);
+  if (!permission.allowed) {
+    return res.status(403).json({ success: false, error: permission.reason || "You can’t create workspaces right now" });
   }
+  // You must rank high enough in the group, so nobody can claim a group they don’t help run
   const urrole = await getRankInGroup(groupId, req.session.userid);
-  if (!urrole)
+  if (!urrole || urrole < permission.minRank)
     return res
       .status(400)
-      .json({ success: false, error: "You are not a high enough rank" });
-  if (urrole < 25)
-    return res
-      .status(400)
-      .json({ success: false, error: "You are not a high enough rank" });
+      .json({ success: false, error: `You need to be rank ${permission.minRank} or higher in that group to create its workspace` });
 
   let groupName = `Group ${groupId}`;
   let groupLogo = "";
