@@ -143,7 +143,8 @@ async function factsFor(userId: string, groupId: string | null) {
     prisma.user.findUnique({ where: { userid: uid }, select: { username: true, displayName: true } }),
     groupId ? prisma.workspaceMember.findUnique({ where: { workspaceGroupId_userId: { workspaceGroupId: BigInt(groupId), userId: uid } }, select: { isAdmin: true } }) : null,
     groupId ? prisma.role.findMany({ where: { workspaceGroupId: BigInt(groupId), members: { some: { userid: uid } } }, select: { id: true, name: true } }) : [],
-    groupId ? prisma.rank.findUnique({ where: { userId_workspaceGroupId: { userId: uid, workspaceGroupId: BigInt(groupId) } }, select: { rankId: true } }).catch(() => null) : null,
+    // Live rank from Roblox, so group members who aren’t on the staff workspace still get rank roles
+    groupId ? import("@/utils/roblox").then((m) => m.getRankInGroup(Number(groupId), Number(userId))).catch(() => null) : null,
     prisma.workspace.findMany({ where: { ownerId: uid }, select: { groupId: true } }),
     prisma.workspaceMember.count({ where: { userId: uid, isAdmin: true } }),
     getSiteRole(userId).catch(() => null),
@@ -162,7 +163,7 @@ async function factsFor(userId: string, groupId: string | null) {
     roleIds: new Set(roles.map((r) => r.id)),
     roleNames: new Set(roles.map((r) => r.name.toLowerCase())),
     roleList: roles.map((r) => r.name),
-    rank: rank ? Number(rank.rankId) : null,
+    rank: typeof rank === "number" ? rank : null,
     ownsWorkspace: owned.length > 0,
     adminSomewhere: adminOf > 0 || owned.length > 0,
     plans,
@@ -282,3 +283,52 @@ export async function robloxIdFromUsername(username: string): Promise<string | n
 }
 
 export { factsFor };
+
+/* ---------- Matching Roblox group ranks to Discord roles ---------- */
+
+/**
+ * Creates a rank bind for every Roblox group role that has a Discord role with the
+ * same name (ignoring capitals). With createMissing, Discord roles are created for
+ * group roles that don’t have one yet. Existing binds are left alone.
+ */
+export async function autoLinkRanks(guildId: string, opts: { createMissing: boolean }) {
+  const groupId = await getWorkspaceForGuild(guildId);
+  if (!groupId) return { error: "Link this server to a workspace first with /link." } as const;
+  const { getGroupRoles } = await import("@/utils/roblox");
+  const groupRoles = (await getGroupRoles(Number(groupId))).filter((r) => r.rank > 0).sort((a, b) => a.rank - b.rank);
+  if (!groupRoles.length) return { error: "I couldn’t read that Roblox group’s roles. Try again in a minute." } as const;
+
+  let discordRoles: { id: string; name: string; managed: boolean }[] = await discord("GET", `/guilds/${guildId}/roles`);
+  const config = await getGuildConfig(guildId);
+  const matched: string[] = [];
+  const created: string[] = [];
+  const skipped: string[] = [];
+  const missing: string[] = [];
+
+  for (const gr of groupRoles) {
+    let role = discordRoles.find((d) => !d.managed && d.name.trim().toLowerCase() === gr.name.trim().toLowerCase());
+    if (!role && opts.createMissing) {
+      try {
+        role = await discord("POST", `/guilds/${guildId}/roles`, { name: gr.name, permissions: "0", mentionable: false });
+        discordRoles = [...discordRoles, role!];
+        created.push(gr.name);
+      } catch {
+        missing.push(gr.name);
+        continue;
+      }
+    }
+    if (!role) {
+      missing.push(gr.name);
+      continue;
+    }
+    const exists = config.binds.some((b) => b.kind === "rank" && b.roleId === role!.id && Number(b.value) === gr.rank && (b.max ?? gr.rank) === gr.rank);
+    if (exists) {
+      skipped.push(gr.name);
+      continue;
+    }
+    config.binds.push({ id: crypto.randomBytes(4).toString("hex"), kind: "rank", roleId: role.id, value: String(gr.rank), max: gr.rank });
+    matched.push(`${gr.name} (${gr.rank})`);
+  }
+  await saveGuildConfig(guildId, config);
+  return { matched, created, skipped, missing, total: config.binds.length } as const;
+}

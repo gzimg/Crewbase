@@ -8,7 +8,7 @@ import {
 import { listItems, createItem } from "@/utils/teamStore";
 import {
   syncMember, getGuildConfig, saveGuildConfig, createVerifyCode, getLinkedUser, setLink, resolveRobloxId, robloxProfile,
-  robloxIdFromUsername, factsFor, BIND_LABELS, BindKind, OFFICIAL_GUILD_ID, OFFICIAL_ONLY_BINDS, SyncResult,
+  robloxIdFromUsername, factsFor, BIND_LABELS, BindKind, OFFICIAL_GUILD_ID, OFFICIAL_ONLY_BINDS, SyncResult, autoLinkRanks,
 } from "@/utils/discordSync";
 
 // Discord needs the exact raw body to check the signature
@@ -186,17 +186,62 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const sub = body.data?.options?.[0];
       const sopt = (n: string) => sub?.options?.find((o: any) => o.name === n)?.value;
       const config = await getGuildConfig(guildId);
+      const describeBind = (b: any, i: number) =>
+        `**${i + 1}.** <@&${b.roleId}> ← ${b.kind === "rank" ? `Roblox rank ${b.value}${b.max !== undefined && Number(b.max) !== Number(b.value) ? `–${b.max}` : ""}` : `${BIND_LABELS[b.kind as BindKind]}${b.value ? `: **${b.value}**` : ""}`}`;
+
+      if (sub?.name === "roblox") {
+        const createMissing = sopt("create_missing") === true;
+        return deferred(res, body.token, async () => {
+          const r = await autoLinkRanks(guildId, { createMissing });
+          if ("error" in r) return { content: r.error };
+          const lines = [`✅ Linked **${r.matched.length}** Roblox rank${r.matched.length === 1 ? "" : "s"} to Discord roles.`];
+          if (r.created.length) lines.push(`Created ${r.created.length} new Discord role(s): ${r.created.join(", ")}`);
+          if (r.skipped.length) lines.push(`Already linked: ${r.skipped.length}`);
+          if (r.missing.length) lines.push(`No matching Discord role for: ${r.missing.join(", ")}. Make roles with those names, or run this again with create_missing.`);
+          lines.push("Members get their rank role next time they /verify or /update. Make sure the **Crewbase** bot role is above these roles.");
+          return { content: lines.join("\n").slice(0, 1900) };
+        });
+      }
+      if (sub?.name === "clear") {
+        if (sopt("confirm") !== true) return privateReply(res, "Nothing was removed. Set confirm to True to remove every bind.");
+        const n = config.binds.length;
+        config.binds = [];
+        await saveGuildConfig(guildId, config);
+        return privateReply(res, `Removed all ${n} bind(s). Roles people already have stay until they /update.`);
+      }
+      if (sub?.name === "edit") {
+        const i = Number(sopt("number")) - 1;
+        const b = config.binds[i];
+        if (!b) return privateReply(res, "There’s no bind with that number. Check **/bind list**.");
+        if (sopt("role") !== undefined) b.roleId = String(sopt("role"));
+        if (sopt("value") !== undefined) b.value = String(sopt("value")).trim();
+        if (sopt("max") !== undefined) b.max = Number(sopt("max"));
+        if (b.kind === "rank" && !/^\d+$/.test(String(b.value || ""))) return privateReply(res, "For a rank bind, the value must be a rank number.");
+        await saveGuildConfig(guildId, config);
+        return privateReply(res, `Updated: ${describeBind(b, i)}`);
+      }
+
       if (sub?.name === "list") {
-        if (!config.binds.length) return privateReply(res, "No role binds yet. Add one with **/bind add**.");
+        if (!config.binds.length) return privateReply(res, "No role binds yet. Add one with **/bind add**, or match your Roblox group’s ranks with **/bind roblox**.");
         return reply(res, {
           flags: EPHEMERAL,
           embeds: [embed({
             title: "Role binds",
-            description: config.binds.map((b) => `<@&${b.roleId}> ← ${BIND_LABELS[b.kind]}${b.value ? `: **${b.value}${b.max !== undefined ? `–${b.max}` : ""}**` : ""}`).join("\n").slice(0, 3900),
+            description: config.binds.map(describeBind).join("\n").slice(0, 3900),
+            footer: { text: "Change one with /bind edit number:…  ·  Remove one with /bind remove number:…" },
           })],
         });
       }
       if (sub?.name === "remove") {
+        if (sopt("number") !== undefined) {
+          const i = Number(sopt("number")) - 1;
+          const b = config.binds[i];
+          if (!b) return privateReply(res, "There’s no bind with that number. Check **/bind list**.");
+          config.binds.splice(i, 1);
+          await saveGuildConfig(guildId, config);
+          return privateReply(res, `Removed: ${describeBind(b, i)}`);
+        }
+        if (sopt("role") === undefined) return privateReply(res, "Pick a role, or give a number from **/bind list**.");
         const roleId = String(sopt("role"));
         const before = config.binds.length;
         config.binds = config.binds.filter((b) => b.roleId !== roleId);
@@ -220,7 +265,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         await saveGuildConfig(guildId, config);
         return privateReply(res, `Done. <@&${roleId}> now goes to: ${BIND_LABELS[kind]}${value ? ` (${value}${max !== undefined ? `–${max}` : ""})` : ""}. People get it next time they /verify or /update.\nMake sure the **Crewbase** bot role is **above** this role in Server Settings → Roles.`);
       }
-      return privateReply(res, "Use /bind add, /bind remove or /bind list.");
+      return privateReply(res, "Use /bind add, /bind edit, /bind remove, /bind list, /bind roblox or /bind clear.");
     }
 
     if (name === "nickname") {
