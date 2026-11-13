@@ -205,6 +205,9 @@ export async function onTeamItemCreated(groupId: number, collection: Collection,
     if (collection === "infractions") {
       tasks.push(notifyUsers(groupId, [item.userId], "⚠️ You’ve received an infraction", `${item.reason}. You can read it and appeal from HR.`, `${hr}/infractions`));
     }
+    if (collection === "commendations") {
+      tasks.push(notifyUsers(groupId, [item.userId], "🏅 You’ve been commended!", item.reason, `${hr}/commendations`));
+    }
     if (collection === "pips") {
       tasks.push(notifyUsers(groupId, [item.userId], "📈 You’ve been placed on an improvement plan", "Read your goals and the support available in HR.", `${hr}/plans`));
     }

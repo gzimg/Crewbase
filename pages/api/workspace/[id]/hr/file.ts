@@ -12,6 +12,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const userId = String(req.query.userId || "");
   if (!/^\d{1,15}$/.test(userId)) return res.status(400).json({ success: false, error: "Pick a member" });
 
+  const [commendations, watchlist, investigations] = await Promise.all([
+    listItems(groupId, "commendations"),
+    listItems(groupId, "watchlist"),
+    listItems(groupId, "investigations"),
+  ]);
   const [user, member, infractions, complaints, pips, resignations, awards, certs, reviews, kudos, notices] = await Promise.all([
     prisma.user.findUnique({ where: { userid: BigInt(userId) }, select: { username: true, picture: true } }),
     prisma.workspaceMember.findUnique({ where: { workspaceGroupId_userId: { workspaceGroupId: BigInt(groupId), userId: BigInt(userId) } }, select: { joinDate: true, isAdmin: true } }),
@@ -44,6 +49,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     certifications: awards.filter((a) => a.userId === userId).map((a) => ({ ...a, certName: certNames.get(a.certId) || "Removed certification" })),
     reviews: reviews.filter((r) => r.userId === userId),
     kudosReceived: kudos.filter((k) => k.toUserId === userId).length,
+    commendations: commendations.filter((c) => c.userId === userId),
+    watchlist: watchlist.filter((w) => w.userId === userId),
+    investigations: investigations.filter((i) => (i.subjects || []).some((s: any) => s.userId === userId)).map(({ id, title, status, createdAt }) => ({ id, title, status, createdAt })),
     notices,
   });
 }

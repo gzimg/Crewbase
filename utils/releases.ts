@@ -8,6 +8,20 @@ export type Release = { id: string; at: string; tag: "new" | "improved" | "fixed
 
 export const RELEASES: Release[] = [
   {
+    id: "2026-11-14-hr",
+    at: "2026-11-14T12:00:00.000Z",
+    tag: "new",
+    title: "A bigger HR section",
+    body: "HR now has an automatic HR log of every action, investigations with timelines and evidence, commendations for great work, a private watchlist with review dates, six months of HR reports, and rehire eligibility when someone resigns. Staff files show all of it in one place.",
+  },
+  {
+    id: "2026-11-13-moderation-hr",
+    at: "2026-11-13T18:00:00.000Z",
+    tag: "improved",
+    title: "Moderation moved into HR",
+    body: "Moderation cases now live in the HR section, next to infractions and appeals, so everything about staff and player conduct is in one place. Nothing about moderation itself has changed.",
+  },
+  {
     id: "2026-11-13-departments",
     at: "2026-11-13T12:00:00.000Z",
     tag: "new",

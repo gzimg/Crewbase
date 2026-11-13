@@ -47,6 +47,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const author = (collection === "feedback" || collection === "complaints") && result.data.anonymous ? null : { id: ctx.id, name: ctx.name };
   const item = await createItem(groupId, collection, result.data, author);
   await onTeamItemCreated(groupId, collection, item, ctx.id, ctx.name);
+  await (await import("@/utils/hrlog")).logHr(groupId, collection, "created", item, author || { id: null, name: null }, item.reason || item.subject || item.title || "");
   return res.status(200).json({ success: true, item: finalize(collection, item) });
 }
 

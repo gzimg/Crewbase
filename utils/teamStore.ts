@@ -16,7 +16,7 @@ export type TeamItem = {
   [field: string]: any;
 };
 
-export const COLLECTIONS = ["announcements", "chat", "events", "certifications", "awards", "reviews", "feedback", "polls", "kudos", "tasks", "ideas", "checklists", "onboarding", "links", "nominations", "infractions", "complaints", "appeals", "pips", "resignations", "paths", "swaps", "positions", "candidates", "headcount", "availability"] as const;
+export const COLLECTIONS = ["announcements", "chat", "events", "certifications", "awards", "reviews", "feedback", "polls", "kudos", "tasks", "ideas", "checklists", "onboarding", "links", "nominations", "infractions", "complaints", "appeals", "pips", "resignations", "paths", "swaps", "positions", "candidates", "headcount", "availability", "hrlog", "commendations", "investigations", "watchlist"] as const;
 export type Collection = (typeof COLLECTIONS)[number];
 
 const LIMITS: Record<Collection, number> = {
@@ -46,6 +46,10 @@ const LIMITS: Record<Collection, number> = {
   candidates: 3000,
   headcount: 200,
   availability: 3000,
+  hrlog: 5000,
+  commendations: 3000,
+  investigations: 1000,
+  watchlist: 500,
 };
 
 const prefix = (c: Collection) => `team:${c}:`;

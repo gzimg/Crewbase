@@ -21,6 +21,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "DELETE") {
     if (!rule.canDelete(found.item, ctx)) return res.status(403).json({ success: false, error: "You don’t have permission to do this" });
     await deleteItem(found.rowId);
+    await (await import("@/utils/hrlog")).logHr(groupId, collection, "deleted", found.item, ctx);
     return res.status(200).json({ success: true });
   }
 
@@ -30,6 +31,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if ("error" in result) return res.status(400).json({ success: false, error: result.error });
     const saved = await saveItem(found.rowId, { ...found.item, ...result.data });
     await onTeamItemChanged(groupId, collection, found.item, saved);
+    await (await import("@/utils/hrlog")).logHr(groupId, collection, "edited", saved, ctx);
     return res.status(200).json({ success: true, item: finalize(collection, rule.view(saved, ctx) || saved) });
   }
 
@@ -40,6 +42,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if ("error" in next && typeof next.error === "string" && !("id" in next)) return res.status(400).json({ success: false, error: next.error });
     const saved = await saveItem(found.rowId, next as any);
     await onTeamItemChanged(groupId, collection, found.item, saved);
+    {
+      const a = String(req.body?.action);
+      const detail = req.body?.status || req.body?.decision || req.body?.reason || req.body?.text || "";
+      await (await import("@/utils/hrlog")).logHr(groupId, collection, a, saved, ctx, typeof detail === "string" ? detail : "");
+    }
     return res.status(200).json({ success: true, item: finalize(collection, rule.view(saved, ctx) || saved) });
   }
 

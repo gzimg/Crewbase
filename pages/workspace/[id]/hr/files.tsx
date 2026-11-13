@@ -89,6 +89,26 @@ const StaffFiles: pageWithLayout = () => {
               ))}
             </Card>
           </div>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Card>
+              <h2 className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Commendations</h2>
+              {(file.commendations || []).length === 0 ? <p className="mt-2 text-sm text-zinc-500">None.</p> : file.commendations.map((c: any) => (
+                <p key={c.id} className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">🏅 {c.reason} <span className="text-xs text-zinc-500">· {new Date(c.createdAt).toLocaleDateString()}</span></p>
+              ))}
+            </Card>
+            <Card>
+              <h2 className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Watchlist</h2>
+              {(file.watchlist || []).length === 0 ? <p className="mt-2 text-sm text-zinc-500">Not on the watchlist.</p> : file.watchlist.map((w: any) => (
+                <p key={w.id} className="mt-2 text-sm text-zinc-700 dark:text-zinc-300"><span className="capitalize">{w.level}</span>: {w.reason}</p>
+              ))}
+            </Card>
+            <Card>
+              <h2 className="text-xs font-medium uppercase tracking-[0.12em] text-zinc-500">Investigations</h2>
+              {(file.investigations || []).length === 0 ? <p className="mt-2 text-sm text-zinc-500">None.</p> : file.investigations.map((i: any) => (
+                <p key={i.id} className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">{i.title} · <span className="capitalize">{String(i.status).replace("_", " ")}</span></p>
+              ))}
+            </Card>
+          </div>
           {file.resignations.length > 0 && <Card><p className="text-sm text-zinc-700 dark:text-zinc-300">Resignation: last day {new Date(file.resignations[0].lastDay).toLocaleDateString()} · <StatusPill status={file.resignations[0].status} /></p></Card>}
         </div>
       )}

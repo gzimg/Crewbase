@@ -55,12 +55,17 @@ const Resignations: pageWithLayout = () => {
             </div>
             {r.wentWell && <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300"><strong>Went well:</strong> {r.wentWell}</p>}
             {r.improve && <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300"><strong>Could improve:</strong> {r.improve}</p>}
-            <p className="mt-1 text-xs text-zinc-500">Would return: {r.wouldReturn}</p>
+            <p className="mt-1 text-xs text-zinc-500">Would return: {r.wouldReturn}{canProcess && r.rehire ? ` · ${r.rehire === "yes" ? "Eligible to rehire" : r.rehire === "no" ? "Not eligible to rehire" : "Rehire with review"}` : ""}</p>
             {r.hrMessage && <p className="mt-2 rounded-lg bg-zinc-50 p-3 text-sm text-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-300">HR: {r.hrMessage}</p>}
             <div className="mt-3 flex flex-wrap gap-2">
               {r.createdBy === me?.id && r.status === "received" && <button onClick={() => t.act(r.id, "withdraw", {}, "Resignation withdrawn")} className={btn}>Withdraw</button>}
               {canProcess && r.status === "received" && (
-                <button onClick={() => { const message = window.prompt("Message to them (optional):") ?? ""; t.act(r.id, "process", { status: "processed", message }, "Processed"); }} className={btnPrimary}>Mark processed</button>
+                <>
+                  <select aria-label="Eligible to rehire?" defaultValue="yes" id={`rehire-${r.id}`} className="rounded-lg border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-white">
+                    <option value="yes">Eligible to rehire</option><option value="with_review">Rehire with review</option><option value="no">Not eligible to rehire</option>
+                  </select>
+                  <button onClick={() => { const message = window.prompt("Message to them (optional):") ?? ""; const rehire = (document.getElementById(`rehire-${r.id}`) as HTMLSelectElement)?.value; t.act(r.id, "process", { status: "processed", message, rehire }, "Processed"); }} className={btnPrimary}>Mark processed</button>
+                </>
               )}
             </div>
           </Card>

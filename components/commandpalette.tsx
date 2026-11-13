@@ -51,6 +51,11 @@ const WORKSPACE_PAGES: [string, string, string?][] = [
   ["/hr/plans", "Improvement plans", "pip performance"],
   ["/hr/resignations", "Resignations", "resign leave quit exit"],
   ["/hr/files", "Staff files", "record personnel"],
+  ["/hr/log", "HR log", "audit history logging"],
+  ["/hr/reports", "HR reports", "trends analytics stats"],
+  ["/hr/investigations", "Investigations", "case evidence findings"],
+  ["/hr/watchlist", "Watchlist", "monitor concern"],
+  ["/hr/commendations", "Commendations", "praise recognition record"],
   ["/settings", "Workspace settings", "config roles permissions"],
   ["/plan", "Plan & usage", "upgrade limits badge request"],
 ];

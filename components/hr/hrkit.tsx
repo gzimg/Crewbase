@@ -3,18 +3,26 @@ import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import axios from "axios";
+import { useRecoilState } from "recoil";
+import { workspacestate } from "@/state";
 
 /** Shared pieces for the Human resources section. */
 
 export const HR_TABS = [
   { slug: "", label: "Overview" },
+  { slug: "../moderation", label: "Moderation", moderation: true },
   { slug: "infractions", label: "Infractions" },
   { slug: "appeals", label: "Appeals" },
+  { slug: "watchlist", label: "Watchlist", hrOnly: true },
   { slug: "complaints", label: "Complaints" },
+  { slug: "investigations", label: "Investigations", hrOnly: true },
+  { slug: "commendations", label: "Commendations" },
   { slug: "paths", label: "Promotion paths" },
   { slug: "plans", label: "Improvement plans" },
   { slug: "resignations", label: "Resignations" },
   { slug: "files", label: "Staff files", hrOnly: true },
+  { slug: "reports", label: "Reports", hrOnly: true },
+  { slug: "log", label: "HR log", hrOnly: true },
 ];
 
 export type HrMe = { id: string; isHR: boolean; can: { view: boolean; infractions: boolean; cases: boolean; plans: boolean; resignations: boolean } };
@@ -62,6 +70,7 @@ export const isActiveInfraction = (i: any) => i.status === "active" && (!i.expir
 export function HrShell({ title, description, action, children }: { title: string; description: string; action?: React.ReactNode; children: React.ReactNode }) {
   const router = useRouter();
   const me = useHrMe();
+  const [ws] = useRecoilState(workspacestate);
   const id = router.query.id as string;
   const current = router.pathname.endsWith("/hr") ? "" : router.pathname.split("/").pop();
   return (
@@ -71,10 +80,10 @@ export function HrShell({ title, description, action, children }: { title: strin
       </Head>
       {/* Phones get tabs; bigger screens use the HR side menu */}
       <nav className="-mx-1 mb-6 flex gap-1 overflow-x-auto pb-1 md:hidden" aria-label="HR sections">
-        {HR_TABS.filter((t) => !t.hrOnly || me?.isHR).map((t) => (
+        {HR_TABS.filter((t) => (!t.hrOnly || me?.isHR) && (!(t as any).moderation || (ws?.settings?.moderationEnabled && (ws?.isAdmin || ws?.yourPermission?.includes("view_moderation"))))).map((t) => (
           <Link
             key={t.slug}
-            href={`/workspace/${id}/hr${t.slug ? `/${t.slug}` : ""}`}
+            href={(t as any).moderation ? `/workspace/${id}/moderation` : `/workspace/${id}/hr${t.slug ? `/${t.slug}` : ""}`}
             aria-current={current === t.slug ? "page" : undefined}
             className={`shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium ${current === t.slug ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900" : "text-zinc-600 dark:text-zinc-300"}`}
           >

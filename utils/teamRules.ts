@@ -553,7 +553,8 @@ export const RULES: Record<Collection, Rule> = {
       process: (item, b, c) => {
         if (!hasHR(c, "hr.resignations")) return { error: "You can’t do this" };
         if (!["received", "processed", "withdrawn"].includes(b?.status)) return { error: "Invalid status" };
-        return { ...item, status: b.status, hrMessage: str(b.message, 1000) || item.hrMessage, processedBy: c.name };
+        const rehire = ["yes", "with_review", "no"].includes(b?.rehire) ? b.rehire : item.rehire || null;
+        return { ...item, status: b.status, hrMessage: str(b.message, 1000) || item.hrMessage, processedBy: c.name, rehire };
       },
       withdraw: (item, _b, c) => (item.createdBy === c.id && item.status === "received" ? { ...item, status: "withdrawn" } : { error: "You can’t withdraw this now" }),
     },
@@ -705,6 +706,89 @@ export const RULES: Record<Collection, Rule> = {
       const to = clampInt(b.toHour, 1, 24);
       if (!days.length) return { error: "Pick at least one day" };
       return { data: { days, fromHour: from, toHour: to, timezone: str(b.timezone, 60), hoursPerWeek: clampInt(b.hoursPerWeek, 0, 168), note: str(b.note, 300) } };
+    },
+  },
+
+  // HR log: written by Crewbase itself whenever something happens in HR
+  hrlog: {
+    canCreate: () => false,
+    canEdit: () => false,
+    canDelete: () => false,
+    view: (item, c) => (hasHR(c, "hr.view") ? item : null),
+    validate: () => ({ error: "The HR log is written automatically" }),
+  },
+
+  // Commendations: the positive side of a staff record
+  commendations: {
+    canCreate: (c) => isHR(c) || c.isManager,
+    canEdit: () => false,
+    canDelete: (item, c) => item.createdBy === c.id || hasHR(c, "hr.infractions"),
+    view: (item, c) => (isHR(c) || item.userId === c.id ? item : null),
+    validate: (b) => {
+      const userId = userIdOf(b.userId);
+      const reason = str(b.reason, 500);
+      if (!userId) return { error: "Pick a member" };
+      if (reason.length < 5) return { error: "Say what they did" };
+      const category = ["above_and_beyond", "leadership", "teamwork", "reliability", "helpfulness", "other"].includes(b.category) ? b.category : "other";
+      return { data: { userId, username: str(b.username, 50), reason, category } };
+    },
+  },
+
+  // Investigations: a case file for looking into something properly
+  investigations: {
+    canCreate: (c) => hasHR(c, "hr.cases"),
+    canEdit: (_i, c) => hasHR(c, "hr.cases"),
+    canDelete: (_i, c) => hasHR(c, "hr.cases"),
+    view: (item, c) => (hasHR(c, "hr.cases") || hasHR(c, "hr.view") ? item : null),
+    validate: (b, _c, existing) => {
+      const title = str(b.title, 140);
+      if (!title) return { error: "Give the investigation a title" };
+      const subjects = Array.isArray(b.subjects)
+        ? b.subjects.map((x: any) => ({ userId: userIdOf(x?.userId), username: str(x?.username, 50) })).filter((x: any) => x.userId).slice(0, 10)
+        : existing?.subjects || [];
+      const priority = ["low", "normal", "high", "urgent"].includes(b.priority) ? b.priority : existing?.priority || "normal";
+      return {
+        data: {
+          title, summary: str(b.summary, 3000), subjects, priority,
+          complaintId: str(b.complaintId, 24) || existing?.complaintId || "",
+          status: existing?.status || "open", findings: existing?.findings || "", outcome: existing?.outcome || "",
+          timeline: existing?.timeline || [], evidence: existing?.evidence || [], assignee: str(b.assignee, 50) || existing?.assignee || "",
+        },
+      };
+    },
+    actions: {
+      note: (item, b, c) => {
+        if (!hasHR(c, "hr.cases")) return { error: "You can’t do this" };
+        const text = str(b?.text, 2000);
+        if (!text) return { error: "Write something" };
+        return { ...item, timeline: [...(item.timeline || []), { by: c.name, at: new Date().toISOString(), text }].slice(-200) };
+      },
+      evidence: (item, b, c) => {
+        if (!hasHR(c, "hr.cases")) return { error: "You can’t do this" };
+        const url = str(b?.url, 500);
+        if (!/^https:\/\//.test(url)) return { error: "Evidence must be an https:// link" };
+        return { ...item, evidence: [...(item.evidence || []), { by: c.name, at: new Date().toISOString(), url, label: str(b?.label, 100) }].slice(-50) };
+      },
+      close: (item, b, c) => {
+        if (!hasHR(c, "hr.cases")) return { error: "You can’t do this" };
+        if (!["open", "in_progress", "substantiated", "unsubstantiated", "inconclusive"].includes(b?.status)) return { error: "Invalid status" };
+        return { ...item, status: b.status, findings: str(b.findings, 3000) || item.findings, outcome: str(b.outcome, 1500) || item.outcome, closedAt: ["open", "in_progress"].includes(b.status) ? null : new Date().toISOString() };
+      },
+    },
+  },
+
+  // Watchlist: staff HR is keeping an eye on, with a date to review
+  watchlist: {
+    canCreate: (c) => hasHR(c, "hr.infractions") || hasHR(c, "hr.cases"),
+    canEdit: (_i, c) => hasHR(c, "hr.infractions") || hasHR(c, "hr.cases"),
+    canDelete: (_i, c) => hasHR(c, "hr.infractions") || hasHR(c, "hr.cases"),
+    view: (item, c) => (isHR(c) ? item : null),
+    validate: (b) => {
+      const userId = userIdOf(b.userId);
+      const reason = str(b.reason, 500);
+      if (!userId) return { error: "Pick a member" };
+      if (!reason) return { error: "Say why" };
+      return { data: { userId, username: str(b.username, 50), reason, reviewDate: isoDate(b.reviewDate), level: ["monitor", "concern", "serious"].includes(b.level) ? b.level : "monitor" } };
     },
   },
 };

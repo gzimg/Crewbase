@@ -85,6 +85,9 @@ import {
   IconHeartHandshake,
   IconClipboardList,
   IconLayoutDashboard,
+  IconHistory,
+  IconSearch,
+  IconEye,
   IconUsersGroup,
   IconRefresh,
   IconGavel,
@@ -441,8 +444,8 @@ const workspace: LayoutProps = ({ children }) => {
 			return { title: "Staffing", sections, hideHeader: true };
 		}
 
-		// Human resources
-		if (path.includes(`/workspace/${id}/hr`)) {
+		// Human resources (moderation lives here too)
+		if (path.includes(`/workspace/${id}/hr`) || path.includes(`/workspace/${id}/moderation`)) {
 			const hr = (slug: string, label: string, icon: any): SecondarySidebarItem => ({
 				label,
 				href: `/workspace/${id}/hr${slug ? `/${slug}` : ""}`,
@@ -453,11 +456,23 @@ const workspace: LayoutProps = ({ children }) => {
 			const canSeeFiles = workspace.isAdmin || workspace.yourPermission?.includes("admin") || hrPerms.some((p) => workspace.yourPermission?.includes(p));
 			const sections: SecondarySidebarSection[] = [
 				{ title: "HR", items: [hr("", "Overview", IconLayoutDashboard)] },
-				{ title: "Discipline", items: [hr("infractions", "Infractions", IconAlertTriangle), hr("appeals", "Appeals", IconGavel)] },
-				{ title: "Cases", items: [hr("complaints", "Complaints", IconMessageReport)] },
+				...(workspace.settings?.moderationEnabled && (workspace.isAdmin || workspace.yourPermission?.includes("view_moderation"))
+					? [{
+						title: "Moderation",
+						items: [{
+							label: "Moderation cases",
+							href: `/workspace/${id}/moderation`,
+							icon: IconShield,
+							active: path.includes(`/workspace/${id}/moderation`),
+						}],
+					}]
+					: []),
+				{ title: "Discipline", items: [hr("infractions", "Infractions", IconAlertTriangle), hr("appeals", "Appeals", IconGavel), ...(canSeeFiles ? [hr("watchlist", "Watchlist", IconEye)] : [])] },
+				{ title: "Cases", items: [hr("complaints", "Complaints", IconMessageReport), ...(canSeeFiles ? [hr("investigations", "Investigations", IconSearch)] : [])] },
+				{ title: "Recognition", items: [hr("commendations", "Commendations", IconAward)] },
 				{ title: "Development", items: [hr("paths", "Promotion paths", IconAward), hr("plans", "Improvement plans", IconTrendingUp)] },
 				{ title: "Offboarding", items: [hr("resignations", "Resignations", IconDoorExit)] },
-				...(canSeeFiles ? [{ title: "Records", items: [hr("files", "Staff files", IconFolderOpen)] }] : []),
+				...(canSeeFiles ? [{ title: "Records", items: [hr("files", "Staff files", IconFolderOpen), hr("reports", "Reports", IconChartBar), hr("log", "HR log", IconHistory)] }] : []),
 			];
 			return { title: "Human resources", sections, hideHeader: true };
 		}

@@ -70,7 +70,9 @@ export default function PrivacyPage() {
           Human resources records: infractions you receive (with reasons and points), appeals, complaints you raise or that are
           about you, improvement plans and check-ins, and resignations with your exit survey answers. HR records are only visible
           to people with HR access in that workspace, and to you for records about you. You aren’t shown complaints made about
-          you, to protect the people who raise them. Anonymous complaints are saved without your name.
+          you, to protect the people who raise them. Anonymous complaints are saved without your name. HR can also keep
+          commendations (which you can see), investigation files, a private watchlist and a note on whether someone could be
+          rehired. Every HR action is recorded in an HR log that only people with HR access can read.
         </li>
       </ul>
 
