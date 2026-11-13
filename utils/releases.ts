@@ -8,6 +8,13 @@ export type Release = { id: string; at: string; tag: "new" | "improved" | "fixed
 
 export const RELEASES: Release[] = [
   {
+    id: "2026-11-14-sync-group",
+    at: "2026-11-14T20:00:00.000Z",
+    tag: "fixed",
+    title: "Sync Group works again",
+    body: "The Sync Group button in role settings now finishes syncing with your Roblox group before telling you it’s done, then refreshes the page so you can see the changes.",
+  },
+  {
     id: "2026-11-14-api-keys",
     at: "2026-11-14T18:00:00.000Z",
     tag: "improved",

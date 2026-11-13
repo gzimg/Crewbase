@@ -36,13 +36,17 @@ export async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
       });
     }
 
-    checkGroupRoles(workspaceId).catch((error) => {
-      console.error("Error checking group roles:", error);
-    });
-
-    res.status(200).json({
-      success: true,
-    });
+    // Run the sync to the end before answering. On Vercel, work started after the
+    // response is sent gets frozen, which is why this button used to do nothing.
+    const { getWorkspaceRobloxApiKey } = await import("@/utils/openCloud");
+    const key = await getWorkspaceRobloxApiKey(workspaceId).catch(() => null);
+    if (!key) {
+      return res.status(400).json({ success: false, error: "Add a Roblox Open Cloud API key in Settings first, so Crewbase can read your group." });
+    }
+    const started = Date.now();
+    await checkGroupRoles(workspaceId);
+    console.log(`[Refresh] Manual sync for ${workspaceId} took ${Math.round((Date.now() - started) / 1000)}s`);
+    return res.status(200).json({ success: true });
   } catch (error) {
     console.error("Error in checkgrouproles handler:", error);
     return res.status(500).json({

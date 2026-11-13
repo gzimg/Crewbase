@@ -345,15 +345,22 @@ const RolesManager: FC<Props> = ({ roles, setRoles, grouproles }) => {
     }
   };
 
+  const [syncing, setSyncing] = useState(false);
   const checkRoles = async () => {
-    const res = axios.post(
-      `/api/workspace/${workspace.groupId}/settings/roles/checkgrouproles`
-    );
+    if (syncing) return;
+    setSyncing(true);
+    const res = axios.post(`/api/workspace/${workspace.groupId}/settings/roles/checkgrouproles`, {}, { timeout: 310_000 });
     toast.promise(res, {
-      loading: "Checking roles...",
-      success: "Sync requested! Please wait.",
-      error: "Error updating roles",
+      loading: "Syncing with your Roblox group… this can take a minute for big groups",
+      success: "Roles synced with your Roblox group",
+      error: (e: any) => e?.response?.data?.error || "Couldn’t sync roles. Try again in a minute.",
     });
+    try {
+      await res;
+      setTimeout(() => router.reload(), 900);
+    } catch {
+      setSyncing(false);
+    }
   };
 
   const deleteRole = async (id: string) => {
@@ -408,7 +415,7 @@ const RolesManager: FC<Props> = ({ roles, setRoles, grouproles }) => {
           ) : (
             <button
               onClick={checkRoles}
-              disabled={hasApiKey === null}
+              disabled={hasApiKey === null || syncing}
               className={clsx(
                 "inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
                 hasApiKey === null
@@ -417,7 +424,7 @@ const RolesManager: FC<Props> = ({ roles, setRoles, grouproles }) => {
               )}
             >
               <IconRefresh size={16} className="mr-1.5" />
-              Sync Group
+              {syncing ? "Syncing…" : "Sync Group"}
             </button>
           )}
         </div>

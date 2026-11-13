@@ -9,6 +9,9 @@
     },
     "pages/api/site/users/[userid]/delete.ts": {
       "maxDuration": 300
+    },
+    "pages/api/workspace/[id]/settings/roles/checkgrouproles.ts": {
+      "maxDuration": 300
     }
   },
   "crons": [
