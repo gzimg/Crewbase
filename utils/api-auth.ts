@@ -2,7 +2,9 @@ import prisma from "@/utils/database"
 
 // Validate API key for a given workspace
 export async function validateApiKey(apiKey: string, workspaceId: string | number) {
-  if (!apiKey || !apiKey.startsWith("firefli_")) return null
+  // New keys start with "crewbase_". Keys made before the rename start with "firefli_"
+  // and keep working.
+  if (!apiKey || !(apiKey.startsWith("crewbase_") || apiKey.startsWith("firefli_"))) return null
 
   const key = await prisma.apiKey.findUnique({ where: { key: apiKey } })
   if (!key) return null

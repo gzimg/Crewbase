@@ -8,6 +8,13 @@ export type Release = { id: string; at: string; tag: "new" | "improved" | "fixed
 
 export const RELEASES: Release[] = [
   {
+    id: "2026-11-14-api-keys",
+    at: "2026-11-14T18:00:00.000Z",
+    tag: "improved",
+    title: "API keys now start with crewbase_",
+    body: "New Public API keys start with “crewbase_”. Keys you already have (starting with “firefli_”) keep working exactly as before, so nothing needs changing.",
+  },
+  {
     id: "2026-11-14-hr",
     at: "2026-11-14T12:00:00.000Z",
     tag: "new",
