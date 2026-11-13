@@ -16,7 +16,7 @@ export type TeamItem = {
   [field: string]: any;
 };
 
-export const COLLECTIONS = ["announcements", "chat", "events", "certifications", "awards", "reviews", "feedback", "polls", "kudos", "tasks", "ideas", "checklists", "onboarding", "links", "nominations", "infractions", "complaints", "appeals", "pips", "resignations", "paths", "swaps"] as const;
+export const COLLECTIONS = ["announcements", "chat", "events", "certifications", "awards", "reviews", "feedback", "polls", "kudos", "tasks", "ideas", "checklists", "onboarding", "links", "nominations", "infractions", "complaints", "appeals", "pips", "resignations", "paths", "swaps", "positions", "candidates", "headcount", "availability"] as const;
 export type Collection = (typeof COLLECTIONS)[number];
 
 const LIMITS: Record<Collection, number> = {
@@ -42,6 +42,10 @@ const LIMITS: Record<Collection, number> = {
   resignations: 2000,
   paths: 100,
   swaps: 1000,
+  positions: 200,
+  candidates: 3000,
+  headcount: 200,
+  availability: 3000,
 };
 
 const prefix = (c: Collection) => `team:${c}:`;
@@ -133,7 +137,7 @@ export async function scrubUserFromTeam(userId: string): Promise<number> {
   for (const row of rows) {
     const item = row.value as any;
     const collection = row.key.split(":")[1];
-    const aboutThem = item.userId === userId || item.toUserId === userId || item.nomineeId === userId || item.aboutUserId === userId;
+    const aboutThem = item.userId === userId || item.toUserId === userId || item.nomineeId === userId || item.aboutUserId === userId || item.candidateUserId === userId;
     const byThem = item.createdBy === userId;
     // Personal content by or about them is deleted
     if (aboutThem || (byThem && ["chat", "kudos", "feedback", "nominations", "complaints", "appeals", "resignations"].includes(collection))) {

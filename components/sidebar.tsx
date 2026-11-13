@@ -26,6 +26,7 @@ import {
   SparklesIcon,
   UserGroupIcon,
   Briefcase01Icon,
+  JobSearchIcon,
 } from "@hugeicons/core-free-icons"
 import {
   IconStar,
@@ -307,6 +308,13 @@ const Sidebar: NextPage = () => {
         `/workspace/${workspace.groupId}/recommendations`,
         `/workspace/${workspace.groupId}/applications`,
       ]
+    }] : []),
+    ...((workspace.settings as any)?.staffingEnabled !== false ? [{
+      name: "Staffing",
+      href: `/workspace/${workspace.groupId}/staffing`,
+      icon: JobSearchIcon,
+      accessible: true,
+      matchPaths: [`/workspace/${workspace.groupId}/staffing`],
     }] : []),
     {
       name: "HR",

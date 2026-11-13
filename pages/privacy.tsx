@@ -27,6 +27,15 @@ export default function PrivacyPage() {
         </li>
       </ul>
 
+      <h3>Staffing</h3>
+      <ul>
+        <li>
+          If a workspace uses Staffing: open positions (and, if they choose, a public careers page), candidates’ Roblox
+          usernames with hiring stages, interview times, interview scorecards and private notes, headcount targets, and the
+          availability you choose to share. Candidate records are only visible to the workspace’s staffing team.
+        </li>
+      </ul>
+
       <h3>Staff Passport (only if you turn it on)</h3>
       <ul>
         <li>

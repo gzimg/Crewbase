@@ -153,6 +153,11 @@ const RolesManager: FC<Props> = ({ roles, setRoles, grouproles }) => {
       "Upload evidence": "upload_evidence",
       "Delete evidence": "delete_evidence",
     },
+    Staffing: {
+      "View staffing (candidates, headcount, availability)": "staffing.view",
+      "Manage positions and headcount targets": "staffing.manage",
+      "Recruit: candidates, interviews and scorecards": "staffing.recruit",
+    },
     "Human resources": {
       "View HR records and staff files": "hr.view",
       "Issue and revoke infractions": "hr.infractions",

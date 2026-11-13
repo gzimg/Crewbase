@@ -8,6 +8,13 @@ export type Release = { id: string; at: string; tag: "new" | "improved" | "fixed
 
 export const RELEASES: Release[] = [
   {
+    id: "2026-11-12-staffing",
+    at: "2026-11-12T12:00:00.000Z",
+    tag: "new",
+    title: "Staffing",
+    body: "A new Staffing section: post open positions (with an optional public careers page), move candidates through a hiring pipeline with interviews and scorecards, set headcount targets for each role, see shift coverage for the week, track turnover, and collect your team’s availability. It’s on by default, and you can turn it off in Settings → Feature Flags.",
+  },
+  {
     id: "2026-11-11-swaps",
     at: "2026-11-11T20:00:00.000Z",
     tag: "new",

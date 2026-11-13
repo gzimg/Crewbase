@@ -14,6 +14,12 @@ export const HR_PERMS = ["hr.view", "hr.infractions", "hr.cases", "hr.plans", "h
 export const hasHR = (c: Ctx, perm: (typeof HR_PERMS)[number]) => c.isManager || !!c.perms?.includes(perm);
 export const isHR = (c: Ctx) => c.isManager || HR_PERMS.some((p) => c.perms?.includes(p));
 
+/* ---------- Staffing ---------- */
+export const STAFFING_PERMS = ["staffing.view", "staffing.manage", "staffing.recruit"] as const;
+export const hasStaffing = (c: Ctx, perm: (typeof STAFFING_PERMS)[number]) => c.isManager || !!c.perms?.includes(perm);
+export const isStaffing = (c: Ctx) => c.isManager || STAFFING_PERMS.some((p) => c.perms?.includes(p));
+export const STAGES = ["applied", "screening", "interview", "offer", "hired", "rejected"] as const;
+
 export const INFRACTION_LEVELS: Record<string, { label: string; points: number; days: number | null }> = {
   verbal: { label: "Verbal warning", points: 1, days: 30 },
   written: { label: "Written warning", points: 2, days: 60 },
@@ -589,6 +595,117 @@ export const RULES: Record<Collection, Rule> = {
     canDelete: authorOrManager,
     view: everyone,
     validate: () => ({ error: "Use the shift swaps page" }),
+  },
+
+  // Open positions the team is hiring for. Everyone in the workspace can see them.
+  positions: {
+    canCreate: (c) => hasStaffing(c, "staffing.manage"),
+    canEdit: (_i, c) => hasStaffing(c, "staffing.manage"),
+    canDelete: (_i, c) => hasStaffing(c, "staffing.manage"),
+    view: everyone,
+    validate: (b) => {
+      const title = str(b.title, 80);
+      if (!title) return { error: "Name the position" };
+      const status = ["open", "paused", "filled"].includes(b.status) ? b.status : "open";
+      const applyLink = str(b.applyLink, 300);
+      if (applyLink && !/^https:\/\//.test(applyLink)) return { error: "The apply link must start with https://" };
+      return {
+        data: {
+          title, department: str(b.department, 60), roleName: str(b.roleName, 60), openings: clampInt(b.openings ?? 1, 1, 100),
+          description: str(b.description, 3000), requirements: str(b.requirements, 2000), status, public: bool(b.public), applyLink,
+        },
+      };
+    },
+  },
+
+  // Candidates moving through hiring. Only the staffing team can see them.
+  candidates: {
+    canCreate: (c) => hasStaffing(c, "staffing.recruit"),
+    canEdit: (_i, c) => hasStaffing(c, "staffing.recruit"),
+    canDelete: (_i, c) => hasStaffing(c, "staffing.recruit"),
+    view: (item, c) => (isStaffing(c) ? item : null),
+    validate: (b, _c, existing) => {
+      const username = str(b.username, 30);
+      if (!username) return { error: "Add the candidate’s Roblox username" };
+      return {
+        data: {
+          username,
+          candidateUserId: userIdOf(b.candidateUserId) || existing?.candidateUserId || null,
+          positionId: str(b.positionId, 24),
+          positionTitle: str(b.positionTitle, 80),
+          source: ["application", "referral", "discord", "headhunted", "other"].includes(b.source) ? b.source : "application",
+          stage: (STAGES as readonly string[]).includes(b.stage) ? b.stage : existing?.stage || "applied",
+          notes: existing?.notes || [],
+          scorecards: existing?.scorecards || [],
+          interview: existing?.interview || null,
+        },
+      };
+    },
+    actions: {
+      stage: (item, b, c) => {
+        if (!hasStaffing(c, "staffing.recruit")) return { error: "You can’t do this" };
+        if (!(STAGES as readonly string[]).includes(b?.stage)) return { error: "Invalid stage" };
+        return { ...item, stage: b.stage, stageChangedAt: new Date().toISOString(), rejectReason: b.stage === "rejected" ? str(b.reason, 300) : item.rejectReason };
+      },
+      note: (item, b, c) => {
+        if (!hasStaffing(c, "staffing.recruit")) return { error: "You can’t do this" };
+        const text = str(b?.text, 2000);
+        if (!text) return { error: "Write a note" };
+        return { ...item, notes: [...(item.notes || []), { by: c.name, at: new Date().toISOString(), text }].slice(-100) };
+      },
+      interview: (item, b, c) => {
+        if (!hasStaffing(c, "staffing.recruit")) return { error: "You can’t do this" };
+        const at = isoDate(b?.at);
+        if (!at) return { error: "Pick a time" };
+        const interviewers = Array.isArray(b?.interviewers) ? b.interviewers.map((x: unknown) => str(x, 40)).filter(Boolean).slice(0, 5) : [];
+        return { ...item, stage: item.stage === "applied" || item.stage === "screening" ? "interview" : item.stage, interview: { at, interviewers, status: "scheduled", location: str(b?.location, 200) } };
+      },
+      interviewStatus: (item, b, c) => {
+        if (!hasStaffing(c, "staffing.recruit") || !item.interview) return { error: "You can’t do this" };
+        if (!["scheduled", "completed", "no_show", "cancelled"].includes(b?.status)) return { error: "Invalid status" };
+        return { ...item, interview: { ...item.interview, status: b.status } };
+      },
+      scorecard: (item, b, c) => {
+        if (!hasStaffing(c, "staffing.recruit")) return { error: "You can’t do this" };
+        const ratings: Record<string, number> = {};
+        for (const k of ["communication", "experience", "attitude", "judgement"]) {
+          const v = Number(b?.ratings?.[k]);
+          if (v >= 1 && v <= 5) ratings[k] = Math.round(v);
+        }
+        const recommendation = ["strong_yes", "yes", "no", "strong_no"].includes(b?.recommendation) ? b.recommendation : null;
+        if (!recommendation) return { error: "Pick a recommendation" };
+        const others = (item.scorecards || []).filter((s: any) => s.byId !== c.id);
+        return { ...item, scorecards: [...others, { by: c.name, byId: c.id, at: new Date().toISOString(), ratings, recommendation, notes: str(b?.notes, 1500) }] };
+      },
+    },
+  },
+
+  // How many people you want in each role
+  headcount: {
+    canCreate: (c) => hasStaffing(c, "staffing.manage"),
+    canEdit: (_i, c) => hasStaffing(c, "staffing.manage"),
+    canDelete: (_i, c) => hasStaffing(c, "staffing.manage"),
+    view: (item, c) => (isStaffing(c) ? item : null),
+    validate: (b) => {
+      const roleName = str(b.roleName, 60);
+      if (!roleName) return { error: "Pick a role" };
+      return { data: { roleName, target: clampInt(b.target, 0, 10000), minimum: clampInt(b.minimum ?? 0, 0, 10000) } };
+    },
+  },
+
+  // When each staff member is usually free. One entry per person, set by them.
+  availability: {
+    canCreate: () => true,
+    canEdit: (item, c) => item.createdBy === c.id,
+    canDelete: (item, c) => item.createdBy === c.id || c.isManager,
+    view: (item, c) => (isStaffing(c) || item.createdBy === c.id ? item : null),
+    validate: (b) => {
+      const days = Array.isArray(b.days) ? b.days.filter((d: unknown) => ["mon", "tue", "wed", "thu", "fri", "sat", "sun"].includes(String(d))) : [];
+      const from = clampInt(b.fromHour, 0, 23);
+      const to = clampInt(b.toHour, 1, 24);
+      if (!days.length) return { error: "Pick at least one day" };
+      return { data: { days, fromHour: from, toHour: to, timezone: str(b.timezone, 60), hoursPerWeek: clampInt(b.hoursPerWeek, 0, 168), note: str(b.note, 300) } };
+    },
   },
 };
 

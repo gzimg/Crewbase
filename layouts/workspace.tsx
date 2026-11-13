@@ -85,6 +85,7 @@ import {
   IconHeartHandshake,
   IconClipboardList,
   IconLayoutDashboard,
+  IconUsersGroup,
   IconRefresh,
   IconGavel,
   IconMessageReport,
@@ -421,6 +422,23 @@ const workspace: LayoutProps = ({ children }) => {
 				},
 			];
 			return { title: "Activity", sections, hideHeader: true };
+		}
+
+		// Staffing
+		if (path.includes(`/workspace/${id}/staffing`)) {
+			const st = (slug: string, label: string, icon: any): SecondarySidebarItem => ({
+				label,
+				href: `/workspace/${id}/staffing${slug ? `/${slug}` : ""}`,
+				icon,
+				active: slug ? path.includes(`/workspace/${id}/staffing/${slug}`) : path.split("?")[0] === `/workspace/${id}/staffing`,
+			});
+			const staffingTeam = workspace.isAdmin || ["admin", "staffing.view", "staffing.manage", "staffing.recruit"].some((p) => workspace.yourPermission?.includes(p));
+			const sections: SecondarySidebarSection[] = [
+				{ title: "Staffing", items: [st("", "Overview", IconLayoutDashboard)] },
+				{ title: "Hiring", items: [st("positions", "Open positions", IconBriefcase), ...(staffingTeam ? [st("candidates", "Candidates", IconUsersGroup)] : [])] },
+				{ title: "Planning", items: [...(staffingTeam ? [st("headcount", "Headcount", IconChartBar)] : []), st("availability", "Availability", IconCalendarEvent)] },
+			];
+			return { title: "Staffing", sections, hideHeader: true };
 		}
 
 		// Human resources

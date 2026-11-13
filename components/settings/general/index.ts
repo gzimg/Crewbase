@@ -8,4 +8,5 @@ import AuditLogs from './logs'
 import Admin from './admin'
 import Moderation from './moderation'
 import Applications from './applications';
-export { home, Color, Alliances, Activity, AuditLogs, Policies, Recommendations, Admin, Moderation, Applications };
+import Staffing from './staffing';
+export { home, Color, Alliances, Activity, AuditLogs, Policies, Recommendations, Admin, Moderation, Applications, Staffing };

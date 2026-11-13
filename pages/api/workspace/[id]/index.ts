@@ -26,6 +26,7 @@ type Data = {
 			recommendationsEnabled: boolean
 			moderationEnabled: boolean
 			applicationsEnabled: boolean
+		staffingEnabled?: boolean
 			widgets: string[]
 			hideEmpty: string[]
 			layout?: Array<{
@@ -55,7 +56,7 @@ export async function handler(
 
 	// Load the workspace, the user and all settings at the same time (one round trip each)
 	const groupIdNum = parseInt(req.query.id as string);
-	const CONFIG_KEYS = ['theme', 'allies', 'policies', 'recommendations', 'moderation', 'applications', 'home'];
+	const CONFIG_KEYS = ['theme', 'allies', 'policies', 'recommendations', 'moderation', 'applications', 'home', 'staffing'];
 	const [workspace, user, configRows] = await Promise.all([
 		prisma.workspace.findUnique({
 			where: { groupId: groupIdNum },
@@ -179,6 +180,8 @@ export async function handler(
 			recommendationsEnabled: cfg('recommendations')?.enabled || false,
 			moderationEnabled: cfg('moderation')?.enabled || false,
 			applicationsEnabled: cfg('applications')?.enabled || false,
+			// Staffing is on unless a workspace turns it off
+			staffingEnabled: cfg('staffing')?.enabled !== false,
 			widgets: cfg('home')?.widgets || [],
 			layout: cfg('home')?.layout || undefined,
 			hideEmpty: cfg('home')?.hideIfEmpty || []
