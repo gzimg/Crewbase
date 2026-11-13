@@ -307,6 +307,7 @@ const Sidebar: NextPage = () => {
         `/workspace/${workspace.groupId}/notices`,
         `/workspace/${workspace.groupId}/recommendations`,
         `/workspace/${workspace.groupId}/applications`,
+        `/workspace/${workspace.groupId}/departments`,
       ]
     }] : []),
     ...((workspace.settings as any)?.staffingEnabled !== false ? [{

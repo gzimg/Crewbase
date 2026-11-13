@@ -168,7 +168,9 @@ export async function handler(
 		groupId: Number(workspace.groupId),
 		groupThumbnail: groupLogo,
 		groupName: groupName,
-		yourPermission: isAdmin ? Object.values(permissions) : user.roles[0].permissions,
+		yourPermission: isAdmin
+			? Object.values(permissions)
+			: Array.from(new Set([...(user.roles[0]?.permissions || []), ...(await (await import('@/utils/departments')).departmentPermissions(groupIdNum, user.userid, user.roles.map((r: any) => String(r.id))))])),
 		isAdmin,
 		ownerId: workspace.ownerId ? Number(workspace.ownerId) : null,
 		groupTheme: themeconfig,

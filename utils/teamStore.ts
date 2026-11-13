@@ -120,7 +120,13 @@ export async function getMemberContext(userId: number | bigint, groupId: number 
       select: { isAdmin: true },
     }),
   ]);
-  const perms = (user?.roles || []).flatMap((r) => r.permissions || []);
+  const rolePerms = (user?.roles || []).flatMap((r) => r.permissions || []);
+  const roleIds = await prisma.role
+    .findMany({ where: { workspaceGroupId: BigInt(groupId), members: { some: { userid: BigInt(userId) } } }, select: { id: true } })
+    .then((rs) => rs.map((r) => String(r.id)))
+    .catch(() => [] as string[]);
+  const { departmentPermissions } = await import("@/utils/departments");
+  const perms = Array.from(new Set([...rolePerms, ...(await departmentPermissions(groupId, String(userId), roleIds))]));
   return {
     id: String(userId),
     name: user?.username ?? null,

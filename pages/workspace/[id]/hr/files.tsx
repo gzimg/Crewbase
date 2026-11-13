@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import UserName from "@/components/username";
 import axios from "axios";
 import { useRouter } from "next/router";
 import workspace from "@/layouts/workspace";
@@ -33,7 +34,7 @@ const StaffFiles: pageWithLayout = () => {
           <Card className="flex flex-wrap items-center gap-4">
             <img src={file.member.picture || "/default-avatar.jpg"} alt="" className="h-14 w-14 rounded-full bg-zinc-200 object-cover dark:bg-zinc-700" />
             <div className="min-w-0 flex-1">
-              <p className="text-lg font-semibold text-zinc-900 dark:text-white">{file.member.username}</p>
+              <p className="text-lg font-semibold text-zinc-900 dark:text-white"><UserName userId={file.member.userId} name={file.member.username} /></p>
               <p className="text-sm text-zinc-500">{file.member.roles.join(", ") || "No roles"}{file.member.joinDate ? ` · joined ${new Date(file.member.joinDate).toLocaleDateString()}` : ""}</p>
             </div>
             <div className="text-right">

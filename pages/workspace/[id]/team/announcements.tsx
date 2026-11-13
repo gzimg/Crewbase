@@ -1,4 +1,5 @@
 import { useState } from "react";
+import UserName from "@/components/username";
 import workspace from "@/layouts/workspace";
 import { pageWithLayout } from "@/layoutTypes";
 import { withPermissionCheckSsr } from "@/utils/permissionsManager";
@@ -45,7 +46,7 @@ const Announcements: pageWithLayout = () => {
               <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
                 {a.pinned && <span className="rounded bg-amber-100 px-1.5 py-0.5 font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Pinned</span>}
                 {a.important && <span className="rounded bg-red-100 px-1.5 py-0.5 font-medium text-red-800 dark:bg-red-900/40 dark:text-red-200">Important</span>}
-                <span>{a.createdByName || "Leadership"} · {ago(a.createdAt)}</span>
+                <span><UserName userId={a.createdBy} name={a.createdByName || "Leadership"} /> · {ago(a.createdAt)}</span>
               </div>
               <h2 className="mt-2 text-lg font-semibold text-zinc-900 dark:text-white">{a.title}</h2>
               {a.body && <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">{a.body}</p>}

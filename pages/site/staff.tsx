@@ -506,6 +506,8 @@ function UserDrawer({ userId, onClose, onChanged }: { userId: string; onClose: (
               ))}
             </ul>
 
+            <BadgeEditor userId={userId} />
+
             <h3 className="mt-8 text-xs font-semibold uppercase tracking-wider text-zinc-500">Staff notes</h3>
             <p className="mt-1 text-xs text-zinc-500">Only site staff and admins can see these.</p>
             <div className="mt-3 flex gap-2">
@@ -899,5 +901,38 @@ function PlansTab({ onChanged }: { onChanged: () => void }) {
         </Panel>
       )}
     </div>
+  );
+}
+
+/** Crewbase badges for one user (given by site staff). */
+function BadgeEditor({ userId }: { userId: string }) {
+  const [data, setData] = useState<{ badges: string[]; available: { id: string; label: string }[] } | null>(null);
+  useEffect(() => {
+    axios.get(`/api/site/users/${userId}/badges`).then((r) => setData(r.data)).catch(() => {});
+  }, [userId]);
+  if (!data) return null;
+  const toggle = async (id: string) => {
+    const next = data.badges.includes(id) ? data.badges.filter((b) => b !== id) : [...data.badges, id];
+    try {
+      const r = await axios.post(`/api/site/users/${userId}/badges`, { badges: next });
+      setData({ ...data, badges: r.data.badges });
+      toast.success("Badges updated");
+    } catch (e) {
+      toast.error(errorText(e));
+    }
+  };
+  return (
+    <>
+      <h3 className="mt-8 text-xs font-semibold uppercase tracking-wider text-zinc-500">Crewbase badges</h3>
+      <p className="mt-1 text-xs text-zinc-500">Shown next to their name across Crewbase. Staff, Discord and Passport badges are automatic.</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {data.available.map((b) => (
+          <label key={b.id} className="flex items-center gap-2 rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
+            <input type="checkbox" checked={data.badges.includes(b.id)} onChange={() => toggle(b.id)} className="h-4 w-4" />
+            {b.label}
+          </label>
+        ))}
+      </div>
+    </>
   );
 }

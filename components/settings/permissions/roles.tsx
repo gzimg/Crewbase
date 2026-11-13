@@ -175,6 +175,7 @@ const RolesManager: FC<Props> = ({ roles, setRoles, grouproles }) => {
       "Admin (Manage workspace)": "admin",
       "Reset activity": "reset_activity",
       "View audit logs": "view_audit_logs",
+      "Manage departments": "manage_departments",
       "Create API keys": "manage_apikeys",
       "Manage features": "manage_features",
       "Workspace customisation": "workspace_customisation",

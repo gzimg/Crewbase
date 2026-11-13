@@ -1,4 +1,5 @@
 import { useState } from "react";
+import UserName from "@/components/username";
 import workspace from "@/layouts/workspace";
 import { pageWithLayout } from "@/layoutTypes";
 import { withPermissionCheckSsr } from "@/utils/permissionsManager";
@@ -54,7 +55,7 @@ const Kudos: pageWithLayout = () => {
               <Card key={k.id} className="flex gap-4">
                 <span className="text-3xl" aria-hidden="true">{k.emoji}</span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-zinc-500"><strong className="text-zinc-900 dark:text-white">{k.createdByName}</strong> to <strong className="text-zinc-900 dark:text-white">{k.toUsername}</strong> · {ago(k.createdAt)}</p>
+                  <p className="text-sm text-zinc-500"><strong className="text-zinc-900 dark:text-white"><UserName userId={k.createdBy} name={k.createdByName} /></strong> to <strong className="text-zinc-900 dark:text-white"><UserName userId={k.toUserId} name={k.toUsername} /></strong> · {ago(k.createdAt)}</p>
                   <p className="mt-1 whitespace-pre-wrap text-zinc-800 dark:text-zinc-200">{k.message}</p>
                   <div className="mt-3 flex items-center gap-2">
                     <button onClick={() => t.act(k.id, "cheer")} aria-pressed={cheered} className={cheered ? btnPrimary : btn}>👏 {(k.cheers || []).length || ""}</button>

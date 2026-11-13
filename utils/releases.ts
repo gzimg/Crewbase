@@ -8,6 +8,13 @@ export type Release = { id: string; at: string; tag: "new" | "improved" | "fixed
 
 export const RELEASES: Release[] = [
   {
+    id: "2026-11-13-departments",
+    at: "2026-11-13T12:00:00.000Z",
+    tag: "new",
+    title: "Departments and Crewbase badges",
+    body: "Departments give groups of people extra permissions on top of their role. People can join automatically through their role (which follows your Roblox group ranks) or be added by hand. Names now also show Crewbase badges, like Crewbase staff, Early supporter or Bug hunter, and a workspace owner’s name shows in gold.",
+  },
+  {
     id: "2026-11-12-staffing",
     at: "2026-11-12T12:00:00.000Z",
     tag: "new",

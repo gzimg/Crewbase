@@ -198,20 +198,22 @@ export function withPermissionCheck(
 
     const isAdmin = membership?.isAdmin || false;
     const userrole = user.roles[0];
+    // Role permissions plus anything from departments the person is in
+    const { departmentPermissions } = await import("@/utils/departments");
+    const deptPerms = await departmentPermissions(workspaceId, uid, user.roles.map((r: any) => String(r.id)));
+    const allPerms = Array.from(new Set([...(userrole?.permissions || []), ...deptPerms]));
 
     permissionsCache.set(cacheKey, {
-      data: { permissions: userrole?.permissions || [], isAdmin },
+      data: { permissions: allPerms, isAdmin },
       timestamp: now,
     });
 
     if (isAdmin) return handler(req, res);
     if (!permission) return handler(req, res);
-    if (!userrole && !isAdmin)
+    if (!userrole && !deptPerms.length && !isAdmin)
       return res.status(401).json({ success: false, error: "Unauthorized" });
     const permissions = Array.isArray(permission) ? permission : [permission];
-    const hasPermission = permissions.some((perm) =>
-      userrole?.permissions?.includes(perm)
-    );
+    const hasPermission = permissions.some((perm) => allPerms.includes(perm));
     if (hasPermission) return handler(req, res);
     return res.status(401).json({ success: false, error: "Unauthorized" });
   });
@@ -344,15 +346,18 @@ export function withPermissionCheckSsr(
 
     const isAdmin = membership.isAdmin || false;
     const userrole = user.roles[0];
+    const { departmentPermissions } = await import("@/utils/departments");
+    const deptPerms = await departmentPermissions(workspaceId, uid, user.roles.map((r: any) => String(r.id)));
+    const allPerms = Array.from(new Set([...(userrole?.permissions || []), ...deptPerms]));
 
     permissionsCache.set(cacheKey, {
-      data: { permissions: userrole?.permissions || [], isAdmin },
+      data: { permissions: allPerms, isAdmin },
       timestamp: now,
     });
     if (isAdmin) return handler(context);
     if (!permission) return handler(context);
 
-    if (!userrole) {
+    if (!userrole && !deptPerms.length) {
       return {
         redirect: {
           destination: "/workspaces",
@@ -362,9 +367,7 @@ export function withPermissionCheckSsr(
     }
 
     const permissions = Array.isArray(permission) ? permission : [permission];
-    const hasPermission = user.roles.some((role) =>
-      permissions.some((perm) => role.permissions.includes(perm))
-    );
+    const hasPermission = permissions.some((perm) => allPerms.includes(perm));
 
     if (!hasPermission) {
       return {

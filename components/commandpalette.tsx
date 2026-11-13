@@ -37,6 +37,7 @@ const WORKSPACE_PAGES: [string, string, string?][] = [
   ["/team/links", "Links", "resources bookmarks"],
   ["/activity/times", "Best times to host", "schedule heatmap availability when online"],
   ["/activity/insights", "Activity insights", "trends quiet report"],
+  ["/departments", "Departments", "permissions teams groups"],
   ["/staffing", "Staffing", "hiring recruit headcount"],
   ["/staffing/positions", "Open positions", "hiring jobs vacancies careers"],
   ["/staffing/candidates", "Candidates", "pipeline interview applicants hire"],

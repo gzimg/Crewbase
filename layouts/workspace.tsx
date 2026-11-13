@@ -517,7 +517,7 @@ const workspace: LayoutProps = ({ children }) => {
 			return { title: "Team", sections: visibleSections, hideHeader: true };
 		}
 
-		const staffPages = ['/views', '/directory', '/notices', '/recommendations', '/applications'];
+		const staffPages = ['/views', '/directory', '/notices', '/recommendations', '/applications', '/departments'];
 		const isStaffSectionPage = staffPages.some(page => 
 			path.includes(`/workspace/${id}${page}`)
 		);
@@ -630,6 +630,13 @@ const workspace: LayoutProps = ({ children }) => {
 					active: isOnRecommendationsPage,
 				});
 			}
+
+			staffItems.push({
+				label: "Departments",
+				href: `/workspace/${id}/departments`,
+				icon: IconBriefcase,
+				active: path.includes(`/workspace/${id}/departments`),
+			});
 
 			// Applications now live in the Staff section instead of their own sidebar icon
 			const canSeeApplications = workspace.settings?.applicationsEnabled && (workspace.yourPermission?.includes("applications.view") || workspace.isAdmin);

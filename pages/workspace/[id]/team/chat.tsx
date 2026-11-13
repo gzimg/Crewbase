@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import UserName from "@/components/username";
 import axios from "axios";
 import workspace from "@/layouts/workspace";
 import { pageWithLayout } from "@/layoutTypes";
@@ -61,7 +62,7 @@ const Chat: pageWithLayout = () => {
             return (
               <div key={m.id} className={`group flex ${mine ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${mine ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900" : "bg-zinc-100 text-zinc-900 dark:bg-zinc-700 dark:text-white"}`}>
-                  {!mine && <p className="mb-0.5 text-xs font-semibold opacity-70">{m.createdByName || "Member"}</p>}
+                  {!mine && <p className="mb-0.5 text-xs font-semibold opacity-80"><UserName userId={m.createdBy} name={m.createdByName || "Member"} /></p>}
                   <p className="whitespace-pre-wrap break-words">{m.text}</p>
                   <p className="mt-1 flex items-center gap-2 text-[10px] opacity-60">
                     {new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
