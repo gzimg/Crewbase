@@ -346,6 +346,27 @@ const RolesManager: FC<Props> = ({ roles, setRoles, grouproles }) => {
   };
 
   const [syncing, setSyncing] = useState(false);
+  const importRoles = async () => {
+    if (syncing) return;
+    const answer = window.prompt(
+      "Create a Crewbase role for every rank in your Roblox group that doesn’t have one yet.\n\nNew roles start with no permissions. Lowest rank to include (1 = everyone in the group):",
+      "1"
+    );
+    if (answer === null) return;
+    setSyncing(true);
+    const res = axios.post(`/api/workspace/${workspace.groupId}/settings/roles/import`, { minRank: Number(answer) || 1 }, { timeout: 310_000 });
+    toast.promise(res, {
+      loading: "Importing your group’s roles…",
+      success: (r: any) => r.data.created.length ? `Added ${r.data.created.length} role${r.data.created.length === 1 ? "" : "s"}${r.data.synced ? " and synced members" : ""}` : "Every group role already has a Crewbase role",
+      error: (e: any) => e?.response?.data?.error || "Couldn’t import roles",
+    });
+    try {
+      await res;
+      setTimeout(() => router.reload(), 900);
+    } catch {
+      setSyncing(false);
+    }
+  };
   const checkRoles = async () => {
     if (syncing) return;
     setSyncing(true);
@@ -399,6 +420,13 @@ const RolesManager: FC<Props> = ({ roles, setRoles, grouproles }) => {
           >
             <IconPlus size={16} className="mr-1.5" />
             Add Role
+          </button>
+          <button
+            onClick={importRoles}
+            disabled={syncing}
+            className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md text-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:text-zinc-200 dark:bg-zinc-700 dark:hover:bg-zinc-600 transition-colors disabled:opacity-50"
+          >
+            Import group roles
           </button>
           {hasApiKey === false ? (
             <button

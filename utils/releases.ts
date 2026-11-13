@@ -8,6 +8,13 @@ export type Release = { id: string; at: string; tag: "new" | "improved" | "fixed
 
 export const RELEASES: Release[] = [
   {
+    id: "2026-11-14-import-roles",
+    at: "2026-11-14T21:00:00.000Z",
+    tag: "new",
+    title: "Import your Roblox group’s roles",
+    body: "In role settings, Import group roles creates a Crewbase role for every rank in your Roblox group, linked and ready, then puts everyone in the right one. New roles start with no permissions, so you choose what each can do.",
+  },
+  {
     id: "2026-11-14-sync-group",
     at: "2026-11-14T20:00:00.000Z",
     tag: "fixed",

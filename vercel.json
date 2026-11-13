@@ -12,6 +12,9 @@
     },
     "pages/api/workspace/[id]/settings/roles/checkgrouproles.ts": {
       "maxDuration": 300
+    },
+    "pages/api/workspace/[id]/settings/roles/import.ts": {
+      "maxDuration": 300
     }
   },
   "crons": [
