@@ -1,0 +1,73 @@
+/**
+ * Crewbase release notes that ship with the code. Each update adds an entry here,
+ * so the What’s new page, the in-app changelog and the “new” dot update by
+ * themselves when the update is deployed. Site admins can still post extra updates
+ * from Site admin → What’s new.
+ */
+export type Release = { id: string; at: string; tag: "new" | "improved" | "fixed"; title: string; body: string };
+
+export const RELEASES: Release[] = [
+  {
+    id: "2026-11-11-swaps",
+    at: "2026-11-11T20:00:00.000Z",
+    tag: "new",
+    title: "Shift swaps and work anniversaries",
+    body: "Can’t make a shift you signed up for? Offer it under Team → Shift swaps, and a teammate can take it in one click. Crewbase now also celebrates work anniversaries, so nobody’s first year on the team goes unnoticed.",
+  },
+  {
+    id: "2026-11-11-lowerranks",
+    at: "2026-11-11T17:00:00.000Z",
+    tag: "new",
+    title: "Roblox rank binds in one command",
+    body: "/bind roblox matches every Roblox group rank to the Discord role with the same name. Binds are numbered and easy to change with /bind edit and /bind remove, and /bind lowerranks lets higher ranks keep the roles of the ranks below them.",
+  },
+  {
+    id: "2026-11-11-verify",
+    at: "2026-11-11T15:00:00.000Z",
+    tag: "improved",
+    title: "Faster, clearer verification",
+    body: "/verify, /update and the Verify button now answer instantly and finish in the background, and tell you exactly why a role couldn’t be given.",
+  },
+  {
+    id: "2026-11-11-besttimes",
+    at: "2026-11-11T12:00:00.000Z",
+    tag: "new",
+    title: "Best times to host and burnout watch",
+    body: "See when your staff are actually in game, hour by hour, with the three best times to host. Activity Insights now also gently flags staff who might be overdoing it.",
+  },
+  {
+    id: "2026-11-11-paths",
+    at: "2026-11-11T09:00:00.000Z",
+    tag: "new",
+    title: "Promotion paths and Staff Passport",
+    body: "Publish exactly what each promotion takes and let staff track their progress. Staff can also share a verified record of their experience with other groups, if they choose to.",
+  },
+  {
+    id: "2026-11-10-discord-login",
+    at: "2026-11-10T20:00:00.000Z",
+    tag: "new",
+    title: "Continue with Discord",
+    body: "Log in with Discord once it’s linked to your Crewbase account, and link it from your account page in one click.",
+  },
+  {
+    id: "2026-11-10-plans",
+    at: "2026-11-10T16:00:00.000Z",
+    tag: "improved",
+    title: "Clearer plan requests",
+    body: "Each plan now shows what a workspace needs to request it, requests include more detail, you’re notified when a decision is made, and each workspace has a plan history.",
+  },
+  {
+    id: "2026-11-10-shifts",
+    at: "2026-11-10T12:00:00.000Z",
+    tag: "new",
+    title: "Shift announcements in Discord",
+    body: "Crewbase can post upcoming shifts to a Discord channel before they start, with the host and how many have signed up. Set it up with /shifts setup.",
+  },
+  {
+    id: "2026-11-10-hr",
+    at: "2026-11-10T08:00:00.000Z",
+    tag: "new",
+    title: "Human resources",
+    body: "A full HR section: infractions with points and expiry, appeals, private complaints, improvement plans, resignations with exit surveys, and staff files.",
+  },
+];

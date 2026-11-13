@@ -13,6 +13,7 @@ export const TEAM_TABS = [
   { slug: "announcements", label: "Announcements" },
   { slug: "chat", label: "Chat" },
   { slug: "events", label: "Events" },
+  { slug: "swaps", label: "Shift swaps" },
   { slug: "trainings", label: "Trainings" },
   { slug: "reviews", label: "Reviews" },
   { slug: "polls", label: "Polls" },

@@ -178,7 +178,17 @@ export type ChangelogEntry = {
   by: string;
 };
 
-export async function getChangelog(): Promise<ChangelogEntry[]> {
+/** Admin-posted updates plus the release notes that ship with the code, newest first. */
+export async function getChangelog(): Promise<(ChangelogEntry & { builtIn?: boolean })[]> {
+  const list = await readJson<ChangelogEntry[]>("site_changelog", []);
+  const posted = Array.isArray(list) ? list : [];
+  const { RELEASES } = await import("@/utils/releases");
+  const shipped = RELEASES.map((r) => ({ ...r, by: "crewbase", builtIn: true }));
+  return [...posted, ...shipped].sort((a, b) => b.at.localeCompare(a.at));
+}
+
+/** Only the updates admins posted themselves (the ones they can edit or delete). */
+export async function getPostedChangelog(): Promise<ChangelogEntry[]> {
   const list = await readJson<ChangelogEntry[]>("site_changelog", []);
   return Array.isArray(list) ? list : [];
 }

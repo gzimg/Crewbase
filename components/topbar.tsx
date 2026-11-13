@@ -3,10 +3,11 @@ import { loginState, workspacestate, createWorkspaceModalState } from "@/state";
 import { useRecoilState } from "recoil";
 import { Menu, Transition, Listbox } from "@headlessui/react";
 import { useRouter } from "next/router";
-import { IconLogout, IconChevronDown, IconPlus, IconCheck, IconHome, IconHeadset, IconShieldLock, IconUserCircle, IconFlag, IconHeart } from "@tabler/icons-react";
+import { IconLogout, IconChevronDown, IconPlus, IconCheck, IconHome, IconHeadset, IconShieldLock, IconUserCircle, IconFlag, IconHeart, IconSparkles } from "@tabler/icons-react";
 import AnnouncementBanner from "@/components/announcementbanner";
 import { PlanBadge } from "@/components/planbadge";
 
+let latestNews: Promise<string | null> | null = null;
 const planBadgeCache = new Map<string, { value: { name: string; color: string }; at: number }>();
 import Link from "next/link";
 import axios from "axios";
@@ -55,6 +56,16 @@ const Topbar: NextPage = () => {
 	const router = useRouter();
 	const isInWorkspace = router.pathname.startsWith('/workspace/');
 	const [workspacePlan, setWorkspacePlan] = useState<{ name: string; color: string } | null>(null);
+	// Orange dot when there’s an update you haven’t seen on the What’s new page
+	const [hasNews, setHasNews] = useState(false);
+	useEffect(() => {
+		if (!latestNews) latestNews = axios.get("/api/site/changelog").then((r) => r.data.entries?.[0]?.at || null).catch(() => null);
+		latestNews.then((at) => {
+			let seen: string | null = null;
+			try { seen = localStorage.getItem("crewbase_changelog_seen"); } catch {}
+			setHasNews(!!at && (!seen || seen < at));
+		});
+	}, []);
 	useEffect(() => {
 		const id = router.query.id;
 		if (!isInWorkspace || !id) {
@@ -246,7 +257,8 @@ const Topbar: NextPage = () => {
 							<Notification variant="topbar" />
 						</div>
 					)}						<Menu as="div" className="relative">
-						<Menu.Button className="flex items-center space-x-2 px-2 py-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors">
+						<Menu.Button className="relative flex items-center space-x-2 px-2 py-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors">
+							{hasNews && <span className="absolute left-1.5 top-1 z-10 h-2.5 w-2.5 rounded-full bg-[#F28C28] ring-2 ring-white dark:ring-zinc-800" aria-label="There’s something new in Crewbase" />}
 							<div className={`h-7 w-7 rounded-full ${getRandomBg(login?.userId)} flex items-center justify-center overflow-hidden`}>
 								<img
 									src={login?.thumbnail}
@@ -341,6 +353,18 @@ const Topbar: NextPage = () => {
 											>
 												<IconFlag className="mr-2 h-5 w-5 text-zinc-500 dark:text-zinc-400" />
 												<span className="text-zinc-700 dark:text-zinc-200">Report a problem</span>
+											</button>
+										)}
+									</Menu.Item>
+									<Menu.Item>
+										{({ active }) => (
+											<button
+												onClick={() => { setHasNews(false); router.push("/changelog"); }}
+												className={`${active ? 'bg-zinc-100 dark:bg-zinc-700' : ''} group flex w-full items-center rounded-md px-3 py-2 text-sm`}
+											>
+												<IconSparkles className="mr-2 h-5 w-5 text-zinc-500 dark:text-zinc-400" />
+												<span className="flex-1 text-left text-zinc-700 dark:text-zinc-200">What’s new</span>
+												{hasNews && <span className="rounded-full bg-[#F28C28] px-1.5 text-[10px] font-semibold text-zinc-900">New</span>}
 											</button>
 										)}
 									</Menu.Item>

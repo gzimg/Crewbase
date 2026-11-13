@@ -29,6 +29,7 @@ const WORKSPACE_PAGES: [string, string, string?][] = [
   ["/team/reviews", "Reviews & feedback", "performance review feedback"],
   ["/team/polls", "Polls", "vote survey"],
   ["/team/kudos", "Kudos", "shoutout thanks recognition"],
+  ["/team/swaps", "Shift swaps", "cover trade swap shift session"],
   ["/team/tasks", "Tasks", "todo board assign"],
   ["/team/ideas", "Ideas board", "suggestions upvote"],
   ["/team/onboarding", "Onboarding", "checklist new staff"],

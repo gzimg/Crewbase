@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { withSessionRoute } from "@/lib/withSession";
 import { requireSiteRole, logSiteAction } from "@/utils/siteRoles";
-import { getChangelog, saveChangelog, newId, ChangelogEntry } from "@/utils/siteSettings";
+import { getChangelog, getPostedChangelog, saveChangelog, newId, ChangelogEntry } from "@/utils/siteSettings";
 
 /**
  * GET (public): the "What's new" list.
@@ -18,7 +18,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const caller = await requireSiteRole(req, res, "admin");
   if (!caller) return;
-  const entries = await getChangelog();
+  const entries = await getPostedChangelog();
 
   if (req.method === "POST") {
     const title = typeof req.body?.title === "string" ? req.body.title.trim().slice(0, 120) : "";

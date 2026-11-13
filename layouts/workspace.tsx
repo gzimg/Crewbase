@@ -85,6 +85,7 @@ import {
   IconHeartHandshake,
   IconClipboardList,
   IconLayoutDashboard,
+  IconRefresh,
   IconGavel,
   IconMessageReport,
   IconTrendingUp,
@@ -465,7 +466,7 @@ const workspace: LayoutProps = ({ children }) => {
 				},
 				{
 					title: "Plan",
-					items: [tab("events", "Events", IconCalendarEvent), tab("tasks", "Tasks", IconChecklist), tab("polls", "Polls", IconChartBar)],
+					items: [tab("events", "Events", IconCalendarEvent), tab("swaps", "Shift swaps", IconRefresh), tab("tasks", "Tasks", IconChecklist), tab("polls", "Polls", IconChartBar)],
 				},
 				{
 					title: "Grow",

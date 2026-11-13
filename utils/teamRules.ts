@@ -581,6 +581,15 @@ export const RULES: Record<Collection, Rule> = {
       };
     },
   },
+
+  // Shift swaps are created and taken through /api/workspace/[id]/swaps, which checks the sessions
+  swaps: {
+    canCreate: () => false,
+    canEdit: () => false,
+    canDelete: authorOrManager,
+    view: everyone,
+    validate: () => ({ error: "Use the shift swaps page" }),
+  },
 };
 
 /** Strips who sent anonymous feedback before anyone sees it. */

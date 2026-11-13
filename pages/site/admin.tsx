@@ -457,7 +457,7 @@ function AuditTab() {
 
 /* ---------------- What's new ---------------- */
 
-type ChangeEntry = { id: string; title: string; body: string; tag: "new" | "improved" | "fixed"; at: string };
+type ChangeEntry = { id: string; title: string; body: string; tag: "new" | "improved" | "fixed"; at: string; builtIn?: boolean };
 
 function ChangelogTab() {
   const [entries, setEntries] = useState<ChangeEntry[]>([]);
@@ -528,7 +528,7 @@ function ChangelogTab() {
                   </p>
                   <p className="mt-0.5 text-xs text-zinc-500">{new Date(e.at).toLocaleDateString()}</p>
                 </div>
-                <button onClick={() => remove(e.id)} className={buttonClass}>Delete</button>
+                {e.builtIn ? <span className="text-xs text-zinc-500">Ships with an update</span> : <button onClick={() => remove(e.id)} className={buttonClass}>Delete</button>}
               </li>
             ))}
           </ul>

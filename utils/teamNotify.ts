@@ -10,7 +10,7 @@ import type { Collection, TeamItem } from "@/utils/teamStore";
 
 const SETTINGS_KEY = "team:settings";
 // Team tabs that can be hidden (Announcements and Settings always stay)
-export const HIDEABLE_TABS = ["chat", "events", "tasks", "polls", "trainings", "onboarding", "reviews", "ideas", "kudos", "spotlight", "links"];
+export const HIDEABLE_TABS = ["chat", "events", "swaps", "tasks", "polls", "trainings", "onboarding", "reviews", "ideas", "kudos", "spotlight", "links"];
 
 export type TeamSettings = {
   discordWebhook: string | null; // encrypted

@@ -9,7 +9,7 @@ export const getServerSideProps = withPermissionCheckSsr(async () => ({ props: {
 import { TeamShell, Card, inputClass, btn, btnPrimary, errorText } from "@/components/team/teamkit";
 
 const TAB_LABELS: Record<string, string> = {
-  chat: "Team chat", events: "Events", tasks: "Tasks", polls: "Polls", trainings: "Trainings", onboarding: "Onboarding",
+  chat: "Team chat", events: "Events", swaps: "Shift swaps", tasks: "Tasks", polls: "Polls", trainings: "Trainings", onboarding: "Onboarding",
   reviews: "Reviews & feedback", ideas: "Ideas", kudos: "Kudos", spotlight: "Staff of the Month", links: "Links",
 };
 

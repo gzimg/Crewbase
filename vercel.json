@@ -47,6 +47,10 @@
     {
       "path": "/api/cron/shift-announcements",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/anniversaries",
+      "schedule": "0 14 * * *"
     }
   ]
 }
